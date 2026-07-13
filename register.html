@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>MyGuru Jobs - Register</title>
+
+<link rel="stylesheet" href="css/style.css">
+
+<style>
+
+body{
+    margin:0;
+    padding:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:#f5f7fa;
+}
+
+.container{
+    width:95%;
+    max-width:500px;
+    margin:30px auto;
+}
+
+.card{
+    background:#fff;
+    border-radius:12px;
+    padding:25px;
+    box-shadow:0 4px 15px rgba(0,0,0,.15);
+}
+
+.logo{
+    text-align:center;
+}
+
+.logo h1{
+    color:#00695c;
+}
+
+.logo p{
+    color:#666;
+}
+
+input,select{
+    width:100%;
+    padding:12px;
+    margin-top:12px;
+    border:1px solid #ccc;
+    border-radius:8px;
+    font-size:16px;
+    box-sizing:border-box;
+}
+
+button{
+    width:100%;
+    margin-top:20px;
+    padding:14px;
+    background:#00695c;
+    color:white;
+    border:none;
+    border-radius:8px;
+    font-size:17px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#00897b;
+}
+
+.login{
+    text-align:center;
+    margin-top:20px;
+}
+
+.login a{
+    color:#00695c;
+    text-decoration:none;
+    font-weight:bold;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<div class="logo">
+
+<h1>MyGuru Jobs</h1>
+
+<p>Create your account</p>
+
+</div>
+
+<form id="registerForm">
+
+<select id="role" required>
+
+<option value="">Register As</option>
+
+<option value="teacher">Teacher</option>
+
+<option value="school">Employer / School</option>
+
+<option value="parent">Parent</option>
+
+</select>
+
+<input
+type="text"
+id="full_name"
+placeholder="Full Name"
+required>
+
+<input
+type="tel"
+id="mobile"
+placeholder="Mobile Number"
+required>
+
+<input
+type="email"
+id="email"
+placeholder="Email Address"
+required>
+
+<input
+type="password"
+id="password"
+placeholder="Password"
+required>
+
+<input
+type="password"
+id="confirmPassword"
+placeholder="Confirm Password"
+required>
+
+<button type="submit">
+
+Create Account
+
+</button>
+
+</form>
+
+<div class="login">
+
+Already have an account?
+
+<br><br>
+
+<a href="login.html">
+
+Login Here
+
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="js/supabase.js"></script>
+
+<script>
+    alert("Before loading supabase.js");
+</script>
+
+<script src="./js/supabase.js"></script>
+
+<script>
+    alert("After loading supabase.js");
+</script>
+
+</body>
+
+</html>
