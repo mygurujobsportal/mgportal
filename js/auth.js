@@ -1,3 +1,4 @@
+alert("auth.js loaded");
 alert("Auth Step 1");
 alert("Auth Step 2");
 document.getElementById("registerForm").addEventListener("submit", async (e) => {
