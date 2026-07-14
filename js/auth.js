@@ -1,4 +1,6 @@
 alert("auth.js loaded");
+form.addEventListener("submit", registerUser);
+alert("Event listener attached");
 document.addEventListener("DOMContentLoaded", () => {
 
     const form = document.getElementById("registerForm");
