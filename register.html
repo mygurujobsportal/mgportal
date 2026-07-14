@@ -1,107 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>MyGuru Jobs - Register</title>
+<title>MyGuru Jobs | Register</title>
 
 <link rel="stylesheet" href="css/style.css">
-
-<style>
-
-body{
-    margin:0;
-    padding:0;
-    font-family:Arial,Helvetica,sans-serif;
-    background:#f5f7fa;
-}
-
-.container{
-    width:95%;
-    max-width:500px;
-    margin:30px auto;
-}
-
-.card{
-    background:#fff;
-    border-radius:12px;
-    padding:25px;
-    box-shadow:0 4px 15px rgba(0,0,0,.15);
-}
-
-.logo{
-    text-align:center;
-}
-
-.logo h1{
-    color:#00695c;
-}
-
-.logo p{
-    color:#666;
-}
-
-input,select{
-    width:100%;
-    padding:12px;
-    margin-top:12px;
-    border:1px solid #ccc;
-    border-radius:8px;
-    font-size:16px;
-    box-sizing:border-box;
-}
-
-button{
-    width:100%;
-    margin-top:20px;
-    padding:14px;
-    background:#00695c;
-    color:white;
-    border:none;
-    border-radius:8px;
-    font-size:17px;
-    cursor:pointer;
-}
-
-button:hover{
-    background:#00897b;
-}
-
-.login{
-    text-align:center;
-    margin-top:20px;
-}
-
-.login a{
-    color:#00695c;
-    text-decoration:none;
-    font-weight:bold;
-}
-
-</style>
 
 </head>
 
 <body>
 
+<header>
+
+MyGuru Jobs Portal
+
+</header>
+
 <div class="container">
 
 <div class="card">
 
-<div class="logo">
+<h2>Create Account</h2>
 
-<h1>MyGuru Jobs</h1>
-
-<p>Create your account</p>
-
-</div>
+<p>Please fill all details.</p>
 
 <form id="registerForm">
 
+<label>Register As</label>
+
 <select id="role" required>
 
-<option value="">Register As</option>
+<option value="">Select User Type</option>
 
 <option value="teacher">Teacher</option>
 
@@ -111,29 +44,39 @@ button:hover{
 
 </select>
 
+<label>Full Name</label>
+
 <input
 type="text"
-id="full_name"
-placeholder="Full Name"
+id="fullname"
+placeholder="Enter Full Name"
 required>
+
+<label>Mobile Number</label>
 
 <input
 type="tel"
 id="mobile"
-placeholder="Mobile Number"
+placeholder="Enter Mobile Number"
 required>
+
+<label>Email</label>
 
 <input
 type="email"
 id="email"
-placeholder="Email Address"
+placeholder="Enter Email"
 required>
+
+<label>Password</label>
 
 <input
 type="password"
 id="password"
-placeholder="Password"
+placeholder="Enter Password"
 required>
+
+<label>Confirm Password</label>
 
 <input
 type="password"
@@ -149,11 +92,11 @@ Create Account
 
 </form>
 
-<div class="login">
+<br>
+
+<p style="text-align:center;">
 
 Already have an account?
-
-<br><br>
 
 <a href="login.html">
 
@@ -161,25 +104,28 @@ Login Here
 
 </a>
 
+</p>
+
+<div
+id="message"
+style="margin-top:20px;text-align:center;font-weight:bold;">
 </div>
 
 </div>
 
 </div>
+
+<footer>
+
+© 2026 MyGuru Jobs Portal
+
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script src="js/supabase.js"></script>
 
-<script>
-    alert("Before loading supabase.js");
-</script>
-
-<script src="./js/supabase.js"></script>
-
-<script>
-    alert("After loading supabase.js");
-</script>
+<script src="js/auth.js"></script>
 
 </body>
 
