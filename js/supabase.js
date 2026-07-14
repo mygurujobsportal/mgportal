@@ -1,6 +1,6 @@
 // MyGuru Central Supabase Client Engine Configuration
 const SUPABASE_URL = "https://iaaetymxqyjrgwrzrimp.supabase.co";
-const SUPABASE_KEY = "Sb_publishable_YwOJUt0JVvWlpf01eV5y6Q_t3LYbQqy"; 
+const SUPABASE_KEY = "sb_publishable_YwOJUt0JVvWlpf01eV5y6Q_t3LYbQqy"; 
 
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
