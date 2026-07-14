@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru - టీచర్ డాష్‌బోర్డ్</title>
+    <!-- CSS లింక్ -->
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <!-- సైడ్‌బార్ ಸೆಕ್ಷನ್ -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="assets/logo.png" alt="MyGuru Logo" style="max-width: 80px; height: auto; border-radius: 50%;">
+            <h2>MyGuru</h2>
+        </div>
+        <a href="teacher_dashboard.html" class="active">డాష్‌బోర్డ్</a>
+        <a href="profile.html">నా ప్రొఫైల్</a>
+        <a href="edit-profile.html">ప్రొఫైల్ ఎడిట్</a>
+        <a href="classes.html">తరగతులు</a>
+        <a href="jobs.html">జాబ్ సెర్చ్</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #e74c3c;">లాగ్ అవుట్</a>
+    </div>
+
+    <!-- మెయిన్ కంటెంట్ సెక్షన్ -->
+    <div class="content">
+        <!-- హెడర్ -->
+        <div class="header">
+            <h3 id="welcome-msg">స్వాగతం, లోడ్ అవుతోంది...</h3>
+            <div class="user-info">
+                <span id="user-role-badge" style="background: #18bc9c; color: white; padding: 5px 10px; border-radius: 20px; font-size: 12px;">Teacher</span>
+            </div>
+        </div>
+
+        <!-- సమాచార కార్డ్స్ -->
+        <div class="card-container">
+            <div class="card">
+                <h3>మొత్తం అప్లికేషన్లు</h3>
+                <p id="total-apps">0</p>
+            </div>
+            <div class="card" style="border-left-color: #3498db;">
+                <h3>మ్యాచ్ అయిన జాబ్స్</h3>
+                <p id="matched-jobs">0</p>
+            </div>
+            <div class="card" style="border-left-color: #e67e22;">
+                <h3>ప్రొఫైల్ స్టేటస్</h3>
+                <p id="profile-status" style="font-size: 18px; color: #e67e22;">Checking...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        -- మీ Supabase Credentials ఇక్కడ కాన్ఫిగర్ చేయండి
+        const SUPABASE_URL = "YOUR_SUPABASE_URL";
+        const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        -- రోల్-బేస్డ్ ప్రొటెక్షన్ చెక్ (Role Verification Logic)
+        async function checkTeacherAccess() {
+            -- 1. లాగిన్ అయిన యూజర్ ఉన్నాడో లేదో చెక్ చేయాలి
+            const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+            if (authError || !user) {
+                -- లాగిన్ అవ్వకపోతే ఇండెక్స్ పేజీకి పంపేయాలి
+                window.location.href = "index.html";
+                return;
+            }
+
+            -- 2. common_users టేబుల్ నుండి రోల్ చెక్ చేయాలి
+            const { data: userData, error: dbError } = await supabase
+                .from('common_users')
+                .select('full_name, role, status')
+                .eq('id', user.id)
+                .single();
+
+            if (dbError || !userData) {
+                alert("యూజర్ డేటా లభించలేదు!");
+                window.location.href = "index.html";
+                return;
+            }
+
+            -- 3. రోల్ 'teacher' కాకపోతే యాక్సెస్ డినై చేసి వెనక్కి పంపాలి (Redirect)
+            if (userData.role !== 'teacher') {
+                alert("Access Denied: ఇది కేవలం టీచర్లకు మాత్రమే సంబందించిన పేజీ!");
+                window.location.href = "index.html"; -- లేదా వారి రోల్ డాష్‌బోర్డ్‌కి పంపవచ్చు
+                return;
+            }
+
+            -- 4. డేటా కరెక్ట్ గా ఉంటే స్క్రీన్ పై డిస్ప్లే చేయాలి
+            document.getElementById('welcome-msg').innerText = `స్వాగతం, ${userData.full_name} గారు`;
+            document.getElementById('profile-status').innerText = userData.status.toUpperCase();
+            
+            if(userData.status === 'approved') {
+                document.getElementById('profile-status').style.color = '#18bc9c';
+            } else if(userData.status === 'rejected') {
+                document.getElementById('profile-status').style.color = '#e74c3c';
+            }
+        }
+
+        -- లాగ్ అవుట్ ఫంక్షనాలిటీ
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await supabase.auth.signOut();
+            window.location.href = "index.html";
+        });
+
+        -- పేజీ లోడ్ అవ్వగానే రన్ చేయాలి
+        window.onload = checkTeacherAccess;
+    </script>
+</body>
+</html>
