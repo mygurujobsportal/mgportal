@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru - పేరెంట్ డాష్‌బోర్డ్</title>
+    <!-- CSS లింక్ (రూట్ ఫోల్డర్ లోని css కి వెళ్ళడానికి ../ వాడాము) -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <!-- సైడ్‌బార్ సెక్షన్ -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 80px; height: auto; border-radius: 50%;">
+            <h2>MyGuru</h2>
+        </div>
+        <a href="parent_dashboard.html" class="active">డాష్‌బోర్డ్</a>
+        <a href="parent-profile.html">నా ప్రొఫైల్</a>
+        <a href="find-tutors.html">ట్యూటర్ల సెర్చ్</a>
+        <a href="my-requirements.html">నా రిక్వైర్మెంట్స్</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #e74c3c;">లాగ్ అవుట్</a>
+    </div>
+
+    <!-- మెయిన్ కంటెంట్ సెక్షన్ -->
+    <div class="content">
+        <!-- హెడర్ -->
+        <div class="header">
+            <h3 id="welcome-msg">స్వాగతం, లోడ్ అవుతోంది...</h3>
+            <div class="user-info">
+                <span id="user-role-badge" style="background: #e67e22; color: white; padding: 5px 10px; border-radius: 20px; font-size: 12px;">Parent / Client</span>
+            </div>
+        </div>
+
+        <!-- సమాచార కార్డ్స్ -->
+        <div class="card-container">
+            <div class="card" style="border-left-color: #e67e22;">
+                <h3>పిల్లల సంఖ్య</h3>
+                <p id="children-count">0</p>
+            </div>
+            <div class="card" style="border-left-color: #9b59b6;">
+                <h3>కనెక్ట్ అయిన ట్యూటర్లు</h3>
+                <p id="connected-tutors">0</p>
+            </div>
+            <div class="card" style="border-left-color: #34495e;">
+                <h3>బడ్జెట్ శ్రేణి (PM)</h3>
+                <p id="budget-range" style="font-size: 18px; color: #2ecc71;">Checking...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- సెషన్ వాలిడేషన్ స్క్రిప్ట్ -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        // రోల్-బేస్డ్ ప్రొటెక్షన్ చెక్ (Role Verification & Security Logic)
+        async function verifyParentGate() {
+            // auth.js లోని ఫంక్షన్ ద్వారా లైవ్ సెషన్ ని క్రాస్ వెరిఫై చేస్తున్నాం
+            const activeUser = await checkLiveUserSession('Parent'); 
+
+            if (!activeUser) return; // సెషన్ లేకపోతే auth.js ఆటోమేటిక్‌గా ఇండెక్స్ కి పంపేస్తుంది.
+
+            // స్క్రీన్ పై సమాచారాన్ని చూపించడం
+            const profileData = activeUser.profileData || {};
+            
+            // ఒకవేళ ప్రొఫైల్ టేబుల్ లో పేరు ఉంటే అది, లేదంటే సాధారణ స్వాగతం
+            document.getElementById('welcome-msg').innerText = `స్వాగతం, పేరెంట్ క్లయింట్ గారు`;
+            
+            // డేటాబేస్ లోని వివరాలను కార్డ్స్ లో డిస్ప్లే చేయడం
+            document.getElementById('children-count').innerText = profileData.children_count || '1';
+            document.getElementById('budget-range').innerText = profileData.budget_range_text || 'Not Set';
+        }
+
+        // లాగ్ అవుట్ యాక్షన్ కనెక్ట్ చేయడం
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        // పేజీ లోడ్ అవ్వగానే రన్ చేయాలి
+        window.onload = verifyParentGate;
+    </script>
+</body>
+</html>
