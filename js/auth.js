@@ -1,8 +1,3 @@
-/* ==========================================
-   MyGuru Jobs Portal
-   Authentication Script
-========================================== */
-
 document.addEventListener("DOMContentLoaded", () => {
 
     const form = document.getElementById("registerForm");
@@ -13,11 +8,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 
-async function registerUser(e){
+async function registerUser(e) {
 
     e.preventDefault();
 
-    const role = document.getElementById("role").value.trim();
+    const role = document.getElementById("role").value;
     const fullname = document.getElementById("fullname").value.trim();
     const mobile = document.getElementById("mobile").value.trim();
     const email = document.getElementById("email").value.trim();
@@ -26,132 +21,118 @@ async function registerUser(e){
 
     const message = document.getElementById("message");
 
-    message.innerHTML="";
-    message.style.color="red";
+    message.style.color = "red";
+    message.innerHTML = "";
 
-    if(role===""){
-        message.innerHTML="Please select user type.";
+    if (password !== confirmPassword) {
+
+        message.innerHTML = "Passwords do not match.";
+
         return;
+
     }
 
-    if(password!==confirmPassword){
-        message.innerHTML="Passwords do not match.";
-        return;
-    }
+    try {
 
-    try{
+        const { data, error } = await window.supabaseClient.auth.signUp({
 
-        const {data,error}=await window.supabaseClient.auth.signUp({
-
-            email:email,
-            password:password
+            email: email,
+            password: password
 
         });
 
-        if(error){
+        if (error) {
 
-            message.innerHTML=error.message;
+            message.innerHTML = error.message;
+
             return;
 
         }
 
-        if(!data.user){
+        const auth_id = data.user.id;
 
-            message.innerHTML="Registration failed.";
-            return;
+        let table = "";
+        let profile = {};
 
-        }
+        if (role === "teacher") {
 
-        const auth_id=data.user.id;
+            table = "teacher_profiles";
 
-        let table="";
-        let profile={};
+            profile = {
 
-        switch(role){
+                auth_id: auth_id,
+                full_name: fullname,
+                mobile: mobile,
+                email: email
 
-            case "teacher":
-
-                table="teacher_profiles";
-
-                profile={
-
-                    auth_id:auth_id,
-                    full_name:fullname,
-                    mobile:mobile,
-                    email:email
-
-                };
-
-            break;
-
-            case "school":
-
-                table="school_profiles";
-
-                profile={
-
-                    auth_id:auth_id,
-                    school_name:fullname,
-                    principal_name:"",
-                    mobile:mobile,
-                    email:email
-
-                };
-
-            break;
-
-            case "parent":
-
-                table="parent_profiles";
-
-                profile={
-
-                    auth_id:auth_id,
-                    parent_name:fullname,
-                    mobile:mobile,
-                    email:email
-
-                };
-
-            break;
+            };
 
         }
 
-        const {error:profileError}=await window.supabaseClient
+        else if (role === "school") {
+
+            table = "school_profiles";
+
+            profile = {
+
+                auth_id: auth_id,
+                school_name: fullname,
+                principal_name: "",
+                mobile: mobile,
+                email: email
+
+            };
+
+        }
+
+        else {
+
+            table = "parent_profiles";
+
+            profile = {
+
+                auth_id: auth_id,
+                parent_name: fullname,
+                mobile: mobile,
+                email: email
+
+            };
+
+        }
+
+        const { error: profileError } = await window.supabaseClient
 
             .from(table)
 
             .insert(profile);
 
-        if(profileError){
+        if (profileError) {
 
-    console.log(profileError);
+            message.innerHTML = profileError.message;
 
-    alert(JSON.stringify(profileError, null, 2));
+            console.log(profileError);
 
-    message.innerHTML=profileError.message;
-
-    return;
-
-}
+            return;
 
         }
 
-        message.style.color="green";
+        message.style.color = "green";
 
-        message.innerHTML="Registration Successful! Please verify your email.";
+        message.innerHTML = "Registration Successful.";
 
-        setTimeout(()=>{
+        setTimeout(() => {
 
-            window.location.href="login.html";
+            window.location.href = "login.html";
 
-        },2000);
+        }, 1500);
 
     }
 
-    catch(err){
+    catch (err) {
 
-        message.innerHTML=err.message;
+        console.log(err);
+
+        message.innerHTML = err.message;
 
     }
 
