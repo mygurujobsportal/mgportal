@@ -125,8 +125,15 @@ async function registerUser(e){
 
         if(profileError){
 
-            message.innerHTML=profileError.message;
-            return;
+    console.log(profileError);
+
+    alert(JSON.stringify(profileError, null, 2));
+
+    message.innerHTML=profileError.message;
+
+    return;
+
+}
 
         }
 
