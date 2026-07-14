@@ -1,8 +1,8 @@
-// MyGuru Secure Session Validation & Dynamic Router Framework
+// MyGuru Secure Session Validation & Routing Engine
 
 /**
- * 🔄 Active Token Session Validator
- * బ్రౌజర్ స్టోరేజ్ మరియు సుపాబేస్ సర్వర్ టోకెన్ రెండింటినీ క్రాస్-చెక్ చేస్తుంది.
+ * 🔄 Active User Session Verification
+ * బ్రౌజర్ లోకల్ డేటాను మరియు సుపాబేస్ నెట్‌వర్క్ ఆథ్ సెషన్ ని క్రాస్-వెరిఫై చేస్తుంది.
  */
 async function checkLiveUserSession(requiredRole) {
     const cachedUser = localStorage.getItem('myguru_user');
@@ -14,7 +14,7 @@ async function checkLiveUserSession(requiredRole) {
     const user = JSON.parse(cachedUser);
 
     try {
-        // Validate actual authentication token existence from network
+        // Validate native session from supabase server
         const { data: { session }, error } = await _supabase.auth.getSession();
         
         if (error || !session) {
@@ -23,38 +23,39 @@ async function checkLiveUserSession(requiredRole) {
             return null;
         }
 
-        // Role-Based Boundary Check Protection Layer
-        if (requiredRole && user.roleType !== requiredRole) {
-            alert("⚠️ Access Node Denied: Unauthorized Classification!");
+        // Role Role Matching Barrier
+        if (requiredRole && user.role !== requiredRole) {
+            alert("⚠️ Unauthorized Access Detected!");
             window.location.href = "index.html";
             return null;
         }
 
         return user;
     } catch (e) {
-        console.error("Session Verification Outage:", e);
+        console.error("Auth Session Outage:", e);
         window.location.href = "index.html";
         return null;
     }
 }
 
 /**
- * 🚪 Dynamic Destination Landing Router
+ * 🚪 Landing Destination Router
  */
-function routeUserToDashboard(roleType) {
-    if (roleType === 'Teacher') {
+function routeUserToDashboard(role) {
+    const lowerRole = role.toLowerCase();
+    if (lowerRole === 'teacher') {
         window.location.href = 'teacher_dashboard.html';
-    } else if (roleType === 'Employer') {
+    } else if (lowerRole === 'employer' || lowerRole === 'school') {
         window.location.href = 'employer_dashboard.html';
-    } else if (roleType === 'Parent') {
+    } else if (lowerRole === 'parent') {
         window.location.href = 'parent_dashboard.html';
-    } else if (roleType === 'Admin') {
+    } else if (lowerRole === 'admin') {
         window.location.href = 'admin_dashboard.html';
     }
 }
 
 /**
- * 🛑 Logout Router Execution Call
+ * 🛑 Sign Out Session Closure
  */
 async function logoutSessionRouter() {
     try {
