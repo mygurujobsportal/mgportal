@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function registerUser(e) {
+    alert("Register button clicked");
 
     e.preventDefault();
 
