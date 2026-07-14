@@ -1,94 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>MyGuru Jobs | Register</title>
-
-<link rel="stylesheet" href="css/style.css">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Network - Account Creation</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --slate-900: #0f172a; --slate-800: #1e293b; --slate-700: #334155;
+            --emerald: #10b981; --blurple: #3b82f6;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: linear-gradient(-45deg, #0f172a, #111827, #1e1b4b, #0f172a); background-size: 400% 400%; animation: gradientBg 15s ease infinite; min-height: 100vh; display: flex; align-items: center; justify-content: center; color: #f1f5f9; padding: 20px; }
+        @keyframes gradientBg { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        
+        .reg-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; width: 100%; max-width: 480px; padding: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); text-align: center; }
+        .title { font-size: 26px; font-weight: 900; margin-bottom: 5px; }
+        .title span { background: linear-gradient(135deg, var(--emerald), var(--blurple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { font-size: 13px; color: #94a3b8; margin-bottom: 25px; }
+        
+        .form-group { text-align: left; margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 12px; font-weight: bold; color: #cbd5e1; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+        .input-ctrl { width: 100%; padding: 13px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--slate-700); color: white; border-radius: 10px; font-size: 15px; outline: none; transition: 0.3s; }
+        .input-ctrl:focus { border-color: var(--emerald); box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
+        
+        .btn-reg { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--emerald), var(--blurple)); color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-reg:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(16, 185, 129, 0.3); }
+        .link-footer { margin-top: 20px; font-size: 14px; color: #94a3b8; }
+        .link-footer a { color: var(--emerald); text-decoration: none; font-weight: bold; }
+    </style>
 </head>
-
 <body>
 
-<header>
-MyGuru Jobs Portal
-</header>
+<div class="reg-card">
+    <h2 class="title">Join <span>MyGuru Network</span></h2>
+    <p class="subtitle">Secure Registration Engine System Enrolment</p>
 
-<div class="container">
+    <div class="form-group">
+        <label>Profile Directory Node</label>
+        <select id="ddlRegRole" class="input-ctrl" onchange="adjustFormFieldsDynamicLabel()">
+            <option value="teachers_reg">👨‍🏫 Core Subject Teacher / Faculty</option>
+            <option value="schools_reg">🏢 School Campus / Employer Entity</option>
+            <option value="parents_reg">🏡 Private Tuition Parent Client</option>
+        </select>
+    </div>
 
-<div class="card">
+    <div class="form-group">
+        <label id="lblDynamicName">Full Name of Teacher</label>
+        <input type="text" id="txtRegName" class="input-ctrl" placeholder="Enter valid record name">
+    </div>
 
-<h2>Create Account</h2>
+    <div class="form-group">
+        <label>Mobile Reference Identifier</label>
+        <input type="tel" id="txtRegMobile" class="input-ctrl" placeholder="10 Digit Sequence Only" maxlength="10">
+    </div>
 
-<form id="registerForm">
+    <div class="form-group">
+        <label>Email Link Identity</label>
+        <input type="email" id="txtRegEmail" class="input-ctrl" placeholder="name@domain.com">
+    </div>
 
-<select id="role" required>
-<option value="">Select User Type</option>
-<option value="teacher">Teacher</option>
-<option value="school">Employer / School</option>
-<option value="parent">Parent</option>
-</select>
+    <div class="form-group">
+        <label>Construct Login Passkey</label>
+        <input type="password" id="txtRegPassword" class="input-ctrl" placeholder="Minimum 6 characters block">
+    </div>
 
-<input
-type="text"
-id="fullname"
-placeholder="Full Name"
-required>
-
-<input
-type="tel"
-id="mobile"
-placeholder="Mobile Number"
-required>
-
-<input
-type="email"
-id="email"
-placeholder="Email"
-required>
-
-<input
-type="password"
-id="password"
-placeholder="Password"
-required>
-
-<input
-type="password"
-id="confirmPassword"
-placeholder="Confirm Password"
-required>
-
-<div
-id="message"
-style="margin:15px 0;color:red;font-weight:bold;">
+    <button class="btn-reg" onclick="executeSecureSignUpEngine()">Enroll Matrix Profile</button>
+    
+    <div class="link-footer">
+        Already indexed? <a href="index.html">Sign In Gate</a>
+    </div>
 </div>
 
-<button type="submit">
-
-Create Account
-
-</button>
-
-</form>
-
-<p style="text-align:center;margin-top:20px;">
-Already have an account?
-<a href="login.html">Login</a>
-</p>
-
-</div>
-
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+<!-- 🔴 SCRIPTS INJECTED -->
 <script src="js/supabase.js"></script>
+<script>
+    function adjustFormFieldsDynamicLabel() {
+        const selector = document.getElementById('ddlRegRole').value;
+        const nameLabel = document.getElementById('lblDynamicName');
+        const nameInput = document.getElementById('txtRegName');
 
-<script src="js/auth.js"></script>
+        if(selector === 'schools_reg') { nameLabel.innerText = "Official Registered Institution Name"; nameInput.placeholder = "e.g., MyGuru High Campus"; } 
+        else if(selector === 'parents_reg') { nameLabel.innerText = "Parent / Guardian Name"; nameInput.placeholder = "e.g., Mrs. Vijayalaxmi"; } 
+        else { nameLabel.innerText = "Full Name of Teacher"; nameInput.placeholder = "Enter valid record name"; }
+    }
 
+    async function executeSecureSignUpEngine() {
+        const table = document.getElementById('ddlRegRole').value;
+        const nameVal = document.getElementById('txtRegName').value.trim();
+        const mobile = document.getElementById('txtRegMobile').value.trim();
+        const email = document.getElementById('txtRegEmail').value.trim();
+        const password = document.getElementById('txtRegPassword').value;
+
+        if(!nameVal || !mobile || !email || !password) { alert("⚠️ All authentication nodes required!"); return; }
+        if(password.length < 6) { alert("⚠️ Passkey must be minimum 6 character bounds."); return; }
+
+        try {
+            // Execution Step A: Register Account to Supabase Central Auth Management Desk
+            const { data: authResult, error: authError } = await _supabase.auth.signUp({
+                email: email,
+                password: password
+            });
+
+            if(authError) throw authError;
+
+            // Execution Step B: Map tracking variables to actual database metadata layout grid
+            let dynamicDataPacket = { mobile: mobile, email: email, password: password, status: "Pending", subscription_status: "Free" };
+            
+            if(table === 'schools_reg') dynamicDataPacket.school_name = nameVal;
+            else if(table === 'parents_reg') dynamicDataPacket.parent_name = nameVal;
+            else dynamicDataPacket.name = nameVal;
+
+            const { error: tableError } = await _supabase.from(table).insert([dynamicDataPacket]);
+            if(tableError) throw tableError;
+
+            alert("🎉 Profile Enrolled Successfully into Database Directory System!");
+            window.location.href = "index.html";
+        } catch(e) { alert("Registry Blockage: " + e.message); }
+    }
+</script>
 </body>
 </html>
