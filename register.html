@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 
 <meta charset="UTF-8">
@@ -15,9 +14,7 @@
 <body>
 
 <header>
-
 MyGuru Jobs Portal
-
 </header>
 
 <div class="container">
@@ -26,63 +23,49 @@ MyGuru Jobs Portal
 
 <h2>Create Account</h2>
 
-<p>Please fill all details.</p>
-
 <form id="registerForm">
 
-<label>Register As</label>
-
 <select id="role" required>
-
 <option value="">Select User Type</option>
-
 <option value="teacher">Teacher</option>
-
 <option value="school">Employer / School</option>
-
 <option value="parent">Parent</option>
-
 </select>
-
-<label>Full Name</label>
 
 <input
 type="text"
 id="fullname"
-placeholder="Enter Full Name"
+placeholder="Full Name"
 required>
-
-<label>Mobile Number</label>
 
 <input
 type="tel"
 id="mobile"
-placeholder="Enter Mobile Number"
+placeholder="Mobile Number"
 required>
-
-<label>Email</label>
 
 <input
 type="email"
 id="email"
-placeholder="Enter Email"
+placeholder="Email"
 required>
-
-<label>Password</label>
 
 <input
 type="password"
 id="password"
-placeholder="Enter Password"
+placeholder="Password"
 required>
-
-<label>Confirm Password</label>
 
 <input
 type="password"
 id="confirmPassword"
 placeholder="Confirm Password"
 required>
+
+<div
+id="message"
+style="margin:15px 0;color:red;font-weight:bold;">
+</div>
 
 <button type="submit">
 
@@ -92,34 +75,14 @@ Create Account
 
 </form>
 
-<br>
-
-<p style="text-align:center;">
-
+<p style="text-align:center;margin-top:20px;">
 Already have an account?
-
-<a href="login.html">
-
-Login Here
-
-</a>
-
+<a href="login.html">Login</a>
 </p>
 
-<div
-id="message"
-style="margin-top:20px;text-align:center;font-weight:bold;">
 </div>
 
 </div>
-
-</div>
-
-<footer>
-
-© 2026 MyGuru Jobs Portal
-
-</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -128,5 +91,4 @@ style="margin-top:20px;text-align:center;font-weight:bold;">
 <script src="js/auth.js"></script>
 
 </body>
-
 </html>
