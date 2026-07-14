@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru - ఎంప్లాయర్ డాష్‌బోర్డ్</title>
+    <!-- CSS లింక్ (రూట్ ఫోల్డర్ లోని css కి వెళ్ళడానికి ../ వాడాము) -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <!-- సైడ్‌బార్ సెక్షన్ -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 80px; height: auto; border-radius: 50%;">
+            <h2>MyGuru</h2>
+        </div>
+        <a href="employer_dashboard.html" class="active">డాష్‌బోర్డ్</a>
+        <a href="institution-profile.html">ఇన్స్టిట్యూషన్ ప్రొఫైల్</a>
+        <a href="post-job.html">కొత్త జాబ్ పోస్ట్</a>
+        <a href="manage-jobs.html">జాబ్స్ మేనేజ్మెంట్</a>
+        <a href="applicants.html">అప్లికేషన్లు</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #e74c3c;">లాగ్ అవుట్</a>
+    </div>
+
+    <!-- మెయిన్ కంటెంట్ సెక్షన్ -->
+    <div class="content">
+        <!-- హెడర్ -->
+        <div class="header">
+            <h3 id="welcome-msg">స్వాగతం, లోడ్ అవుతోంది...</h3>
+            <div class="user-info">
+                <span id="user-role-badge" style="background: #3498db; color: white; padding: 5px 10px; border-radius: 20px; font-size: 12px;">Employer / School</span>
+            </div>
+        </div>
+
+        <!-- సమాచార కార్డ్స్ -->
+        <div class="card-container">
+            <div class="card" style="border-left-color: #3498db;">
+                <h3>పోస్ట్ చేసిన జాబ్స్</h3>
+                <p id="total-posted-jobs">0</p>
+            </div>
+            <div class="card" style="border-left-color: #2ecc71;">
+                <h3>వచ్చిన అప్లికేషన్లు</h3>
+                <p id="total-applicants">0</p>
+            </div>
+            <div class="card" style="border-left-color: #e67e22;">
+                <h3>వెరిఫికేషన్ స్టేటస్</h3>
+                <p id="verification-status" style="font-size: 18px; color: #e67e22;">Checking...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- సెషన్ వాలిడేషన్ స్క్రిప్ట్ -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        // రోల్-బేస్డ్ ప్రొటెక్షన్ చెక్ (Role Verification & Security Logic)
+        async function verifyEmployerGate() {
+            // auth.js లోని ఫంక్షన్ ద్వారా లైవ్ సెషన్ ని క్రాస్ వెరిఫై చేస్తున్నాం
+            const activeUser = await checkLiveUserSession('School'); 
+            // గమనిక: డ్రాప్‌డౌన్/లోకల్ స్టోరేజ్ లో 'School' లేదా 'Employer' ఏది ఉన్నా మ్యాచ్ అయ్యేలా auth.js లో మార్చాము.
+
+            if (!activeUser) return; // సెషన్ లేకపోతే auth.js ఆటోమేటిక్‌గా ఇండెక్స్ కి పంపేస్తుంది.
+
+            // స్క్రీన్ పై ఇన్స్టిట్యూషన్ పేరు మరియు డేటాబేస్ వెరిఫికేషన్ స్టేటస్ చూపించడం
+            const profileData = activeUser.profileData || {};
+            document.getElementById('welcome-msg').innerText = `స్వాగతం, ${profileData.institution_name || 'క్యాంపస్ ఓనర్'} గారు`;
+            
+            // వెరిఫికేషన్ స్టేటస్ డిస్ప్లే
+            const isVerified = profileData.verified_boolean;
+            const statusBadge = document.getElementById('verification-status');
+            
+            if (isVerified) {
+                statusBadge.innerText = "VERIFIED ✓";
+                statusBadge.style.color = '#2ecc71';
+            } else {
+                statusBadge.innerText = "PENDING APPROVAL";
+                statusBadge.style.color = '#e67e22';
+            }
+
+            // కావాలనుకుంటే ఇక్కడ నుండి మీ 'employer_profiles' టేబుల్ బేస్డ్ గా మిగతా కౌంటర్స్ ని క్వెరీ చేసుకోవచ్చు.
+        }
+
+        // లాగ్ అవుట్ యాక్షన్ కనెక్ట్ చేయడం
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        // పేజీ లోడ్ అవ్వగానే రన్ చేయాలి
+        window.onload = verifyEmployerGate;
+    </script>
+</body>
+</html>
