@@ -7,7 +7,7 @@
 async function checkLiveUserSession(requiredRole) {
     const cachedUser = localStorage.getItem('myguru_user');
     if (!cachedUser) {
-        window.location.href = "index.html";
+        window.location.href = "../index.html"; // ఒకవేళ ఫోల్డర్ లోపల ఉంటే వెనక్కి పంపడానికి
         return null;
     }
     
@@ -19,38 +19,42 @@ async function checkLiveUserSession(requiredRole) {
         
         if (error || !session) {
             localStorage.removeItem('myguru_user');
-            window.location.href = "index.html";
+            window.location.href = "../index.html";
             return null;
         }
 
-        // Role Role Matching Barrier
-        if (requiredRole && user.role !== requiredRole) {
+        // Role Matching Barrier (toLowerCase వాడటం వల్ల కేస్-మిస్మ్యాచ్ సమస్య రాదు)
+        if (requiredRole && user.role.toLowerCase() !== requiredRole.toLowerCase()) {
             alert("⚠️ Unauthorized Access Detected!");
-            window.location.href = "index.html";
+            window.location.href = "../index.html";
             return null;
         }
 
         return user;
     } catch (e) {
         console.error("Auth Session Outage:", e);
-        window.location.href = "index.html";
+        window.location.href = "../index.html";
         return null;
     }
 }
 
 /**
  * 🚪 Landing Destination Router
+ * ఫోల్డర్ స్ట్రక్చర్ ప్రకారం పాత్‌లను ఇక్కడ సరిచేశాం 🛠️
  */
 function routeUserToDashboard(role) {
     const lowerRole = role.toLowerCase();
+    
     if (lowerRole === 'teacher') {
-        window.location.href = 'teacher_dashboard.html';
+        window.location.href = 'teacher/teacher_dashboard.html';
     } else if (lowerRole === 'employer' || lowerRole === 'school') {
-        window.location.href = 'employer_dashboard.html';
+        window.location.href = 'employer/employer_dashboard.html'; // మీ ఎంప్లాయర్ ఫోల్డర్ పాత్
     } else if (lowerRole === 'parent') {
-        window.location.href = 'parent_dashboard.html';
+        window.location.href = 'parent/parent_dashboard.html';
     } else if (lowerRole === 'admin') {
-        window.location.href = 'admin_dashboard.html';
+        window.location.href = 'admin/admin_dashboard.html';
+    } else {
+        window.location.href = 'index.html';
     }
 }
 
@@ -64,5 +68,5 @@ async function logoutSessionRouter() {
         console.error("SignOut Exception:", e);
     }
     localStorage.removeItem('myguru_user');
-    window.location.href = "index.html";
+    window.location.href = "../index.html"; // రూట్ లాగిన్ పేజీకి రీడైరెక్ట్
 }
