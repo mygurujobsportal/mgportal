@@ -3,49 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyGuru Terminal - Secure Portal Access</title>
+    <title>MyGuru Terminal - Secure Access Gateway</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --slate-900: #0f172a; --slate-800: #1e293b; --slate-700: #334155;
-            --emerald: #10b981; --blurple: #3b82f6; --purple: #8b5cf6;
-        }
+        :root { --slate-900: #0f172a; --slate-800: #1e293b; --slate-700: #334155; --blurple: #3b82f6; --purple: #8b5cf6; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
         body { background: linear-gradient(-45deg, #0f172a, #111827, #1e1b4b, #0f172a); background-size: 400% 400%; animation: gradientBg 15s ease infinite; min-height: 100vh; display: flex; align-items: center; justify-content: center; color: #f1f5f9; padding: 20px; }
         @keyframes gradientBg { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        
         .login-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; width: 100%; max-width: 450px; padding: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); text-align: center; }
-        .logo-box img { height: 60px; width: auto; border-radius: 12px; margin-bottom: 15px; background: rgba(255,255,255,0.02); padding: 5px; border: 1px solid rgba(255,255,255,0.1); }
-        .title { font-size: 26px; font-weight: 900; letter-spacing: 0.5px; margin-bottom: 5px; }
+        .title { font-size: 26px; font-weight: 900; margin-bottom: 5px; }
         .title span { background: linear-gradient(135deg, var(--blurple), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .subtitle { font-size: 13px; color: #94a3b8; margin-bottom: 30px; }
-        
         .form-group { text-align: left; margin-bottom: 20px; }
-        .form-group label { display: block; font-size: 12px; font-weight: bold; color: #cbd5e1; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
-        .input-ctrl { width: 100%; padding: 14px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--slate-700); color: white; border-radius: 10px; font-size: 15px; outline: none; transition: 0.3s; }
-        .input-ctrl:focus { border-color: var(--blurple); box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
-        
+        .form-group label { display: block; font-size: 12px; font-weight: bold; color: #cbd5e1; text-transform: uppercase; margin-bottom: 8px; }
+        .input-ctrl { width: 100%; padding: 14px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--slate-700); color: white; border-radius: 10px; font-size: 15px; outline: none; }
+        .input-ctrl:focus { border-color: var(--blurple); }
         .btn-submit { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--blurple), var(--purple)); color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
         .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(139, 92, 246, 0.3); }
-        
         .link-footer { margin-top: 25px; font-size: 14px; color: #94a3b8; }
         .link-footer a { color: var(--blurple); text-decoration: none; font-weight: bold; }
-        .link-footer a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
 
 <div class="login-card">
-    <div class="logo-box"><img src="myguru_logo.jpeg" alt="MyGuru" onerror="this.src='https://via.placeholder.com/60?text=MG'"></div>
     <h2 class="title">MyGuru <span>Terminal</span></h2>
-    <p class="subtitle">Supabase Managed Security Gate Login</p>
+    <p style="color: #94a3b8; font-size: 13px; margin-bottom: 30px;">Universal Workspace Identity Gate</p>
 
     <div class="form-group">
-        <label>Account Directory Node</label>
-        <select id="ddlRoleSelector" class="input-ctrl">
-            <option value="teachers_reg">👨‍🏫 Professional Core Teacher</option>
-            <option value="schools_reg">🏢 Institutional School Board</option>
-            <option value="parents_reg">🏡 Home Tuition Parent Client</option>
+        <label>Account Identity Segment</label>
+        <select id="ddlRole" class="input-ctrl">
+            <option value="Teacher">👨‍🏫 Professional Subject Teacher</option>
+            <option value="School">🏢 School Campus / Employer Owner</option>
+            <option value="Parent">🏡 Private Tuition Parent Client</option>
         </select>
     </div>
 
@@ -59,60 +48,68 @@
         <input type="password" id="txtPassword" class="input-ctrl" placeholder="••••••••••••">
     </div>
 
-    <button class="btn-submit" onclick="executeSecureLoginGate()">Authenticate Profile</button>
+    <button class="btn-submit" onclick="executeSecureLoginGate()">Verify Authentication</button>
     
     <div class="link-footer">
-        Don't have a node account? <a href="register.html">Register Here</a>
+        Don't have an account? <a href="register.html">Register Here</a>
     </div>
 </div>
 
-<!-- 🔴 CRITICAL SCRIPTS ORDER RETAINED -->
 <script src="js/supabase.js"></script>
 <script src="js/auth.js"></script>
 <script>
     async function executeSecureLoginGate() {
-        const table = document.getElementById('ddlRoleSelector').value;
+        const selectedRole = document.getElementById('ddlRole').value;
         const email = document.getElementById('txtEmail').value.trim();
         const password = document.getElementById('txtPassword').value;
 
-        if(!email || !password) { alert("⚠️ Authentication credentials required!"); return; }
+        if(!email || !password) { alert("⚠️ Email and password required!"); return; }
 
-        // Master Dashboard Bypass for Owner Command Control Desk
+        // Owner Bypass Command Console For Admin Desk
         if(email === "admin@myguru.com" && password === "Vishnu@MyGuru") {
-            const adminSession = { name: "Master Admin Vishnu", roleType: "Admin" };
+            const adminSession = { name: "Master Admin Vishnu", role: "Admin", roleType: "Admin" };
             localStorage.setItem('myguru_user', JSON.stringify(adminSession));
             routeUserToDashboard("Admin");
             return;
         }
 
         try {
-            // Trigger Supabase Native Authentication API Call
+            // Step 1: Trigger Native Supabase Auth Sign In
             const { data: authData, error: authError } = await _supabase.auth.signInWithPassword({
-                email: email,
-                password: password
+                email: email, password: password
             });
-
             if(authError) throw authError;
 
-            // Retrieve profile mapping payload rows from target metadata table
-            const { data: profile, error: profError } = await _supabase
-                .from(table)
+            const userId = authData.user.id;
+
+            // Step 2: Cross-check role alignment from public.common_users
+            const { data: coreUser, error: coreErr } = await _supabase
+                .from('common_users')
                 .select('*')
-                .eq('email', email)
+                .eq('id', userId)
                 .maybeSingle();
 
-            if(profError || !profile) { alert("❌ Profile record matrix entry row not found."); return; }
+            if(coreErr || !coreUser) { alert("❌ Central user record node missing."); return; }
+            if(coreUser.role.toLowerCase() !== selectedRole.toLowerCase()) { alert("⚠️ Account classification role mismatch!"); return; }
 
-            let roleLabel = "Teacher";
-            if(table === "schools_reg") roleLabel = "Employer";
-            if(table === "parents_reg") roleLabel = "Parent";
+            // Step 3: Fetch custom payload attributes from specific profile sheets
+            let targetTable = selectedRole === 'Teacher' ? 'teacher_profiles' : (selectedRole === 'School' ? 'school_profiles' : 'parent_profiles');
+            const { data: profile, error: profErr } = await _supabase.from(targetTable).select('*').eq('id', userId).maybeSingle();
 
-            const userPacket = { ...profile, roleTable: table, roleType: roleLabel, auth_id: authData.user.id };
+            const userPacket = {
+                id: userId,
+                role: selectedRole,
+                roleType: selectedRole,
+                subscription: coreUser.subscription,
+                account_status: coreUser.account_status,
+                profileData: profile || {}
+            };
+
             localStorage.setItem('myguru_user', JSON.stringify(userPacket));
-            
-            alert("✓ Identity Signature Matches! Routing Terminal.");
-            routeUserToDashboard(roleLabel);
-        } catch(e) { alert("Auth Error: " + e.message); }
+            alert(`✓ Handshake Verified. Welcome back!`);
+            routeUserToDashboard(selectedRole);
+
+        } catch(e) { alert("Access Denied: " + e.message); }
     }
 </script>
 </body>
