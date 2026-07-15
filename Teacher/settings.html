@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru - సెట్టింగ్స్</title>
+    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .settings-container { background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 12px; max-width: 500px; margin-top: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 13px; font-weight: bold; color: #cbd5e1; text-transform: uppercase; margin-bottom: 8px; }
+        .input-ctrl { width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: white; border-radius: 8px; font-size: 15px; outline: none; }
+        .input-ctrl:focus { border-color: #3b82f6; }
+        .btn-update { width: 100%; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-update:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4); }
+    </style>
+</head>
+<body>
+
+    <!-- సైడ్‌బార్ సెక్షన్ -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 80px; height: auto; border-radius: 50%;">
+            <h2>MyGuru</h2>
+        </div>
+        <a href="teacher_dashboard.html">డాష్‌బోర్డ్</a>
+        <a href="teacher_profile.html">నా ప్రొఫైల్</a>
+        <a href="jobs.html">తరగతులు / జాబ్స్</a>
+        <a href="applications.html">అప్లికేషన్లు</a>
+        <a href="settings.html" class="active">సెట్టింగ్స్</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #e74c3c;">లాగ్ అవుట్</a>
+    </div>
+
+    <!-- மெయిన్ కంటెంట్ సెక్షన్ -->
+    <div class="content">
+        <div class="header">
+            <h3>ఖాతా భద్రతా సెట్టింగ్స్</h3>
+            <span class="tag" style="background: #e74c3c;">Security Gate</span>
+        </div>
+
+        <div class="settings-container">
+            <form id="settings-form" onsubmit="updateSecurePassword(event)">
+                <div class="form-group">
+                    <label>కొత్త పాస్‌వర్డ్ (New Password)</label>
+                    <input type="password" id="txtNewPassword" class="input-ctrl" placeholder="••••••••" required minlength="6">
+                </div>
+
+                <div class="form-group">
+                    <label>పాస్‌వర్డ్ నిర్ధారించండి (Confirm Password)</label>
+                    <input type="password" id="txtConfirmPassword" class="input-ctrl" placeholder="••••••••" required minlength="6">
+                </div>
+
+                <button type="submit" class="btn-update">పాస్‌వర్డ్ అప్‌డేట్ చేయి</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- స్క్రిప్ట్స్ లింకింగ్ ఆర్డర్ -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        async function initSettingsPage() {
+            // auth.js ద్వారా సెషన్ వెరిఫికేషన్
+            const session = await checkLiveUserSession('Teacher');
+            if (!session) return;
+        }
+
+        // 🔐 Supabase Auth వాడి పాస్‌వర్డ్ అప్‌డేట్ చేసే లాజిక్
+        async function updateSecurePassword(event) {
+            event.preventDefault();
+
+            const newPassword = document.getElementById('txtNewPassword').value;
+            const confirmPassword = document.getElementById('txtConfirmPassword').value;
+
+            // రెండు పాస్‌వర్డ్‌లు మ్యాచ్ అయ్యాయో లేదో చెక్ చేయడం
+            if (newPassword !== confirmPassword) {
+                alert("⚠️ పాస్‌వర్డ్‌లు ఒకదానికొకటి మ్యాచ్ అవ్వడం లేదు!");
+                return;
+            }
+
+            try {
+                // Supabase Native User Update Command
+                const { error } = await _supabase.auth.updateUser({
+                    password: newPassword
+                });
+
+                if (error) throw error;
+
+                alert("✓ మీ పాస్‌వర్డ్ విజయవంతంగా మార్చబడింది!");
+                document.getElementById('settings-form').reset();
+
+            } catch (err) {
+                alert("పాస్‌వర్డ్ మార్చడంలో లోపం: " + err.message);
+            }
+        }
+
+        // లాగ్ అవుట్ యాక్షన్
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        window.onload = initSettingsPage;
+    </script>
+</body>
+</html>
