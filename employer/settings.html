@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Employer - Settings</title>
+    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .settings-wrapper { max-width: 600px; margin: 20px auto; display: flex; flex-direction: column; gap: 25px; }
+        .settings-card { background: #1e293b; border: 1px solid #334155; padding: 25px; border-radius: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .card-title { font-size: 15px; color: #38bdf8; text-transform: uppercase; border-bottom: 1px solid #334155; padding-bottom: 8px; margin-bottom: 15px; font-weight: bold; }
+        .form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
+        .form-group label { font-size: 12px; font-weight: bold; color: #cbd5e1; margin-bottom: 6px; }
+        .input-ctrl { padding: 11px; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: white; border-radius: 8px; font-size: 14px; outline: none; }
+        .input-ctrl:focus { border-color: #3b82f6; }
+        .btn-update { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-update:hover { transform: translateY(-2px); }
+        .plan-box { background: #0f172a; padding: 15px; border-radius: 8px; border: 1px solid #2e3c51; display: flex; justify-content: space-between; align-items: center; }
+        .plan-details h4 { color: white; font-size: 16px; margin-bottom: 4px; }
+        .plan-details p { color: #94a3b8; font-size: 13px; }
+        .badge-premium { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #0f172a; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+    <!-- 🧭 Left Menu / సైడ్‌బార్ సెక్షన్ -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 80px; height: auto; border-radius: 50%;">
+            <h2>MyGuru Jobs</h2>
+        </div>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="profile.html">My Profile</a>
+        <a href="post-job.html">Post Job</a>
+        <a href="jobs.html">My Jobs</a>
+        <a href="applicants.html">Applicants</a>
+        <a href="settings.html" class="active">Settings</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
+    </div>
+
+    <!-- 💻 మెయిన్ కంటెంట్ సెక్షన్ -->
+    <div class="content">
+        <div class="header">
+            <h3>Account Settings & Subscriptions</h3>
+            <span class="tag" style="background: #e2e8f0; color:#0f172a;">Control Panel</span>
+        </div>
+
+        <div class="settings-wrapper">
+            
+            <!-- SECTION 1: Subscription Status -->
+            <div class="settings-card">
+                <div class="card-title">Active Subscription</div>
+                <div class="plan-box">
+                    <div class="plan-details">
+                        <h4 id="lblPlanName">Standard Workspace</h4>
+                        <p id="lblPlanDesc">Basic active limits for posting regular vacancies.</p>
+                    </div>
+                    <span id="badgePlan" class="badge-premium" style="background:#475569; color:white;">Standard</span>
+                </div>
+            </div>
+
+            <!-- SECTION 2: Security Gate -->
+            <div class="settings-card">
+                <div class="card-title">Update Security Password</div>
+                <form id="settings-form" onsubmit="changeEmployerPassword(event)">
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <input type="password" id="txtNewPass" class="input-ctrl" placeholder="••••••••" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm Password</label>
+                        <input type="password" id="txtConfirmPass" class="input-ctrl" placeholder="••••••••" required minlength="6">
+                    </div>
+                    <button type="submit" class="btn-update">Update Password</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- స్క్రిప్ట్స్ లింకింగ్ ఆర్డర్ -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        async function initSettingsPage() {
+            // auth.js ద్వారా సెషన్ ని వెరిఫై చేయడం
+            const session = await checkLiveUserSession('School');
+            if (!session) return;
+
+            // సబ్‌స్క్రిప్షన్ ప్లాన్ అలైన్‌మెంట్ చెక్
+            if (session.subscription === 'premium') {
+                document.getElementById('lblPlanName').innerText = "Premium Enterprise Plan";
+                document.getElementById('lblPlanDesc').innerText = "Unlimited job postings with smart priority auto-matching.";
+                
+                const badge = document.getElementById('badgePlan');
+                badge.innerText = "⭐ Premium";
+                badge.style.background = "linear-gradient(135deg, #fbbf24, #f59e0b)";
+                badge.style.color = "#0f172a";
+            }
+        }
+
+        // 🔐 Supabase Auth వాడి పాస్‌వర్డ్ అప్‌డేట్ చేసే లాజిక్
+        async function changeEmployerPassword(event) {
+            event.preventDefault();
+
+            const newPass = document.getElementById('txtNewPass').value;
+            const confirmPass = document.getElementById('txtConfirmPass').value;
+
+            if (newPass !== confirmPass) {
+                alert("⚠️ Passwords do not match!");
+                return;
+            }
+
+            try {
+                const { error } = await _supabase.auth.updateUser({
+                    password: newPass
+                });
+
+                if (error) throw error;
+
+                alert("✓ Password updated safely!");
+                document.getElementById('settings-form').reset();
+
+            } catch (err) {
+                alert("Update failed: " + err.message);
+            }
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        window.onload = initSettingsPage;
+    </script>
+</body>
+</html>
