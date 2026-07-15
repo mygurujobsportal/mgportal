@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru - నా అప్లికేషన్లు</title>
+    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .app-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #1e293b; border-radius: 12px; overflow: hidden; }
+        .app-table th, .app-table td { padding: 15px; text-align: left; border-bottom: 1px solid #334155; }
+        .app-table th { background-color: #0f172a; color: #38bdf8; font-weight: bold; }
+        .app-table tr:hover { background-color: rgba(255, 255, 255, 0.02); }
+        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; display: inline-block; }
+        .status-pending { background: #e67e22; color: white; }
+        .status-accepted { background: #18bc9c; color: white; }
+        .status-rejected { background: #e74c3c; color: white; }
+        .no-data { text-align: center; color: #94a3b8; padding: 30px; }
+    </style>
+</head>
+<body>
+
+    <!-- సైడ్‌బార్ సెక్షన్ -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 80px; height: auto; border-radius: 50%;">
+            <h2>MyGuru</h2>
+        </div>
+        <a href="teacher_dashboard.html">డాష్‌బోర్డ్</a>
+        <a href="teacher_profile.html">నా ప్రొఫైల్</a>
+        <a href="jobs.html">తరగతులు / జాబ్స్</a>
+        <a href="applications.html" class="active">అప్లికేషన్లు</a>
+        <a href="settings.html">సెట్టింగ్స్</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #e74c3c;">లాగ్ అవుట్</a>
+    </div>
+
+    <!-- మెయిన్ కంటెంట్ సెక్షన్ -->
+    <div class="content">
+        <div class="header">
+            <h3>నేను అప్లై చేసిన ఉద్యోగాల వివరాలు</h3>
+            <span class="tag" style="background: #18bc9c;">Track Status</span>
+        </div>
+
+        <!-- అప్లికేషన్ల టేబుల్ -->
+        <table class="app-table">
+            <thead>
+                <tr>
+                    <th>జాబ్ శీర్షిక</th>
+                    <th>సబ్జెక్ట్</th>
+                    <th>అప్లై చేసిన తేదీ</th>
+                    <th>స్టేటస్ (Status)</th>
+                </tr>
+            </thead>
+            <tbody id="applications-list">
+                <tr>
+                    <td colspan="4" class="no-data">అప్లికేషన్లు లోడ్ అవుతున్నాయి...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- స్క్రిప్ట్స్ లింకింగ్ ఆర్డర్ -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        async function initApplicationsPage() {
+            // 1. auth.js ద్వారా సెషన్ వెరిఫికేషన్
+            const teacherSession = await checkLiveUserSession('Teacher');
+            if (!teacherSession) return;
+
+            // 2. ఈ టీచర్ ఐడీకి సంబంధించిన అప్లికేషన్లు డేటాబేస్ నుండి తేవడం
+            await loadMyApplications(teacherSession.id);
+        }
+
+        async function loadMyApplications(teacherId) {
+            try {
+                // PostgreSQL JOIN Query: applications తో పాటు దానికి లింక్ అయిన jobs డేటాను కూడా ఒకేసారి లాగడం
+                const { data: apps, error } = await _supabase
+                    .from('applications')
+                    .select(`
+                        status,
+                        applied_at,
+                        jobs (
+                            job_title,
+                            subject
+                        )
+                    `)
+                    .eq('teacher_id', teacherId)
+                    .order('applied_at', { ascending: false });
+
+                if (error) throw error;
+
+                const tbody = document.getElementById('applications-list');
+                tbody.innerHTML = "";
+
+                if (!apps || apps.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="no-data">మీరు ఇంకా ఏ జాబ్‌కూ అప్లై చేయలేదు.</td></tr>`;
+                    return;
+                }
+
+                // ప్రతి అప్లికేషన్‌ను టేబుల్ రో (Row) లాగా మార్చడం
+                apps.forEach(app => {
+                    const jobInfo = app.jobs || { job_title: 'Unknown Job', subject: 'N/A' };
+                    const formattedDate = new Date(app.applied_at).toLocaleDateString('te-IN');
+                    
+                    // స్టేటస్ బట్టి కలర్ బ్యాడ్జ్ సెట్ చేయడం
+                    let statusClass = 'status-pending';
+                    if (app.status === 'accepted') statusClass = 'status-accepted';
+                    if (app.status === 'rejected') statusClass = 'status-rejected';
+
+                    const row = `
+                        <tr>
+                            <td><strong>${jobInfo.job_title}</strong></td>
+                            <td><span class="tag">${jobInfo.subject}</span></td>
+                            <td>${formattedDate}</td>
+                            <td><span class="status-badge ${statusClass}">${app.status}</span></td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+
+            } catch (err) {
+                console.error("Applications Load Error:", err.message);
+                document.getElementById('applications-list').innerHTML = 
+                    `<tr><td colspan="4" class="no-data" style="color: #ef4444;">డేటా లోడ్ చేయడంలో సమస్య వచ్చింది.</td></tr>`;
+            }
+        }
+
+        // లాగ్ అవుట్ యాక్షన్
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        window.onload = initApplicationsPage;
+    </script>
+</body>
+</html>
