@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Employer - Post New Job</title>
+    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .form-container { background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 16px; max-width: 750px; margin: 20px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px; }
+        @media(max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-size: 13px; font-weight: bold; color: #cbd5e1; margin-bottom: 6px; text-transform: uppercase; }
+        .input-ctrl { padding: 11px; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: white; border-radius: 8px; font-size: 14px; outline: none; }
+        .input-ctrl:focus { border-color: #3b82f6; }
+        .btn-publish { display: block; width: 100%; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; padding: 13px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px; transition: 0.3s; margin-top: 20px; }
+        .btn-publish:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4); }
+    </style>
+</head>
+<body>
+
+    <!-- 🧭 Left Menu / సైడ్‌బార్ సెక్షన్ -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 80px; height: auto; border-radius: 50%;">
+            <h2>MyGuru Jobs</h2>
+        </div>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="profile.html">My Profile</a>
+        <a href="post-job.html" class="active">Post Job</a>
+        <a href="jobs.html">My Jobs</a>
+        <a href="applicants.html">Applicants</a>
+        <a href="settings.html">Settings</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
+    </div>
+
+    <!-- 💻 మెయిన్ కంటెంట్ సెక్షన్ -->
+    <div class="content">
+        <div class="header">
+            <h3>Create Vacancy Requirement</h3>
+            <span class="tag" style="background: #8b5cf6;">Step 5: Matching Gateway</span>
+        </div>
+
+        <div class="form-container">
+            <form id="post-job-form" onsubmit="publishNewJob(event)">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Job Title / Designation *</label>
+                        <input type="text" id="txtTitle" class="input-ctrl" required placeholder="e.g., High School PGT Teacher">
+                    </div>
+                    <div class="form-group">
+                        <label>Subject Focus (మ్యాచింగ్ కోసం) *</label>
+                        <input type="text" id="txtSubject" class="input-ctrl" required placeholder="e.g., Zoology, Botany, Math">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Required Qualification *</label>
+                        <input type="text" id="txtQual" class="input-ctrl" required placeholder="e.g., MSc Zoology, BEd">
+                    </div>
+                    <div class="form-group">
+                        <label>Minimum Experience (In Years) *</label>
+                        <input type="number" id="txtExp" class="input-ctrl" required min="0" placeholder="0">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Salary Range (Per Month)</label>
+                        <input type="text" id="txtSalary" class="input-ctrl" placeholder="e.g., 35,000 - 45,000 PM">
+                    </div>
+                    <div class="form-group">
+                        <label>Job Type</label>
+                        <select id="ddlJobType" class="input-ctrl">
+                            <option value="Full Time">Full Time Regular</option>
+                            <option value="Part Time">Part Time</option>
+                            <option value="Residential">Residential Faculty</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>State *</label>
+                        <input type="text" id="txtState" class="input-ctrl" required placeholder="e.g., Telangana">
+                    </div>
+                    <div class="form-group">
+                        <label>District *</label>
+                        <input type="text" id="txtDistrict" class="input-ctrl" required placeholder="e.g., Warangal">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Specific Location / Area *</label>
+                        <input type="text" id="txtLocation" class="input-ctrl" required placeholder="e.g., Hanamkonda">
+                    </div>
+                    <div class="form-group">
+                        <label>Number of Vacancies</label>
+                        <input type="number" id="txtVacancies" class="input-ctrl" min="1" value="1">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Application Last Date *</label>
+                    <input type="date" id="txtLastDate" class="input-ctrl" required>
+                </div>
+
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>Job Description & Responsibilities</label>
+                    <textarea id="txtJobDesc" class="input-ctrl" rows="4" placeholder="Mention working hours, syllabus grid, or specific timeline constraints..."></textarea>
+                </div>
+
+                <button type="submit" class="btn-publish">Publish Requirement</button>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- స్క్రిప్ట్స్ లింకింగ్ ఆర్డర్ -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        let currentEmployerId = null;
+
+        async function initPostJobPage() {
+            // auth.js ద్వారా సెషన్ ని వెరిఫై చేయడం
+            const session = await checkLiveUserSession('School');
+            if (!session) return;
+
+            currentEmployerId = session.id;
+
+            // ప్రొఫైల్ నుండి స్టేట్, డిస్ట్రిక్ట్ ఆటోమేటిక్‌గా ముందే ఫిల్ చేయడం
+            const profile = session.profileData || {};
+            if(profile.state) document.getElementById('txtState').value = profile.state;
+            if(profile.district) document.getElementById('txtDistrict').value = profile.district;
+            if(profile.city) document.getElementById('txtLocation').value = profile.city;
+        }
+
+        // 📝 jobs టేబుల్‌లోకి డేటాను ఇన్సర్ట్ చేసే ఫంక్షన్
+        async function publishNewJob(event) {
+            event.preventDefault();
+
+            // సబ్జెక్ట్ స్పేస్ క్లీన్ చేయడం (e.g., "Zoology " -> "Zoology")
+            const subjectVal = document.getElementById('txtSubject').value.trim();
+
+            const jobDataPacket = {
+                employer_id: currentEmployerId,
+                job_title: document.getElementById('txtTitle').value.trim(),
+                subject: subjectVal,
+                qualification_required: document.getElementById('txtQual').value.trim(),
+                experience_required: parseInt(document.getElementById('txtExp').value) || 0,
+                salary_range: document.getElementById('txtSalary').value.trim(),
+                job_type: document.getElementById('ddlJobType').value,
+                state: document.getElementById('txtState').value.trim(),
+                district: document.getElementById('txtDistrict').value.trim(),
+                location: document.getElementById('txtLocation').value.trim(),
+                vacancies: parseInt(document.getElementById('txtVacancies').value) || 1,
+                last_date: document.getElementById('txtLastDate').value,
+                description: document.getElementById('txtJobDesc').value.trim()
+            };
+
+            try {
+                const { error } = await _supabase
+                    .from('jobs')
+                    .insert([jobDataPacket]);
+
+                if (error) throw error;
+
+                alert("✓ Job published successfully & live for matching!");
+                // విజయవంతం అయ్యాక పోస్ట్ చేసిన జాబ్స్ లిస్ట్ పేజీకి రీడైరెక్ట్ చేయడం
+                window.location.href = "jobs.html";
+
+            } catch (err) {
+                alert("Failed to publish job: " + err.message);
+            }
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        window.onload = initPostJobPage;
+    </script>
+</body>
+</html>
