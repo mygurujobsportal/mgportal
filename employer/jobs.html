@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Employer - My Jobs</title>
+    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .jobs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; margin-top: 20px; }
+        .emp-job-card { background: #1e293b; border: 1px solid #334155; padding: 20px; border-radius: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; flex-direction: column; justify-content: space-between; }
+        .job-meta h4 { color: #38bdf8; font-size: 18px; margin-bottom: 8px; }
+        .job-meta p { font-size: 14px; margin-bottom: 6px; color: #cbd5e1; }
+        .badge-holder { margin: 8px 0; display: flex; gap: 8px; flex-wrap: wrap; }
+        .job-badge { background: #0f172a; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; color: #e2e8f0; border: 1px solid #1e293b; }
+        .status-live { background: #16a34a; color: white; border: none; }
+        .card-actions { border-top: 1px solid #334155; padding-top: 15px; margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px; }
+        .btn-sm { padding: 6px 12px; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; text-decoration: none; text-align: center; }
+        .btn-view { background: #334155; color: white; border: 1px solid #475569; }
+        .btn-edit { background: #ca8a04; color: white; }
+        .btn-delete { background: #dc2626; color: white; }
+        .btn-apps { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; margin-left: auto; }
+        .btn-sm:hover { transform: translateY(-1px); opacity: 0.9; }
+        .no-records { text-align: center; color: #94a3b8; padding: 40px; width: 100%; }
+    </style>
+</head>
+<body>
+
+    <!-- 🧭 Left Menu / సైడ్‌బార్ సెక్షన్ -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 80px; height: auto; border-radius: 50%;">
+            <h2>MyGuru Jobs</h2>
+        </div>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="profile.html">My Profile</a>
+        <a href="post-job.html">Post Job</a>
+        <a href="jobs.html" class="active">My Jobs</a>
+        <a href="applicants.html">Applicants</a>
+        <a href="settings.html">Settings</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
+    </div>
+
+    <!-- 💻 మెయిన్ కంటెంట్ సెక్షన్ -->
+    <div class="content">
+        <div class="header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>పోస్ట్ చేసిన ఉద్యోగాల నిర్వహణ</h3>
+            <a href="post-job.html" class="tag" style="background: #22c55e; text-decoration: none;">+ Create New</a>
+        </div>
+
+        <!-- జాబ్ కార్డ్స్ కంటైనర్ -->
+        <div id="employer-jobs-container" class="jobs-grid">
+            <p style="color: #94a3b8;">జాబ్స్ లోడ్ అవుతున్నాయి...</p>
+        </div>
+    </div>
+
+    <!-- స్క్రిప్ట్స్ లింకింగ్ ఆర్డర్ -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        let currentEmployerId = null;
+
+        async function initMyJobsPage() {
+            // auth.js ద్వారా సెషన్ వెరిఫికేషన్
+            const session = await checkLiveUserSession('School');
+            if (!session) return;
+
+            currentEmployerId = session.id;
+            await fetchAndRenderPostedJobs();
+        }
+
+        async function fetchAndRenderPostedJobs() {
+            try {
+                // 1. ఈ ఎంప్లాయర్ పోస్ట్ చేసిన జాబ్స్ ని లోడ్ చేయడం
+                const { data: jobs, error: jobErr } = await _supabase
+                    .from('jobs')
+                    .select('*')
+                    .eq('employer_id', currentEmployerId)
+                    .order('posted_at', { ascending: false });
+
+                if (jobErr) throw jobErr;
+
+                const container = document.getElementById('employer-jobs-container');
+                container.innerHTML = "";
+
+                if (!jobs || jobs.length === 0) {
+                    container.innerHTML = `<div class="no-records">మీరు ఇప్పటివరకు ఎలాంటి ఉద్యోగ రిక్వైర్మెంట్స్ పోస్ట్ చేయలేదు.</div>`;
+                    return;
+                }
+
+                // 2. ప్రతి జాబ్ కి వచ్చిన అప్లికేషన్ల కౌంట్ ని ఒకేసారి తెచ్చుకోవడం
+                const jobIds = jobs.map(j => j.job_id);
+                const { data: appCounts, error: appErr } = await _supabase
+                    .from('applications')
+                    .select('job_id');
+                
+                if (appErr) throw appErr;
+
+                // మ్యాపింగ్ కౌంటర్ బిల్డర్
+                const countMap = {};
+                if(appCounts) {
+                    appCounts.forEach(app => {
+                        countMap[app.job_id] = (countMap[app.job_id] || 0) + 1;
+                    });
+                }
+
+                // కార్డ్స్ డిజైన్ రెండరింగ్
+                jobs.forEach(job => {
+                    const applicantsCount = countMap[job.job_id] || 0;
+                    const formattedDate = new Date(job.posted_at).toLocaleDateString('en-IN');
+                    
+                    const cardHtml = `
+                        <div class="emp-job-card">
+                            <div class="job-meta">
+                                <h4>${job.job_title}</h4>
+                                <div class="badge-holder">
+                                    <span class="job-badge">${job.subject}</span>
+                                    <span class="job-badge">${job.job_type || 'Full Time'}</span>
+                                    <span class="job-badge job-badge-live status-live">Active</span>
+                                </div>
+                                <p style="margin-top:10px;"><strong>Posted on:</strong> ${formattedDate}</p>
+                                <p><strong>Location:</strong> ${job.location}, ${job.district}</p>
+                                <p><strong>Applicants:</strong> <span style="color:#38bdf8; font-weight:bold;">${applicantsCount} Teachers</span></p>
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn-sm btn-view" onclick="alert('Viewing feature coming soon!')">View</button>
+                                <button class="btn-sm btn-edit" onclick="alert('Edit feature coming soon!')">Edit</button>
+                                <button class="btn-sm btn-delete" onclick="deleteJobGate('${job.job_id}')">Delete</button>
+                                <button class="btn-sm btn-apps" onclick="goToApplicantsPage('${job.job_id}')">Applicants (${applicantsCount})</button>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += cardHtml;
+                });
+
+            } catch (err) {
+                console.error("Jobs Portal Error:", err.message);
+            }
+        }
+
+        // 🚀 Applicants బటన్ నొక్కినప్పుడు ఆ జాబ్ ఐడీని URL పారామీటర్‌గా పంపడం
+        function goToApplicantsPage(jobId) {
+            window.location.href = `applicants.html?job_id=${jobId}`;
+        }
+
+        // 🗑️ జాబ్ డిలీట్ చేసే ఫంక్షన్
+        async function deleteJobGate(jobId) {
+            if (!confirm("Are you sure you want to delete this job requirement permanently?")) return;
+
+            try {
+                const { error } = await _supabase
+                    .from('jobs')
+                    .delete()
+                    .eq('job_id', jobId);
+
+                if (error) throw error;
+
+                alert("✓ Job requirement deleted successfully!");
+                fetchAndRenderPostedJobs(); // లిస్ట్ రీలోడ్
+            } catch (err) {
+                alert("Delete failed: " + err.message);
+            }
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        window.onload = initMyJobsPage;
+    </script>
+</body>
+</html>
