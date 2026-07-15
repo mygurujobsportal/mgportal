@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru - మ్యాచ్ అయిన జాబ్స్</title>
+    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .job-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
+        .job-card { background: #1e293b; border: 1px solid #334155; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .job-card h4 { color: #38bdf8; font-size: 18px; margin-bottom: 10px; }
+        .job-card p { font-size: 14px; margin-bottom: 8px; color: #cbd5e1; }
+        .job-card .tag { display: inline-block; background: #334155; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; color: #e2e8f0; }
+        .btn-apply { display: block; width: 100%; text-align: center; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.3s; }
+        .btn-apply:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4); }
+        .btn-applied { display: block; width: 100%; text-align: center; background: #475569; color: #94a3b8; border: none; padding: 10px; border-radius: 8px; font-weight: bold; margin-top: 15px; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <!-- సైడ్‌బార్ సెక్షన్ -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 80px; height: auto; border-radius: 50%;">
+            <h2>MyGuru</h2>
+        </div>
+        <a href="teacher_dashboard.html">డాష్‌బోర్డ్</a>
+        <a href="teacher_profile.html">నా ప్రొఫైల్</a>
+        <a href="jobs.html" class="active">तरगटुलु / జాబ్స్</a>
+        <a href="applications.html">అప్లికేషన్లు</a>
+        <a href="settings.html">సెట్టింగ్స్</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #e74c3c;">లాగ్ అవుట్</a>
+    </div>
+
+    <!-- మెయిన్ కంటెంట్ సెక్షన్ -->
+    <div class="content">
+        <div class="header">
+            <h3>మీ సబ్జెక్టుకు సరిపోయే జాబ్స్</h3>
+            <span id="user-badge" class="tag" style="background: #8b5cf6;">Teacher Desk</span>
+        </div>
+
+        <!-- జాబ్స్ డిస్ప్లే గ్రిడ్ -->
+        <div id="jobs-container" class="job-grid">
+            <p style="color: #94a3b8;">జాబ్స్ లోడ్ అవుతున్నాయి...</p>
+        </div>
+    </div>
+
+    <!-- స్క్రిప్ట్స్ లింకింగ్ ఆర్డర్ -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        let currentTeacherId = null;
+
+        async function initJobsPage() {
+            // 1. auth.js ద్వారా సెషన్ వెరిఫికేషన్
+            const teacherSession = await checkLiveUserSession('Teacher');
+            if (!teacherSession) return;
+
+            currentTeacherId = teacherSession.id;
+            const profile = teacherSession.profileData || {};
+            const subjects = profile.subjects || [];
+
+            if (subjects.length === 0) {
+                document.getElementById('jobs-container').innerHTML = `<p style="color: #ef4444;">⚠️ దయచేసి మీ ప్రొఫైల్‌లో సబ్జెక్టులను అప్‌డేట్ చేయండి.</p>`;
+                return;
+            }
+
+            // 2. మ్యాచ్ అయిన జాబ్స్ మరియు ఆల్రెడీ అప్లై చేసిన అప్లికేషన్లను లోడ్ చేయడం
+            await loadMatchedJobs(subjects);
+        }
+
+        async function loadMatchedJobs(subjectsArray) {
+            try {
+                // jobs టేబుల్ నుండి సబ్జెక్ట్ మ్యాచ్ అయిన డేటా లాగడం (Step 5: Job Matching)
+                const { data: jobs, error: jobsErr } = await _supabase
+                    .from('jobs')
+                    .select('*')
+                    .in('subject', subjectsArray)
+                    .order('posted_at', { ascending: false });
+
+                if (jobsErr) throw jobsErr;
+
+                // ఆల్రెడీ అప్లై చేసిన జాబ్స్ ని ట్రాక్ చేయడానికి ఈ టీచర్ యొక్క అప్లికేషన్లు తెచ్చుకోవడం
+                const { data: myApps, error: appsErr } = await _supabase
+                    .from('applications')
+                    .select('job_id')
+                    .eq('teacher_id', currentTeacherId);
+
+                if (appsErr) throw appsErr;
+
+                // అప్లై చేసిన job_ids ని ఒక Set లో పెట్టుకోవడం
+                const appliedJobIds = new Set(myApps.map(app => app.job_id));
+                const container = document.getElementById('jobs-container');
+                container.innerHTML = "";
+
+                if (!jobs || jobs.length === 0) {
+                    container.innerHTML = `<p style="color: #94a3b8;">ప్రస్తుతానికి మీ సబ్జెక్టుకు సరిపోయే జాబ్స్ ఏవీ లేవు.</p>`;
+                    return;
+                }
+
+                // జాబ్ కార్డ్స్ బిల్డ్ చేయడం
+                jobs.forEach(job => {
+                    const isApplied = appliedJobIds.has(job.job_id);
+                    const buttonHtml = isApplied 
+                        ? `<button class="btn-applied" disabled>✓ Applied</button>`
+                        : `<button class="btn-apply" onclick="applyJob('${job.job_id}')">Apply Now</button>`;
+
+                    const card = `
+                        <div class="job-card">
+                            <h4>${job.job_title}</h4>
+                            <p><strong>సబ్జెక్ట్:</strong> <span class="tag">${job.subject}</span></p>
+                            <p><strong>అర్హత:</strong> ${job.qualification_required || 'N/A'}</p>
+                            <p><strong>అనుభవం:</strong> ${job.experience_required} సం.లు</p>
+                            <p><strong>జీతం:</strong> ${job.salary_range || 'చర్చించబడును'}</p>
+                            ${buttonHtml}
+                        </div>
+                    `;
+                    container.innerHTML += card;
+                });
+
+            } catch (err) {
+                console.error("Jobs Outage:", err.message);
+            }
+        }
+
+        // 📝 Step 6: Application Workflow - జాబ్‌కు అప్లై చేసే ఫంక్షన్
+        async function applyJob(jobId) {
+            try {
+                const { error } = await _supabase
+                    .from('applications')
+                    .insert([
+                        { job_id: jobId, teacher_id: currentTeacherId, status: 'pending' }
+                    ]);
+
+                if (error) throw error;
+
+                alert("✓ జాబ్‌కు విజయవంతంగా అప్లై చేసారు!");
+                initJobsPage(); // పేజీని రీలోడ్ చేసి బటన్ ని 'Applied' గా మారుస్తుంది
+
+            } catch (err) {
+                alert("అప్లికేషన్ విఫలమైంది: " + err.message);
+            }
+        }
+
+        // లాగ్ అవుట్ యాక్షన్
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        window.onload = initJobsPage;
+    </script>
+</body>
+</html>
