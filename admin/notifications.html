@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Admin - Broadcast Notification Center</title>
+    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .notify-container { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; margin-top: 20px; }
+        @media(max-width: 850px) { .notify-container { grid-template-columns: 1fr; } }
+        
+        .panel-box { background: #1e293b; padding: 25px; border-radius: 14px; border: 1px solid #334155; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 12px; font-weight: bold; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+        
+        .input-ctrl, .select-ctrl, .textarea-ctrl { width: 100%; padding: 10px 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: white; border-radius: 8px; font-size: 14px; outline: none; box-sizing: border-box; }
+        .textarea-ctrl { resize: none; }
+        
+        .btn-broadcast { width: 100%; padding: 12px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .btn-broadcast:hover { transform: translateY(-1px); opacity: 0.95; }
+        
+        /* History Log View */
+        .history-list { list-style: none; padding: 0; margin: 0; }
+        .history-item { background: rgba(15, 23, 42, 0.4); border: 1px solid #2e3c51; padding: 15px; border-radius: 10px; margin-bottom: 12px; }
+        .history-meta { display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; font-weight: bold; margin-bottom: 6px; }
+        .badge-scope { padding: 2px 6px; border-radius: 4px; font-size: 10px; text-transform: uppercase; }
+        .scope-all { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+        .scope-teacher { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+        .scope-school { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .scope-parent { background: rgba(99, 102, 241, 0.15); color: #6366f1; }
+    </style>
+</head>
+<body>
+
+    <!-- 👑 Master Controller Sidebar -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 70px; height: auto; border-radius: 50%;">
+            <h2 style="color: #38bdf8; font-size: 16px; margin-top: 8px;">MyGuru Control</h2>
+        </div>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="teachers.html">Teachers</a>
+        <a href="schools.html">Schools</a>
+        <a href="parents.html">Parents</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="applications.html">Applications</a>
+        <a href="interview-letters.html">Interview Letters</a>
+        <a href="notifications.html" class="active">Notifications</a>
+        <a href="subscriptions.html">Subscriptions</a>
+        <a href="payments.html">Payments</a>
+        <a href="reports.html">Reports</a>
+        <a href="settings.html">Settings</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
+    </div>
+
+    <!-- 💻 Command Workspace Main Content -->
+    <div class="content">
+        <div class="header">
+            <h3>Mass Notification Center (మాస్ అలర్ట్స్ బ్రాడ్‌కాస్ట్ రూమ్)</h3>
+            <span class="tag" style="background: #ea580c;">Push Gateway Active</span>
+        </div>
+
+        <!-- 🛠️ Split Operational Hub Layout -->
+        <div class="notify-container">
+            
+            <!-- LEFT COLUMN: Broadcast Control Panel -->
+            <div class="panel-box">
+                <h4 style="color: white; font-size: 15px; margin-top: 0; margin-bottom: 20px;">📢 Dispatch New Mass Notification</h4>
+                
+                <div class="form-group">
+                    <label>🎯 Target Audience Scope</label>
+                    <select id="selectAudience" class="select-ctrl">
+                        <option value="ALL">All Registered Users (Teachers, Schools & Parents)</option>
+                        <option value="Teacher">Teachers Only (ఉపాధ్యాయులు మాత్రమే)</option>
+                        <option value="School">Schools Only (పాఠశాలలు/యాజమాన్యం)</option>
+                        <option value="Parent">Parents Only (తల్లిదండ్రులు మాత్రమే)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>📝 Notification Title / Heading</label>
+                    <input type="text" id="txtNoticeTitle" class="input-ctrl" placeholder="e.g., Server Maintenance Alert / New Feature Launch">
+                </div>
+
+                <div class="form-group">
+                    <label>💬 Notification Message Body</label>
+                    <textarea id="txtNoticeMessage" rows="5" class="textarea-ctrl" placeholder="యూజర్ల డాష్‌బోర్డులో కనిపించాల్సిన పూర్తి సమాచారాన్ని ఇక్కడ టైప్ చేయండి..."></textarea>
+                </div>
+
+                <button class="btn-broadcast" onclick="triggerMassBroadcastTransaction()">Launch Network Broadcast</button>
+            </div>
+
+            <!-- RIGHT COLUMN: Past Broadcast Logs Audit -->
+            <div class="panel-box">
+                <h4 style="color: white; font-size: 15px; margin-top: 0; margin-bottom: 20px;">📜 Global Broadcast History Logs</h4>
+                <div id="historyLogsContainer" style="max-height: 480px; overflow-y: auto; padding-right: 5px;">
+                    <ul class="history-list" id="broadcastHistoryUl">
+                        <li style="color:#94a3b8; text-align:center; padding:30px;">Syncing historical data logs...</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts Architecture Node -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        async function initNotificationCenter() {
+            // Role Shield Barrier Check
+            const activeAdmin = await checkLiveUserSession('Admin');
+            if (!activeAdmin) return;
+
+            await loadBroadcastLogsHistory();
+        }
+
+        async function loadBroadcastLogsHistory() {
+            try {
+                // global_broadcasts లేదా notifications టేబుల్ నుండి బ్రాడ్‌కాస్ట్ హిస్టరీ లాగడం
+                // ఇక్కడ సుపాబేస్ నుండి డేటా ఆర్డర్ లో తెచ్చుకుంటాం
+                const { data: logs, error } = await _supabase
+                    .from('notifications')
+                    .select('*')
+                    .eq('type', 'admin_mass_broadcast')
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+
+                if (error) throw error;
+
+                const ul = document.getElementById('broadcastHistoryUl');
+                ul.innerHTML = "";
+
+                if (!logs || logs.length === 0) {
+                    ul.innerHTML = `<li style="color:#94a3b8; text-align:center; padding:20px;">✓ No mass broadcast records found in current log segments.</li>`;
+                    return;
+                }
+
+                logs.forEach(log => {
+                    const dateStr = new Date(log.created_at).toLocaleString('en-IN');
+                    let scopeClass = 'scope-all';
+                    let scopeText = log.target_role || 'ALL';
+                    
+                    if(log.target_role === 'Teacher') scopeClass = 'scope-teacher';
+                    if(log.target_role === 'School') scopeClass = 'scope-school';
+                    if(log.target_role === 'Parent') scopeClass = 'scope-parent';
+
+                    ul.innerHTML += `
+                        <li class="history-item">
+                            <div class="history-meta">
+                                <span>📅 ${dateStr}</span>
+                                <span class="badge-scope ${scopeClass}">Target: ${scopeText}</span>
+                            </div>
+                            <strong style="color:#f8fafc; display:block; font-size:14px; margin-bottom:4px;">${log.title}</strong>
+                            <p style="color:#cbd5e1; font-size:13px; margin:0; line-height:1.4;">${log.message}</p>
+                        </li>
+                    `;
+                });
+
+            } catch (err) { console.error("History logs fetch failed:", err.message); }
+        }
+
+        // ⚡ Mass Broadcast Transaction Engine
+        async function triggerMassBroadcastTransaction() {
+            const audience = document.getElementById('selectAudience').value;
+            const title = document.getElementById('txtNoticeTitle').value.trim();
+            const message = document.getElementById('txtNoticeMessage').value.trim();
+
+            if (!title || !message) {
+                alert("Both Notification Title and Message Body are mandatory fields.");
+                return;
+            }
+
+            if (!confirm(`🚨 MASS DISPATCH ALERT: Are you sure you want to trigger this notification to ${audience.toUpperCase()}? This injects alerts into active session nodes immediately.`)) return;
+
+            try {
+                // మీ ఆర్కిటెక్చర్ ప్రకారం, అడ్మిన్ పంపే బ్రాడ్‌కాస్ట్ రికార్డునుnotifications టేబుల్ లోకి ఇన్సర్ట్ చేయడం
+                const { error } = await _supabase
+                    .from('notifications')
+                    .insert([{
+                        title: title,
+                        message: message,
+                        type: 'admin_mass_broadcast',
+                        target_role: audience,
+                        is_read: false
+                    }]);
+
+                if (error) throw error;
+
+                alert("✓ Network mass broadcast initiated successfully! Users will receive alerts upon console reload.");
+                
+                // Form Reset
+                document.getElementById('txtNoticeTitle').value = "";
+                document.getElementById('txtNoticeMessage').value = "";
+                
+                await loadBroadcastLogsHistory(); // రీ-లోడ్ లాగ్స్
+
+            } catch (err) { alert("Broadcast execution crashed: " + err.message); }
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        window.onload = initNotificationCenter;
+    </script>
+</body>
+</html>
