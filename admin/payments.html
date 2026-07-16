@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Admin - Payment Ledger</title>
+    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .ledger-container { background: #1e293b; border: 1px solid #334155; padding: 25px; border-radius: 14px; margin-top: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .filter-bar { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+        .input-search, .select-ctrl { padding: 9px 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: white; border-radius: 6px; font-size: 13px; outline: none; }
+        .input-search { flex-grow: 1; min-width: 200px; }
+        
+        /* Data Table Style */
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .data-table th { color: #38bdf8; font-size: 12px; text-transform: uppercase; padding: 12px 10px; border-bottom: 2px solid #334155; }
+        .data-table td { padding: 12px 10px; font-size: 14px; border-bottom: 1px solid #334155; color: #cbd5e1; vertical-align: middle; }
+        
+        /* Status Badges */
+        .status-badge { padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .pay-success { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .pay-pending { background: rgba(234, 179, 8, 0.15); color: #eab308; }
+        .pay-failed { background: rgba(220, 38, 38, 0.15); color: #ef4444; }
+        
+        .amt-tag { color: #22c55e; font-weight: bold; font-family: monospace; }
+    </style>
+</head>
+<body>
+
+    <!-- 👑 Master Controller Sidebar -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 70px; height: auto; border-radius: 50%;">
+            <h2 style="color: #38bdf8; font-size: 16px; margin-top: 8px;">MyGuru Control</h2>
+        </div>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="teachers.html">Teachers</a>
+        <a href="schools.html">Schools</a>
+        <a href="parents.html">Parents</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="applications.html">Applications</a>
+        <a href="interview-letters.html">Interview Letters</a>
+        <a href="notifications.html">Notifications</a>
+        <a href="messages.html">Messages</a>
+        <a href="subscriptions.html">Subscriptions</a>
+        <a href="payments.html" class="active">Payments</a>
+        <a href="reports.html">Reports</a>
+        <a href="settings.html">Settings</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
+    </div>
+
+    <!-- 💻 Command Workspace Main Content -->
+    <div class="content">
+        <div class="header">
+            <h3>Payment Ledger Audit (ఆర్థిక లావాదేవీల నిఘా ప్యానెల్)</h3>
+            <span class="tag" style="background: #22c55e;">Gateway Node Online</span>
+        </div>
+
+        <div class="ledger-container">
+            <!-- 🔍 Filter Controls -->
+            <div class="filter-bar">
+                <input type="text" id="searchPayQuery" class="input-search" placeholder="🔍 Search by Transaction ID or User Name..." oninput="filterPaymentsTable()">
+                <select id="filterStatus" class="select-ctrl" onchange="filterPaymentsTable()">
+                    <option value="ALL">All Gateway States</option>
+                    <option value="success">Success Only</option>
+                    <option value="pending">Pending Gateway Verification</option>
+                    <option value="failed">Failed / Declined</option>
+                </select>
+            </div>
+
+            <!-- 📊 Payments Data Table -->
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Transaction ID</th>
+                        <th>User Profile</th>
+                        <th>Amount</th>
+                        <th>Gateway Status</th>
+                        <th>Transaction Date</th>
+                    </tr>
+                </thead>
+                <tbody id="payMasterTbody">
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: #94a3b8; padding: 30px;">Loading global transactional streams...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Scripts Integration Node -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        let cachedPaymentsList = [];
+
+        async function initPaymentLedger() {
+            // Master Role Shield Guard
+            const activeAdmin = await checkLiveUserSession('Admin');
+            if (!activeAdmin) return;
+
+            await loadPaymentsRepository();
+        }
+
+        async function loadPaymentsRepository() {
+            try {
+                // `payments` టేబుల్ మరియు `common_users` నుండి రిలేషనల్ డేటా లాగడం
+                const { data: payments, error } = await _supabase
+                    .from('payments')
+                    .select(`
+                        id, transaction_id, amount, status, created_at,
+                        common_users ( full_name )
+                    `)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                cachedPaymentsList = payments || [];
+                renderPaymentsTable(cachedPaymentsList);
+
+            } catch (err) { console.error("Payment ledger sync failure:", err.message); }
+        }
+
+        function renderPaymentsTable(list) {
+            const tbody = document.getElementById('payMasterTbody');
+            tbody.innerHTML = "";
+
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8; padding:20px;">No transaction logs match the designated viewport criteria.</td></tr>`;
+                return;
+            }
+
+            list.forEach(p => {
+                const clientName = p.common_users ? p.common_users.full_name : 'Platform Workspace';
+                const dateStr = new Date(p.created_at).toLocaleString('en-IN');
+                const txId = p.transaction_id ? p.transaction_id.toUpperCase() : `TXN-${p.id.split('-')[0].toUpperCase()}`;
+                
+                let statusClass = 'pay-pending';
+                if(p.status === 'success') statusClass = 'pay-success';
+                if(p.status === 'failed') statusClass = 'pay-failed';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><code style="color:#38bdf8; font-weight:bold;">#${txId}</code></td>
+                        <td><strong>${clientName}</strong></td>
+                        <td><span class="amt-tag">₹ ${p.amount}</span></td>
+                        <td><span class="status-badge ${statusClass}">${p.status || 'success'}</span></td>
+                        <td>${dateStr}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // 🔍 Client-side Dynamic Live Filter Matrix
+        function filterPaymentsTable() {
+            const searchVal = document.getElementById('searchPayQuery').value.toLowerCase().trim();
+            const statusVal = document.getElementById('filterStatus').value;
+
+            const filtered = cachedPaymentsList.filter(p => {
+                const clientName = p.common_users ? p.common_users.full_name.toLowerCase() : '';
+                const txIdStr = p.transaction_id ? p.transaction_id.toLowerCase() : '';
+                
+                const textMatch = clientName.includes(searchVal) || txIdStr.includes(searchVal);
+                const statusMatch = (statusVal === 'ALL') || (p.status === statusVal);
+
+                return textMatch && statusMatch;
+            });
+
+            renderPaymentsTable(filtered);
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        window.onload = initPaymentLedger;
+    </script>
+</body>
+</html>
