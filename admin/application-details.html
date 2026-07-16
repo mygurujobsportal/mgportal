@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Admin - Application Pipeline Audit</title>
+    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .details-container { max-width: 900px; margin: 20px auto; display: flex; flex-direction: column; gap: 20px; }
+        .audit-card { background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); position: relative; }
+        .stamp-status { position: absolute; top: 25px; right: 25px; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        
+        /* Layout Structure */
+        .audit-header { border-bottom: 1px solid #334155; padding-bottom: 20px; margin-bottom: 20px; }
+        .audit-header h2 { color: #38bdf8; font-size: 22px; margin-bottom: 5px; }
+        
+        /* Flex Link Boxes */
+        .entity-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        @media(max-width: 650px) { .entity-grid { grid-template-columns: 1fr; } }
+        .entity-box { background: rgba(15, 23, 42, 0.4); padding: 15px; border-radius: 8px; border: 1px solid #2e3c51; }
+        .entity-box h4 { font-size: 12px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px; }
+        .entity-box p { font-size: 15px; color: white; margin-bottom: 8px; font-weight: bold; }
+        .lnk-btn { color: #38bdf8; font-size: 13px; text-decoration: none; font-weight: bold; }
+        .lnk-btn:hover { text-decoration: underline; }
+
+        /* Timeline Components */
+        .timeline-zone { background: #0f172a; padding: 20px; border-radius: 10px; border: 1px solid #334155; }
+        .timeline-list { list-style: none; padding: 0; position: relative; margin-left: 20px; border-left: 2px solid #334155; }
+        .timeline-item { position: relative; margin-bottom: 20px; padding-left: 20px; }
+        .timeline-item::before { content: ""; position: absolute; left: -6px; top: 4px; width: 10px; height: 10px; background: #38bdf8; border-radius: 50%; }
+        .timeline-date { font-size: 11px; color: #94a3b8; font-weight: bold; }
+        .timeline-text { font-size: 13px; color: #cbd5e1; margin-top: 4px; }
+        
+        /* Control Hub Actions */
+        .action-hub { border-top: 1px solid #334155; padding-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; margin-top: 10px; }
+        .select-status-ctrl { padding: 10px 15px; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 8px; font-size: 13px; outline: none; }
+        .btn-ctrl { padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; background: #22c55e; color: white; }
+        .btn-ctrl:hover { transform: translateY(-1px); opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+    <!-- 👑 Master Controller Sidebar -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 70px; height: auto; border-radius: 50%;">
+            <h2 style="color: #38bdf8; font-size: 16px; margin-top: 8px;">MyGuru Control</h2>
+        </div>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="teachers.html">Teachers</a>
+        <a href="schools.html">Schools</a>
+        <a href="parents.html">Parents</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="applications.html" class="active">Applications</a>
+        <a href="interview-letters.html">Interview Letters</a>
+        <a href="notifications.html">Notifications</a>
+        <a href="subscriptions.html">Subscriptions</a>
+        <a href="payments.html">Payments</a>
+        <a href="reports.html">Reports</a>
+        <a href="settings.html">Settings</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
+    </div>
+
+    <!-- 💻 Command Main Content Workspace -->
+    <div class="content">
+        <div class="header">
+            <h3> దరఖాస్తు పైప్‌లైన్ పరిశీలన (ATS Node Audit)</h3>
+            <a href="applications.html" class="tag" style="background:#475569; text-decoration:none;">← Back Pipeline</a>
+        </div>
+
+        <div class="details-container">
+            
+            <!-- MASTER AUDIT CARD -->
+            <div class="audit-card">
+                <span id="lblStatusStamp" class="stamp-status" style="background:#475569; color:white;">Loading</span>
+                
+                <div class="audit-header">
+                    <h2 id="lblJobTitleHeading">Recruitment Node Audit</h2>
+                    <p style="color:#94a3b8; font-size:13px; margin:0;" id="lblAppIdNode">Application Node ID: --</p>
+                </div>
+
+                <!-- Entity Relations Boxes -->
+                <div class="entity-grid">
+                    <div class="entity-box">
+                        <h4>👨‍🏫 Teacher Candidate</h4>
+                        <p id="lblTeacherName">Candidate Name</p>
+                        <a href="#" id="lnkTeacherProfile" class="lnk-btn">→ View Complete Teacher Profile</a>
+                    </div>
+                    <div class="entity-box">
+                        <h4>🏢 Target School / Employer</h4>
+                        <p id="lblSchoolName">Institution Name</p>
+                        <a href="#" id="lnkSchoolProfile" class="lnk-btn">→ View Complete School Workspace</a>
+                    </div>
+                    <div class="entity-box" style="grid-column: span 2;">
+                        <h4>💼 Linked Vacancy Specification</h4>
+                        <p id="lblJobTitleMeta">Position Meta</p>
+                        <a href="#" id="lnkJobDetails" class="lnk-btn">→ View Vacancy Parameters & Target Qualifications</a>
+                    </div>
+                </div>
+
+                <!-- Managed ATS System Flow Timeline -->
+                <div class="timeline-zone">
+                    <h4 style="color:white; font-size:14px; margin-bottom:15px; margin-top:0;">📊 Application State Lifecycle Timeline</h4>
+                    <ul class="timeline-list" id="timelineListContainer">
+                        <li class="timeline-item">
+                            <span class="timeline-date">Processing...</span>
+                            <div class="timeline-text">Fetching historical activity state trails from backend logs...</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Administrative Application Status Operations Override -->
+                <div class="action-hub">
+                    <div>
+                        <label style="color:#94a3b8; font-size:12px; font-weight:bold; display:block; margin-bottom:5px;">MANUAL PIPELINE OVERRIDE / UPDATE STATUS</label>
+                        <select id="selectPipelineStatus" class="select-status-ctrl">
+                            <option value="applied">Applied</option>
+                            <option value="viewed">Viewed</option>
+                            <option value="shortlisted">Shortlisted</option>
+                            <option value="admin_review">Admin Review Queue</option>
+                            <option value="selected">Selected by School</option>
+                            <option value="joined">Joined / Closed Node</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                    <button class="btn-ctrl" onclick="triggerManualStatusOverride()">Commit Status Shift</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts Integration Node -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        let targetApplicationId = null;
+
+        async function initApplicationDetailsRoom() {
+            const activeAdmin = await checkLiveUserSession('Admin');
+            if (!activeAdmin) return;
+
+            const urlParams = new URLSearchParams(window.location.search);
+            targetApplicationId = urlParams.get('id');
+
+            if (!targetApplicationId) {
+                alert("Invalid Application Scope.");
+                window.location.href = "applications.html";
+                return;
+            }
+
+            await loadCompleteApplicationPayload();
+        }
+
+        async function loadCompleteApplicationPayload() {
+            try {
+                // Relational Core Join Query
+                const { data: app, error } = await _supabase
+                    .from('applications')
+                    .select(`
+                        application_id, status, created_at, teacher_id, job_id,
+                        common_users ( full_name ),
+                        jobs ( job_title, employer_id, employer_profiles ( institution_name ) )
+                    `)
+                    .eq('application_id', targetApplicationId)
+                    .single();
+
+                if (error) throw error;
+
+                // Bind Data Parameters
+                const shortId = app.application_id.split('-')[0].toUpperCase();
+                document.getElementById('lblAppIdNode').innerText = `Application Node ID: #APP-${shortId}`;
+                
+                const jobTitle = app.jobs ? app.jobs.job_title : 'Vacancy Posting';
+                document.getElementById('lblJobTitleHeading').innerText = `Audit: ${jobTitle}`;
+                document.getElementById('lblJobTitleMeta').innerText = jobTitle;
+
+                const teacherName = app.common_users ? app.common_users.full_name : 'Teacher Candidate';
+                document.getElementById('lblTeacherName').innerText = teacherName;
+
+                const schoolName = (app.jobs && app.jobs.employer_profiles) ? app.jobs.employer_profiles.institution_name : 'Partner Institution';
+                document.getElementById('lblSchoolName').innerText = schoolName;
+
+                // Bind Cross-Reference Action Redirection Links
+                document.getElementById('lnkTeacherProfile').href = `teacher-details.html?id=${app.teacher_id}`;
+                document.getElementById('lnkSchoolProfile').href = `school-details.html?id=${app.jobs ? app.jobs.employer_id : ''}`;
+                document.getElementById('lnkJobDetails').href = `job-details.html?id=${app.job_id}`;
+
+                // Inject Dropdown Value Match
+                document.getElementById('selectPipelineStatus').value = app.status || 'applied';
+
+                // Manage Status Stamp Styling
+                const stamp = document.getElementById('lblStatusStamp');
+                stamp.innerText = app.status || 'applied';
+                if (app.status === 'applied') stamp.style.background = '#475569';
+                if (app.status === 'viewed') stamp.style.background = '#38bdf8';
+                if (app.status === 'shortlisted') stamp.style.background = '#6366f1';
+                if (app.status === 'admin_review') stamp.style.background = '#eab308';
+                if (app.status === 'selected' || app.status === 'joined') stamp.style.background = '#22c55e';
+                if (app.status === 'rejected') stamp.style.background = '#dc2626';
+
+                // Generate Dynamic Mock Historical Lifecycle Timeline Based on State Stamps
+                generateRecruitmentTimeline(app.created_at, app.status);
+
+            } catch (err) { console.error("Application details parsing crash:", err.message); }
+        }
+
+        function generateRecruitmentTimeline(creationTime, currentStatus) {
+            const container = document.getElementById('timelineListContainer');
+            container.innerHTML = "";
+            const initialDate = new Date(creationTime).toLocaleString('en-IN');
+
+            // Baseline application entry node
+            let timelineHTML = `
+                <li class="timeline-item">
+                    <span class="timeline-date">${initialDate}</span>
+                    <div class="timeline-text">📥 <strong>Application Initialized:</strong> Teacher submitted documents targeting this live slot.</div>
+                </li>
+            `;
+
+            if (currentStatus !== 'applied') {
+                timelineHTML += `
+                    <li class="timeline-item">
+                        <span class="timeline-date">Recruitment Node Trail</span>
+                        <div class="timeline-text">🔄 <strong>ATS Flow State Shift:</strong> Managed pipelines recorded transition update to <code>${currentStatus.toUpperCase()}</code> step framework inside employer dashboard modules.</div>
+                    </li>
+                `;
+            }
+
+            container.innerHTML = timelineHTML;
+        }
+
+        // ⚡ Manual Status Shift Operation Command Override
+        async function triggerManualStatusOverride() {
+            const nextStatus = document.getElementById('selectPipelineStatus').value;
+            if(!confirm(`🚨 WARNING: Manually override this application's lifecycle status to ${nextStatus.toUpperCase()}? This forces status mapping changes inside employer tracking engines.`)) return;
+
+            try {
+                const { error } = await _supabase
+                    .from('applications')
+                    .update({ status: nextStatus })
+                    .eq('application_id', targetApplicationId);
+
+                if (error) throw error;
+                alert("✓ Application pipeline lifecycle updated successfully!");
+                await loadCompleteApplicationPayload();
+            } catch (err) { alert("Pipeline execution override failed: " + err.message); }
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        window.onload = initApplicationDetailsRoom;
+    </script>
+</body>
+</html>
