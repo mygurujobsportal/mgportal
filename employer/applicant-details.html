@@ -154,16 +154,19 @@
                     .eq('application_id', activeApplicationId)
                     .single();
 
-                if (error) throw error;
-        if (error) throw error;
+                        if (error) throw error;
 
-        // 🌟 [ఇక్కడ పేస్ట్ చేయండి] - applied లో ఉంటే ఆటోమేటిక్‌గా viewed గా మారుతుంది
+        // 🌟 లోడ్ అయిన డేటాన్ని గ్లోబల్ విండో ఆబ్జెక్ట్ లో దాచడం
+        window.currentAppPayload = app;
+
+        // Profile Auto-Viewed Tracker
         if (app.status === 'applied') {
             await _supabase
-                .from('job_applications')
+                .from('applications')
                 .update({ status: 'viewed' })
-                .eq('id', activeApplicationId);
+                .eq('application_id', activeApplicationId);
         }
+
 
         // సెక్యూరిటీ గేట్: ఈ అప్లికేషన్ కరెంట్ లాగిన్ ఎంప్లాయర్ జాబ్‌కే వచ్చిందా...
 
@@ -220,24 +223,65 @@
             }
         }
 
-        // 📝 Application Workflow Action (Shortlist / Reject / Select)
-        async function processWorkflowAction(targetStatus) {
-            if(!confirm(`Are you sure you want to change the applicant status to ${targetStatus.toUpperCase()}?`)) return;
-
+                // 📝 Updated Workflow Engine with Admin Pipeline Gate & Message Capture
+        async function processWorkflowAction(targetAction) {
             try {
+                let updateData = {};
+                
+                if (targetAction === 'rejected') {
+                    if(!confirm("Are you sure you want to REJECT this candidate?")) return;
+                    updateData = { status: 'rejected' };
+                } 
+                else if (targetAction === 'shortlisted') {
+                    if(!confirm("Shortlist this candidate for internal pipeline review?")) return;
+                    updateData = { status: 'shortlisted' };
+                } 
+                else if (targetAction === 'selected') {
+                    // 🌟 Managed Platform: అభ్యర్థికి పంపాల్సిన ఇంటర్వ్యూ వివరాలను సేకరించడం
+                    const letterMsg = prompt("Enter Interview Details / Instructions for the Candidate (This will be verified and branded by MyGuru):");
+                    if (!letterMsg) {
+                        alert("Action cancelled. Interview details are mandatory to trigger selection.");
+                        return;
+                    }
+                    
+                    // మీ కొత్త ఆర్కిటెక్చర్ ప్రకారం స్టేటస్ నేరుగా selected అవ్వదు -> 'admin_review' కి వెళ్తుంది
+                    updateData = { status: 'admin_review' };
+                    
+                    // interview_letters టేబుల్ లోకి రికార్డ్ పంపడం (Pending Admin Approval)
+                    const { error: letterErr } = await _supabase
+                        .from('interview_letters')
+                        .insert([{
+                            job_application_id: activeApplicationId,
+                            job_id: window.currentAppPayload ? window.currentAppPayload.job_id : null, 
+     					    teacher_id: window.currentAppPayload ? window.currentAppPayload.teacher_id : null,
+      					    school_id: currentEmployerId,
+                            letter_type: 'text',
+                            message: letterMsg,
+                            status: 'pending_admin_approval'
+                        }]);
+                        
+                    if (letterErr) throw letterErr;
+                }
+
+                // applications టేబుల్ లో అప్లికేషన్ స్టేటస్ అప్‌డేట్ చేయడం
                 const { error } = await _supabase
                     .from('applications')
-                    .update({ status: targetStatus })
+                    .update(updateData)
                     .eq('application_id', activeApplicationId);
 
                 if (error) throw error;
 
-                alert(`✓ Candidate application status updated to: ${targetStatus.toUpperCase()}`);
-                await loadFullCandidatePayload(); // స్క్రీన్ రిఫ్రెష్
+                alert(targetAction === 'selected' 
+                    ? "✓ Selection triggered! Sent to 'Pending Admin Approval' queue to prevent misuse." 
+                    : `✓ Status updated to ${targetAction.toUpperCase()}`);
+                    
+                await loadFullCandidatePayload(); // స్క్రీన్ రీఫ్రెష్
+
             } catch (err) {
-                alert("Workflow transition failed: " + err.message);
+                alert("Workflow Error: " + err.message);
             }
         }
+
 
         document.getElementById('logout-btn').addEventListener('click', async (e) => {
             e.preventDefault();
