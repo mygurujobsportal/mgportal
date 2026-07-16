@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Admin - Interview Letters Gateway</title>
+    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .gateway-container { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; margin-top: 20px; }
+        @media(max-width: 850px) { .gateway-container { grid-template-columns: 1fr; } }
+        
+        .panel-box { background: #1e293b; padding: 22px; border-radius: 12px; border: 1px solid #334155; }
+        
+        /* Queue Table Styling */
+        .table-view { width: 100%; border-collapse: collapse; text-align: left; }
+        .table-view th { color: #38bdf8; font-size: 12px; text-transform: uppercase; padding: 10px; border-bottom: 2px solid #334155; }
+        .table-view td { padding: 12px 10px; font-size: 13px; border-bottom: 1px solid #334155; color: #cbd5e1; }
+        
+        /* Preview Component Station */
+        .preview-station { background: #0f172a; border: 2px dashed #334155; padding: 25px; border-radius: 10px; color: #cbd5e1; position: relative; }
+        .letter-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 15px; margin-bottom: 15px; }
+        .letter-body-text { background: rgba(30, 41, 59, 0.5); padding: 15px; border-radius: 6px; border: 1px solid #1e293b; font-family: monospace; white-space: pre-wrap; color: #f8fafc; line-height: 1.5; }
+        
+        /* Buttons Setup */
+        .btn-action { padding: 5px 10px; border: none; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-rev { background: #3b82f6; color: white; }
+        
+        .btn-ctrl-lg { padding: 12px 24px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 20px; }
+        .btn-dispatch { background: #22c55e; color: white; margin-right: 10px; }
+        .btn-reject { background: #dc2626; color: white; }
+        .btn-ctrl-lg:hover { transform: translateY(-1px); opacity: 0.9; }
+
+        .badge-status { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .bad-pending { background: rgba(234, 179, 8, 0.15); color: #eab308; }
+        .bad-approved { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .bad-rejected { background: rgba(220, 38, 38, 0.15); color: #ef4444; }
+    </style>
+</head>
+<body>
+
+    <!-- 👑 Master Controller Sidebar -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 70px; height: auto; border-radius: 50%;">
+            <h2 style="color: #38bdf8; font-size: 16px; margin-top: 8px;">MyGuru Control</h2>
+        </div>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="teachers.html">Teachers</a>
+        <a href="schools.html">Schools</a>
+        <a href="parents.html">Parents</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="applications.html">Applications</a>
+        <a href="interview-letters.html" class="active">Interview Letters</a>
+        <a href="notifications.html">Notifications</a>
+        <a href="subscriptions.html">Subscriptions</a>
+        <a href="payments.html">Payments</a>
+        <a href="reports.html">Reports</a>
+        <a href="settings.html">Settings</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
+    </div>
+
+    <!-- 💻 Command Workspace Main Content -->
+    <div class="content">
+        <div class="header">
+            <h3>Interview Letters Dispatch Center (ఇంటర్వ్యూ నోటిఫికేషన్ గేట్‌వే)</h3>
+            <span class="tag" style="background: #eab308;">Branding Guard Enabled</span>
+        </div>
+
+        <!-- 🛠️ Split Gateway Management Workspace -->
+        <div class="gateway-container">
+            
+            <!-- LEFT BOX: Master Letters Queue Registry -->
+            <div class="panel-box">
+                <h4 style="color: white; font-size: 14px; margin-top: 0; margin-bottom: 15px;">🚨 Verification Pipeline Queue</h4>
+                <table class="table-view">
+                    <thead>
+                        <tr>
+                            <th>Origin School</th>
+                            <th>Target Teacher</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lettersQueueTbody">
+                        <tr><td colspan="4" style="color:#94a3b8;">Syncing transmission queues...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- RIGHT BOX: Live Dynamic Branded Preview Station -->
+            <div class="panel-box">
+                <h4 style="color: white; font-size: 14px; margin-top: 0; margin-bottom: 15px;">🔍 Branded Intercom Letter Preview</h4>
+                <div id="previewWrapper" class="preview-station">
+                    <div style="text-align:center; color:#94a3b8; padding:40px 0;">
+                        SELECT A PENDING TRANSMISSION RECORD TO LOAD LIVE SECURE MYGURU PREVIEW STAGE.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts Infrastructure Integration -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        let activeLettersList = [];
+        let selectedLetterScope = null;
+
+        async function initLettersGateway() {
+            // Master Session Gateway Shield Check
+            const activeAdmin = await checkLiveUserSession('Admin');
+            if (!activeAdmin) return;
+
+            await fetchLettersVerificationQueue();
+            
+            // Check Router Context Parameters (Dashboard Navigation Deep Linking)
+            const urlParams = new URLSearchParams(window.location.search);
+            const reviewId = urlParams.get('review_id');
+            if (reviewId) loadTargetLetterForPreview(reviewId);
+        }
+
+        async function fetchLettersVerificationQueue() {
+            try {
+                // Relational Fetch: లెటర్ డేటాతో పాటు పంపిన స్కూల్ పేరు, అందుకోవాల్సిన టీచర్ పేరు జాయిన్ చేయడం
+                const { data: letters, error } = await _supabase
+                    .from('interview_letters')
+                    .select(`
+                        id, message, status, job_application_id, created_at, letter_type,
+                        school:common_users!interview_letters_school_id_fkey ( full_name ),
+                        teacher:common_users!interview_letters_teacher_id_fkey ( full_name )
+                    `)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                activeLettersList = letters || [];
+                renderLettersQueueTable(activeLettersList);
+
+            } catch (err) { console.error("Letters queue sync crashed:", err.message); }
+        }
+
+        function renderLettersQueueTable(list) {
+            const tbody = document.getElementById('lettersQueueTbody');
+            tbody.innerHTML = "";
+
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8; padding:20px;">✓ Transmission queue clear. No letters pending dispatch auditing.</td></tr>`;
+                return;
+            }
+
+            list.forEach(item => {
+                const schoolName = item.school ? item.school.full_name : 'Partner School';
+                const teacherName = item.teacher ? item.teacher.full_name : 'Candidate Teacher';
+                const badClass = `bad-${item.status}`;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${schoolName}</strong></td>
+                        <td>${teacherName}</td>
+                        <td><span class="badge-status ${badClass}">${item.status}</span></td>
+                        <td>
+                            <button class="btn-action btn-rev" onclick="loadTargetLetterForPreview('${item.id}')">Review</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function loadTargetLetterForPreview(letterId) {
+            selectedLetterScope = activeLettersList.find(l => l.id === letterId);
+            if (!selectedLetterScope) return;
+
+            const targetWrapper = document.getElementById('previewWrapper');
+            const dateStr = new Date(selectedLetterScope.created_at).toLocaleString('en-IN');
+            const schoolName = selectedLetterScope.school ? selectedLetterScope.school.full_name : 'Partner School';
+            const teacherName = selectedLetterScope.teacher ? selectedLetterScope.teacher.full_name : 'Candidate Teacher';
+
+            // Check if status allows dispatch operations
+            const isPending = selectedLetterScope.status === 'pending_admin_approval';
+
+            targetWrapper.innerHTML = `
+                <div class="letter-header">
+                    <div>
+                        <strong style="color:#38bdf8; font-size:16px;">MyGuru Jobs Dispatch</strong>
+                        <p style="margin:2px 0; font-size:11px; color:#94a3b8;">Generated: ${dateStr}</p>
+                    </div>
+                    <span class="badge-status bad-${selectedLetterScope.status}">${selectedLetterScope.status}</span>
+                </div>
+                
+                <div style="margin-bottom: 15px; font-size: 13px;">
+                    <p style="margin: 4px 0;"><strong>From (Employer):</strong> ${schoolName}</p>
+                    <p style="margin: 4px 0;"><strong>To (Candidate):</strong> ${teacherName}</p>
+                    <p style="margin: 4px 0;"><strong>Format Framework:</strong> Dynamic Content Message</p>
+                </div>
+
+                <div class="letter-body-text">${selectedLetterScope.message}</div>
+
+                <p style="font-size:11px; color:#94a3b8; margin-top:15px; line-height:1.4;">
+                    🔒 <strong>MyGuru Anti-Misuse Shield Active:</strong> Approving this record updates the application lifecycle to SELECTED state and dispatches the alert structure directly to the teacher node dashboard.
+                </p>
+
+                ${isPending ? `
+                    <div style="margin-top: 20px; text-align: right;">
+                        <button class="btn-ctrl-lg btn-dispatch" onclick="processLetterDecisionGate('approved')">Approve & Dispatch</button>
+                        <button class="btn-ctrl-lg btn-reject" onclick="processLetterDecisionGate('rejected')">Reject / Block Content</button>
+                    </div>
+                ` : `
+                    <div style="margin-top:20px; color:#94a3b8; font-size:13px; font-weight:bold; text-align:center;">
+                        ✓ Operations Completed for this Node Record.
+                    </div>
+                `}
+            `;
+        }
+
+        // ⚡ Core Processing Logic (Approve & Dispatch / Reject Gateway)
+        async function processLetterDecisionGate(decisionState) {
+            if (!selectedLetterScope) return;
+            
+            const confirmMsg = decisionState === 'approved' 
+                ? "Authorize MyGuru branding dispatch and release this interview loop to the teacher?" 
+                : "Block this interview letter request?";
+                
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                // 1. Update status in interview_letters table
+                const { error: letterErr } = await _supabase
+                    .from('interview_letters')
+                    .update({ status: decisionState })
+                    .eq('id', selectedLetterScope.id);
+
+                if (letterErr) throw letterErr;
+
+                // 2. Cascade status shift into target job application pipeline
+                const nextAppStatus = decisionState === 'approved' ? 'selected' : 'rejected';
+                
+                if (selectedLetterScope.job_application_id) {
+                    const { error: appErr } = await _supabase
+                        .from('applications')
+                        .update({ status: nextAppStatus })
+                        .eq('application_id', selectedLetterScope.job_application_id);
+                        
+                    if (appErr) throw appErr;
+                }
+
+                alert(decisionState === 'approved' 
+                    ? "✓ Dispatch successful! Communication transmitted to candidate console." 
+                    : "✓ Transmission blocked. Request moved to rejected status.");
+                
+                // Refresh Interface States
+                document.getElementById('previewWrapper').innerHTML = `
+                    <div style="text-align:center; color:#22c55e; padding:40px 0; font-weight:bold;">
+                        ✓ TRANSACTION COMMITTED SUCCESSFULLY! RE-SYNCING DATA NODES...
+                    </div>`;
+                    
+                await fetchLettersVerificationQueue();
+
+            } catch (err) { alert("Pipeline Transaction Failure: " + err.message); }
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        window.onload = initLettersGateway;
+    </script>
+</body>
+</html>
