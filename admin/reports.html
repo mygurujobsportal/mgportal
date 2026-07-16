@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Admin - Intelligence Reports</title>
+    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .reports-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        @media(max-width: 800px) { .reports-grid { grid-template-columns: 1fr; } }
+        
+        .report-box { background: #1e293b; padding: 25px; border-radius: 14px; border: 1px solid #334155; }
+        .report-box h4 { font-size: 15px; color: white; margin-top: 0; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Simulated Chart Bars styling */
+        .chart-container { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
+        .chart-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #cbd5e1; }
+        .chart-label { min-width: 100px; font-weight: bold; }
+        .chart-bar-wrapper { flex-grow: 1; background: #0f172a; height: 16px; border-radius: 4px; overflow: hidden; }
+        .chart-bar { background: linear-gradient(90deg, #38bdf8, #8b5cf6); height: 100%; border-radius: 4px; width: 0%; transition: width 1s ease-in-out; }
+        .chart-value { min-width: 35px; text-align: right; font-weight: bold; color: #38bdf8; }
+        
+        .btn-export { background: #22c55e; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-export:hover { opacity: 0.9; transform: translateY(-1px); }
+    </style>
+</head>
+<body>
+
+    <!-- 👑 Master Controller Sidebar -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 70px; height: auto; border-radius: 50%;">
+            <h2 style="color: #38bdf8; font-size: 16px; margin-top: 8px;">MyGuru Control</h2>
+        </div>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="teachers.html">Teachers</a>
+        <a href="schools.html">Schools</a>
+        <a href="parents.html">Parents</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="applications.html">Applications</a>
+        <a href="interview-letters.html">Interview Letters</a>
+        <a href="notifications.html">Notifications</a>
+        <a href="messages.html">Messages</a>
+        <a href="subscriptions.html">Subscriptions</a>
+        <a href="payments.html">Payments</a>
+        <a href="reports.html" class="active">Reports</a>
+        <a href="settings.html">Settings</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
+    </div>
+
+    <!-- 💻 Command Workspace Main Content -->
+    <div class="content">
+        <div class="header">
+            <h3>Intelligence Reports & Analytics (వ్యవస్థ నివేదికల కేంద్రం)</h3>
+            <span class="tag" style="background: #8b5cf6;">Analytics Engine Active</span>
+        </div>
+
+        <!-- 📊 Operational Analytics Matrix -->
+        <div class="reports-grid">
+            
+            <!-- CHART BOX 1: Role-wise Registration Density -->
+            <div class="report-box">
+                <h4>
+                    <span>👥 Global Account Type Distribution</span>
+                    <button class="btn-export" onclick="exportMetricToCSV('registrations')">Export CSV</button>
+                </h4>
+                <div class="chart-container">
+                    <div class="chart-row">
+                        <span class="chart-label">Teachers</span>
+                        <div class="chart-bar-wrapper"><div id="barTeachers" class="chart-bar"></div></div>
+                        <span id="valTeachers" class="chart-value">0</span>
+                    </div>
+                    <div class="chart-row">
+                        <span class="chart-label">Schools</span>
+                        <div class="chart-bar-wrapper"><div id="barSchools" class="chart-bar" style="background:linear-gradient(90deg, #a855f7, #ec4899)"></div></div>
+                        <span id="valSchools" class="chart-value">0</span>
+                    </div>
+                    <div class="chart-row">
+                        <span class="chart-label">Parents</span>
+                        <div class="chart-bar-wrapper"><div id="barParents" class="chart-bar" style="background:linear-gradient(90deg, #6366f1, #3b82f6)"></div></div>
+                        <span id="valParents" class="chart-value">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHART BOX 2: Pipeline Activity Matrix -->
+            <div class="report-box">
+                <h4>
+                    <span>💼 Recruitment Pipeline Demand Metrics</span>
+                    <button class="btn-export" onclick="exportMetricToCSV('pipeline')">Export CSV</button>
+                </h4>
+                <div class="chart-container">
+                    <div class="chart-row">
+                        <span class="chart-label">Total Jobs</span>
+                        <div class="chart-bar-wrapper"><div id="barJobs" class="chart-bar" style="background:linear-gradient(90deg, #f43f5e, #f43f5e)"></div></div>
+                        <span id="valJobs" class="chart-value">0</span>
+                    </div>
+                    <div class="chart-row">
+                        <span class="chart-label">Applications</span>
+                        <div class="chart-bar-wrapper"><div id="barApps" class="chart-bar" style="background:linear-gradient(90deg, #06b6d4, #0891b2)"></div></div>
+                        <span id="valApps" class="chart-value">0</span>
+                    </div>
+                    <div class="chart-row">
+                        <span class="chart-label">Letters Issued</span>
+                        <div class="chart-block" style="flex-grow:1; display:flex;">
+                            <div class="chart-bar-wrapper"><div id="barLetters" class="chart-bar" style="background:linear-gradient(90deg, #eab308, #ca8a04)"></div></div>
+                        </div>
+                        <span id="valLetters" class="chart-value">0</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts Integration Node -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        let reportDataCache = {
+            teachers: 0, schools: 0, parents: 0, jobs: 0, apps: 0, letters: 0
+        };
+
+        async function initIntelligenceReports() {
+            // Role Gate
+            const activeAdmin = await checkLiveUserSession('Admin');
+            if (!activeAdmin) return;
+
+            await compileSystemMetrics();
+        }
+
+        async function compileSystemMetrics() {
+            try {
+                // Fetch Core Metrics counts from DB clusters
+                const { count: tCount } = await _supabase.from('common_users').select('*', { count: 'exact', head: true }).eq('role', 'Teacher');
+                const { count: sCount } = await _supabase.from('common_users').select('*', { count: 'exact', head: true }).eq('role', 'School');
+                const { count: pCount } = await _supabase.from('common_users').select('*', { count: 'exact', head: true }).eq('role', 'Parent');
+                
+                const { count: jCount } = await _supabase.from('jobs').select('*', { count: 'exact', head: true });
+                const { count: aCount } = await _supabase.from('applications').select('*', { count: 'exact', head: true });
+                const { count: lCount } = await _supabase.from('interview_letters').select('*', { count: 'exact', head: true });
+
+                // Update Local Cache Stack
+                reportDataCache = {
+                    teachers: tCount || 0, schools: sCount || 0, parents: pCount || 0,
+                    jobs: jCount || 0, apps: aCount || 0, letters: lCount || 0
+                };
+
+                // Render Digital Text Values
+                document.getElementById('valTeachers').innerText = reportDataCache.teachers;
+                document.getElementById('valSchools').innerText = reportDataCache.schools;
+                document.getElementById('valParents').innerText = reportDataCache.parents;
+                document.getElementById('valJobs').innerText = reportDataCache.jobs;
+                document.getElementById('valApps').innerText = reportDataCache.apps;
+                document.getElementById('valLetters').innerText = reportDataCache.letters;
+
+                // Render Dynamic Visual Graphic Bars (Scale ratios maximum point 100%)
+                const totalUsersMax = Math.max(reportDataCache.teachers, reportDataCache.schools, reportDataCache.parents, 1);
+                document.getElementById('barTeachers').style.width = `${(reportDataCache.teachers / totalUsersMax) * 100}%`;
+                document.getElementById('barSchools').style.width = `${(reportDataCache.schools / totalUsersMax) * 100}%`;
+                document.getElementById('barParents').style.width = `${(reportDataCache.parents / totalUsersMax) * 100}%`;
+
+                const totalPipelineMax = Math.max(reportDataCache.jobs, reportDataCache.apps, reportDataCache.letters, 1);
+                document.getElementById('barJobs').style.width = `${(reportDataCache.jobs / totalPipelineMax) * 100}%`;
+                document.getElementById('barApps').style.width = `${(reportDataCache.apps / totalPipelineMax) * 100}%`;
+                document.getElementById('barLetters').style.width = `${(reportDataCache.letters / totalPipelineMax) * 100}%`;
+
+            } catch (err) { console.error("Metrics compilation failure:", err.message); }
+        }
+
+        // 💾 CSV Data Export Engine
+        function exportMetricToCSV(metricType) {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            
+            if (metricType === 'registrations') {
+                csvContent += "Metric Label,Count Value\r\n";
+                csvContent += `Teachers,${reportDataCache.teachers}\r\n`;
+                csvContent += `Schools,${reportDataCache.schools}\r\n`;
+                csvContent += `Parents,${reportDataCache.parents}\r\n`;
+            } else if (metricType === 'pipeline') {
+                csvContent += "Metric Label,Count Value\r\n";
+                csvContent += `Total Posted Jobs,${reportDataCache.jobs}\r\n`;
+                csvContent += `Submitted Applications,${reportDataCache.apps}\r\n`;
+                csvContent += `Interview Letters Dispatched,${reportDataCache.letters}\r\n`;
+            }
+
+            const encodedUri = encodeURI(csvContent);
+            const downloadLink = document.createElement("a");
+            downloadLink.setAttribute("href", encodedUri);
+            downloadLink.setAttribute("download", `MyGuru_${metricType}_Report.csv`);
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        window.onload = initIntelligenceReports;
+    </script>
+</body>
+</html>
