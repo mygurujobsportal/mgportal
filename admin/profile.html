@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Admin - Profile Vault</title>
+    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .profile-wrapper { max-width: 650px; margin: 30px auto; background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .meta-station { display: flex; align-items: center; gap: 20px; border-bottom: 1px solid #334155; padding-bottom: 25px; margin-bottom: 25px; }
+        .avatar-frame { width: 80px; height: 80px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; color: white; font-weight: bold; }
+        
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 12px; font-weight: bold; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+        .input-ctrl { width: 100%; padding: 10px 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: white; border-radius: 8px; font-size: 14px; outline: none; box-sizing: border-box; }
+        .input-ctrl:disabled { background: rgba(15, 23, 42, 0.3); color: #64748b; cursor: not-allowed; }
+        
+        .btn-update { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; }
+        .btn-update:hover { transform: translateY(-1px); opacity: 0.9; }
+        
+        .security-zone { border-top: 1px solid #334155; margin-top: 25px; padding-top: 25px; }
+    </style>
+</head>
+<body>
+
+    <!-- 👑 Master Controller Sidebar -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 70px; height: auto; border-radius: 50%;">
+            <h2 style="color: #38bdf8; font-size: 16px; margin-top: 8px;">MyGuru Control</h2>
+        </div>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="teachers.html">Teachers</a>
+        <a href="schools.html">Schools</a>
+        <a href="parents.html">Parents</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="applications.html">Applications</a>
+        <a href="interview-letters.html">Interview Letters</a>
+        <a href="notifications.html">Notifications</a>
+        <a href="messages.html">Messages</a>
+        <a href="subscriptions.html">Subscriptions</a>
+        <a href="payments.html">Payments</a>
+        <a href="reports.html">Reports</a>
+        <a href="audit-logs.html">Audit Logs</a>
+        <a href="settings.html">Settings</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
+    </div>
+
+    <!-- 💻 Command Main Content Workspace -->
+    <div class="content">
+        <div class="header">
+            <h3>Admin Profile Room (అడ్మినిస్ట్రేటర్ వ్యక్తిగత ప్రొఫైల్)</h3>
+            <span class="tag" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6);">Super Admin Control</span>
+        </div>
+
+        <!-- 🛡️ Profile Vault Wrapper -->
+        <div class="profile-wrapper">
+            
+            <!-- Identity Meta Header -->
+            <div class="meta-station">
+                <div class="avatar-frame" id="lblAvatarChar">A</div>
+                <div>
+                    <h2 id="lblAdminTitle" style="color: white; font-size: 22px; margin: 0 0 4px 0;">Administrator</h2>
+                    <p style="color: #38bdf8; font-size: 13px; font-weight: bold; margin: 0;">Scope Role: Super User Panel</p>
+                </div>
+            </div>
+
+            <!-- Block 1: Read-only Identity Constants -->
+            <div class="form-group">
+                <label>Secure Sign-in Email</label>
+                <input type="email" id="txtAdminEmail" class="input-ctrl" disabled>
+            </div>
+
+            <div class="form-group">
+                <label>Full Structural Display Name</label>
+                <input type="text" id="txtAdminName" class="input-ctrl" placeholder="Loading authentication profile...">
+            </div>
+
+            <button class="btn-update" onclick="commitAdminProfileMetadata()">Update Profile Name</button>
+
+            <!-- Block 2: Secure Password Rotation Vault -->
+            <div class="security-zone">
+                <h4 style="color: white; font-size: 14px; margin-top: 0; margin-bottom: 15px;">🔒 Rotate Cryptographic Password</h4>
+                
+                <div class="form-group">
+                    <label>New Secure Password</label>
+                    <input type="password" id="txtNewPassword" class="input-ctrl" placeholder="కనీసం 6 అక్షరాలు ఉండాలి...">
+                </div>
+
+                <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <input type="password" id="txtConfirmPassword" class="input-ctrl" placeholder="కొత్త పాస్‌వర్డ్‌ను మళ్లీ టైప్ చేయండి...">
+                </div>
+
+                <button class="btn-update" style="background: #22c55e;" onclick="rotateAdminAccessPassword()">Commit Password Rotation</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts Integration Node -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        async function initAdminProfileVault() {
+            // Role Shield Barrier Check
+            const activeAdmin = await checkLiveUserSession('Admin');
+            if (!activeAdmin) return;
+
+            await loadLiveAdminSessionMeta();
+        }
+
+        async function loadLiveAdminSessionMeta() {
+            try {
+                // సుపాబేస్ ఆథెంటికేషన్ సెషన్ నుండి లైవ్ యూజర్ డేటా లాగడం
+                const { data: { user }, error } = await _supabase.auth.getUser();
+                if (error) throw error;
+
+                if (user) {
+                    document.getElementById('txtAdminEmail').value = user.email;
+                    
+                    // మెటాడేటా లో పేరు ఉంటే బైండ్ చేయడం, లేకపోతే ఈమెయిల్ లోని మొదటి అక్షరాన్ని అవతార్ గా మార్చడం
+                    const displayName = user.user_metadata && user.user_metadata.full_name ? user.user_metadata.full_name : "System Administrator";
+                    document.getElementById('txtAdminName').value = displayName;
+                    document.getElementById('lblAdminTitle').innerText = displayName;
+                    document.getElementById('lblAvatarChar').innerText = displayName.charAt(0).toUpperCase();
+                }
+
+            } catch (err) { console.error("Session profile load failure:", err.message); }
+        }
+
+        // ⚡ Commit Profile Name Metadata Changes
+        async function commitAdminProfileMetadata() {
+            const nextName = document.getElementById('txtAdminName').value.trim();
+            if (!nextName) return alert("Display Name cannot be left blank.");
+
+            try {
+                const { error } = await _supabase.auth.updateUser({
+                    data: { full_name: nextName }
+                });
+
+                if (error) throw error;
+                alert("✓ Admin Display Name successfully synchronized with auth nodes!");
+                await loadLiveAdminSessionMeta(); // రిఫ్రెష్
+            } catch (err) { alert("Profile update crashed: " + err.message); }
+        }
+
+        // ⚡ Rotate Access Password Gate
+        async function rotateAdminAccessPassword() {
+            const newPass = document.getElementById('txtNewPassword').value;
+            const confPass = document.getElementById('txtConfirmPassword').value;
+
+            if (!newPass || !confPass) return alert("Password entry cells cannot be left empty.");
+            if (newPass.length < 6) return alert("Security directive: Password must be at least 6 characters long.");
+            if (newPass !== confPass) return alert("Mismatch detected: Confirm password must perfectly mirror the new password cell.");
+
+            try {
+                const { error } = await _supabase.auth.updateUser({
+                    password: newPass
+                });
+
+                if (error) throw error;
+                
+                alert("🔒 Access credential rotation completed! Password updated across secure servers.");
+                document.getElementById('txtNewPassword').value = "";
+                document.getElementById('txtConfirmPassword').value = "";
+                
+            } catch (err) { alert("Password rotation crashed: " + err.message); }
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        window.onload = initAdminProfileVault;
+    </script>
+</body>
+</html>
