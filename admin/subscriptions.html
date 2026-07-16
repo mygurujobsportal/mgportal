@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Admin - Subscription Management</title>
+    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .sub-container { background: #1e293b; border: 1px solid #334155; padding: 25px; border-radius: 14px; margin-top: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .filter-bar { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+        .input-search, .select-ctrl { padding: 9px 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: white; border-radius: 6px; font-size: 13px; outline: none; }
+        .input-search { flex-grow: 1; min-width: 200px; }
+        
+        /* Data Table Style */
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .data-table th { color: #38bdf8; font-size: 12px; text-transform: uppercase; padding: 12px 10px; border-bottom: 2px solid #334155; }
+        .data-table td { padding: 12px 10px; font-size: 14px; border-bottom: 1px solid #334155; color: #cbd5e1; vertical-align: middle; }
+        
+        /* Action Buttons */
+        .btn-action-zone { display: flex; gap: 6px; }
+        .btn-adm { padding: 6px 12px; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; text-align: center; }
+        .btn-adm-verify { background: #22c55e; color: white; }
+        .btn-adm-del { background: #dc2626; color: white; }
+        .btn-adm:hover { transform: translateY(-1px); opacity: 0.9; }
+
+        /* Plan Badges */
+        .status-badge { padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .plan-standard { background: #0f172a; border: 1px solid #334155; color: #e2e8f0; }
+        .plan-premium { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #0f172a; border: none; }
+        
+        .role-badge { background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <!-- 👑 Master Controller Sidebar -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 70px; height: auto; border-radius: 50%;">
+            <h2 style="color: #38bdf8; font-size: 16px; margin-top: 8px;">MyGuru Control</h2>
+        </div>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="teachers.html">Teachers</a>
+        <a href="schools.html">Schools</a>
+        <a href="parents.html">Parents</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="applications.html">Applications</a>
+        <a href="interview-letters.html">Interview Letters</a>
+        <a href="notifications.html">Notifications</a>
+        <a href="messages.html">Messages</a>
+        <a href="subscriptions.html" class="active">Subscriptions</a>
+        <a href="payments.html">Payments</a>
+        <a href="reports.html">Reports</a>
+        <a href="settings.html">Settings</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
+    </div>
+
+    <!-- 💻 Command Workspace Main Content -->
+    <div class="content">
+        <div class="header">
+            <h3>Premium Subscriptions Hub (ప్రీమియం సబ్‌స్క్రిప్షన్స్ నియంత్రణ కేంద్రం)</h3>
+            <span class="tag" style="background: #fbbf24; color: #0f172a;">Plan Node Active</span>
+        </div>
+
+        <div class="sub-container">
+            <!-- 🔍 Filter Controls -->
+            <div class="filter-bar">
+                <input type="text" id="searchSubQuery" class="input-search" placeholder="🔍 Search by User Name..." oninput="filterSubscriptionsTable()">
+                <select id="filterPlan" class="select-ctrl" onchange="filterSubscriptionsTable()">
+                    <option value="ALL">All Active Access Plans</option>
+                    <option value="standard">Standard Free Tier</option>
+                    <option value="premium">⭐ Premium Access Tier</option>
+                </select>
+                <select id="filterRole" class="select-ctrl" onchange="filterSubscriptionsTable()">
+                    <option value="ALL">All Account Roles</option>
+                    <option value="Teacher">Teachers Only</option>
+                    <option value="School">Schools Only</option>
+                </select>
+            </div>
+
+            <!-- 📊 Subscriptions Management Table -->
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>User Identity Name</th>
+                        <th>Account Role</th>
+                        <th>Current Access Plan</th>
+                        <th>Verification Status</th>
+                        <th>Control Gateway Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="subMasterTbody">
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: #94a3b8; padding: 30px;">Syncing subscription matrices...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Scripts Integration Node -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        let cachedSubsList = [];
+
+        async function initSubscriptionsHub() {
+            // Master Role Check Barrier
+            const activeAdmin = await checkLiveUserSession('Admin');
+            if (!activeAdmin) return;
+
+            await loadSubscriptionsRepository();
+        }
+
+        async function loadSubscriptionsRepository() {
+            try {
+                // `common_users` టేబుల్ నుండి సబ్‌స్క్రిప్షన్ డేటా లాగడం
+                const { data: users, error } = await _supabase
+                    .from('common_users')
+                    .select('id, full_name, role, subscription, status')
+                    .in('role', ['Teacher', 'School'])
+                    .order('full_name', { ascending: true });
+
+                if (error) throw error;
+
+                cachedSubsList = users || [];
+                renderSubscriptionsTable(cachedSubsList);
+
+            } catch (err) { console.error("Subscriptions fetch failed:", err.message); }
+        }
+
+        function renderSubscriptionsTable(list) {
+            const tbody = document.getElementById('subMasterTbody');
+            tbody.innerHTML = "";
+
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8; padding:20px;">No account profiles match the active plan filter parameters.</td></tr>`;
+                return;
+            }
+
+            list.forEach(u => {
+                const planText = u.subscription ? u.subscription.toUpperCase() : 'STANDARD';
+                const isPremium = u.subscription === 'premium';
+                const planClass = isPremium ? 'plan-premium' : 'plan-standard';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${u.full_name}</strong></td>
+                        <td><span class="role-badge">${u.role}</span></td>
+                        <td><span class="status-badge ${planClass}">${planText}</span></td>
+                        <td><code style="color:#cbd5e1;">${u.status || 'active'}</code></td>
+                        <td>
+                            <div class="btn-action-zone">
+                                ${!isPremium ? `
+                                    <button class="btn-adm btn-adm-verify" onclick="mutateSubscriptionPlan('${u.id}', 'premium')">Activate Premium</button>
+                                ` : `
+                                    <button class="btn-adm btn-adm-del" onclick="mutateSubscriptionPlan('${u.id}', 'standard')">Cancel Subscription</button>
+                                `}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // 🔍 Client-side Multi-Tier Filter Logic
+        function filterSubscriptionsTable() {
+            const searchVal = document.getElementById('searchSubQuery').value.toLowerCase().trim();
+            const planVal = document.getElementById('filterPlan').value;
+            const roleVal = document.getElementById('filterRole').value;
+
+            const filtered = cachedSubsList.filter(u => {
+                const nameMatch = u.full_name.toLowerCase().includes(searchVal);
+                const planMatch = (planVal === 'ALL') || (u.subscription === planVal || (planVal === 'standard' && !u.subscription));
+                const roleMatch = (roleVal === 'ALL') || (u.role === roleVal);
+
+                return nameMatch && planMatch && roleMatch;
+            });
+
+            renderSubscriptionsTable(filtered);
+        }
+
+        // ⚡ Core Access Tier Modification Command (Activate / Revoke Pro Plan)
+        async function mutateSubscriptionPlan(userId, nextPlan) {
+            const promptMsg = nextPlan === 'premium' 
+                ? "Authorize PRO enterprise premium tier benefits for this node user profile?" 
+                : "Revoke premium membership limits and drop down this profile node back to baseline free tier limits?";
+            
+            if(!confirm(promptMsg)) return;
+
+            try {
+                const { error } = await _supabase
+                    .from('common_users')
+                    .update({ subscription: nextPlan })
+                    .eq('id', userId);
+
+                if (error) throw error;
+                
+                // నిశ్శబ్దంగా ఒక సిస్టమ్ నోటిఫికేషన్ అలర్ట్ కూడా పంపడం
+                await _supabase.from('notifications').insert([{
+                    user_id: userId,
+                    title: nextPlan === 'premium' ? '👑 Premium Activated!' : '⚠️ Subscription Changed',
+                    message: nextPlan === 'premium' 
+                        ? 'Your MyGuru profile has been upgraded to Premium Tier by administration.' 
+                        : 'Your Premium plan duration matrix has expired or been terminated.',
+                    type: 'admin_notice',
+                    is_read: false
+                }]);
+
+                alert(`✓ Plan update complete: Node account set to ${nextPlan.toUpperCase()}`);
+                await loadSubscriptionsRepository();
+
+            } catch (err) { alert("Access level adjustment crashed: " + err.message); }
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        window.onload = initSubscriptionsHub;
+    </script>
+</body>
+</html>
