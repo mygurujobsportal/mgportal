@@ -48,7 +48,7 @@ function routeUserToDashboard(role) {
     if (lowerRole === 'teacher') {
         window.location.href = 'teacher/teacher_dashboard.html';
     } else if (lowerRole === 'employer' || lowerRole === 'school') {
-        window.location.href = 'employer/employer_dashboard.html'; // మీ ఎంప్లాయర్ ఫోల్డర్ పాత్
+        window.location.href = 'employer/dashboard.html'; // మీ ఎంప్లాయర్ ఫోల్డర్ పాత్
     } else if (lowerRole === 'parent') {
         window.location.href = 'parent/parent_dashboard.html';
     } else if (lowerRole === 'admin') {
