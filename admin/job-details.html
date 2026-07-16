@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Admin - Job Validation Center</title>
+    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .details-container { max-width: 900px; margin: 20px auto; display: flex; flex-direction: column; gap: 20px; }
+        .job-card { background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); position: relative; }
+        .stamp-status { position: absolute; top: 25px; right: 25px; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        
+        /* Layout Structure */
+        .job-header { border-bottom: 1px solid #334155; padding-bottom: 20px; margin-bottom: 20px; }
+        .job-header h2 { color: #38bdf8; font-size: 24px; margin-bottom: 5px; }
+        .school-link { color: #a855f7; font-weight: bold; text-decoration: none; font-size: 15px; }
+        .school-link:hover { text-decoration: underline; }
+        
+        /* Grid Info Columns */
+        .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        @media(max-width: 650px) { .info-grid { grid-template-columns: 1fr; } }
+        .info-block { background: rgba(15, 23, 42, 0.4); padding: 12px 16px; border-radius: 8px; border: 1px solid #2e3c51; }
+        .info-block label { display: block; font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; }
+        .info-block p { font-size: 14px; color: white; margin: 0; }
+        
+        .action-hub { border-top: 1px solid #334155; padding-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; margin-top: 10px; }
+        
+        /* Buttons */
+        .btn-ctrl { padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-ctrl-appr { background: #22c55e; color: white; }
+        .btn-ctrl-rejl { background: #dc2626; color: white; }
+        .btn-ctrl-del { background: #475569; color: white; }
+        .btn-ctrl:hover { transform: translateY(-1px); opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+    <!-- 👑 Master Controller Sidebar -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 70px; height: auto; border-radius: 50%;">
+            <h2 style="color: #38bdf8; font-size: 16px; margin-top: 8px;">MyGuru Control</h2>
+        </div>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="teachers.html">Teachers</a>
+        <a href="schools.html">Schools</a>
+        <a href="parents.html">Parents</a>
+        <a href="jobs.html" class="active">Jobs</a>
+        <a href="applications.html">Applications</a>
+        <a href="interview-letters.html">Interview Letters</a>
+        <a href="notifications.html">Notifications</a>
+        <a href="subscriptions.html">Subscriptions</a>
+        <a href="payments.html">Payments</a>
+        <a href="reports.html">Reports</a>
+        <a href="settings.html">Settings</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
+    </div>
+
+    <!-- 💻 Command Main Content Workspace -->
+    <div class="content">
+        <div class="header">
+            <h3>💼 ఉద్యోగ ప్రకటన పరిశీలన కేంద్రం (Job Audit Room)</h3>
+            <a href="jobs.html" class="tag" style="background:#475569; text-decoration:none;">← Back Registry</a>
+        </div>
+
+        <div class="details-container">
+            
+            <!-- MASTER BLOCK: Job Specifications -->
+            <div class="job-card">
+                <span id="lblStatusStamp" class="stamp-status" style="background:#475569; color:white;">Loading</span>
+                
+                <div class="job-header">
+                    <h2 id="lblJobTitle">Job Opening Title</h2>
+                    <a href="#" id="lnkSchoolProfile" class="school-link">🏢 Checking School Workspace...</a>
+                </div>
+
+                <!-- Complete Verification Info Grid (Admin Only Privileges) -->
+                <div class="info-grid">
+                    <div class="info-block">
+                        <label>📚 Subject Focus</label>
+                        <p id="lblSubject">Loading...</p>
+                    </div>
+                    <div class="info-block">
+                        <label>💰 Salary Bracket Offered</label>
+                        <p id="lblSalary">Loading...</p>
+                    </div>
+                    <div class="info-block">
+                        <label>🎓 Required Qualification</label>
+                        <p id="lblQual">Loading...</p>
+                    </div>
+                    <div class="info-block">
+                        <label>⏳ Required Experience</label>
+                        <p id="lblExp">Loading...</p>
+                    </div>
+                    <div class="info-block">
+                        <label>📍 District</label>
+                        <p id="lblDistrict">Loading...</p>
+                    </div>
+                    <div class="info-block">
+                        <label>📅 Posted Date</label>
+                        <p id="lblPostedDate">Loading...</p>
+                    </div>
+                    <div class="info-block" style="grid-column: span 2;">
+                        <label>📝 Complete Job Description</label>
+                        <p id="lblDescription" style="line-height: 1.6; white-space: pre-line;">Loading vacancy directives...</p>
+                    </div>
+                </div>
+
+                <!-- Administrative Actions Engine -->
+                <div class="action-hub">
+                    <button class="btn-ctrl btn-ctrl-appr" onclick="changeJobStatusGate('active')">Approve & Publish Live</button>
+                    <button class="btn-ctrl btn-ctrl-rejl" onclick="changeJobStatusGate('rejected')">Reject & Hide Post</button>
+                    <button class="btn-ctrl btn-ctrl-del" onclick="purgeJobPostGate()">Delete Permanently</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts Integration Node -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        let targetJobId = null;
+
+        async function initJobDetailsRoom() {
+            const activeAdmin = await checkLiveUserSession('Admin');
+            if (!activeAdmin) return;
+
+            const urlParams = new URLSearchParams(window.location.search);
+            targetJobId = urlParams.get('id');
+
+            if (!targetJobId) {
+                alert("Invalid Job Scope.");
+                window.location.href = "jobs.html";
+                return;
+            }
+
+            await loadCompleteJobPayload();
+        }
+
+        async function loadCompleteJobPayload() {
+            try {
+                // Relational Fetch for Detailed Job Meta
+                const { data: job, error } = await _supabase
+                    .from('jobs')
+                    .select(`
+                        job_id, job_title, subject, salary_package, qualification_required, experience_required, job_description, status, created_at, employer_id,
+                        employer_profiles ( institution_name, district )
+                    `)
+                    .eq('job_id', targetJobId)
+                    .single();
+
+                if (error) throw error;
+
+                // Bind Metrics into Elements
+                document.getElementById('lblJobTitle').innerText = job.job_title;
+                document.getElementById('lblSubject').innerText = job.subject;
+                document.getElementById('lblSalary').innerText = job.salary_package ? `₹ ${job.salary_package}` : 'Not Disclosed';
+                document.getElementById('lblQual').innerText = job.qualification_required || 'Any Graduate';
+                document.getElementById('lblExp').innerText = job.experience_required ? `${job.experience_required} Years` : 'Freshers Welcome';
+                document.getElementById('lblDescription').innerText = job.job_description || 'No description provided.';
+                document.getElementById('lblPostedDate').innerText = new Date(job.created_at).toLocaleDateString('en-IN');
+
+                const school = job.employer_profiles || { institution_name: 'Partner School', district: 'N/A' };
+                document.getElementById('lblDistrict').innerText = school.district;
+                
+                const schoolLnk = document.getElementById('lnkSchoolProfile');
+                schoolLnk.innerText = `🏢 ${school.institution_name}`;
+                schoolLnk.href = `school-details.html?id=${job.employer_id}`;
+
+                // Status Indicator System
+                const stamp = document.getElementById('lblStatusStamp');
+                stamp.innerText = job.status || 'pending';
+                if(job.status === 'active') stamp.style.background = '#22c55e';
+                if(job.status === 'pending') stamp.style.background = '#ca8a04';
+                if(job.status === 'rejected') stamp.style.background = '#dc2626';
+
+            } catch (err) { console.error("Critical Job payload sync crash:", err.message); }
+        }
+
+        // 🛡️ State Mutation Engine (Approve / Reject)
+        async function changeJobStatusGate(nextStatus) {
+            const confirmMsg = nextStatus === 'active' 
+                ? "Confirm pushing this job opening to live matching algorithms?" 
+                : "Hide this posting from all teacher dashboards?";
+            
+            if(!confirm(confirmMsg)) return;
+
+            try {
+                const { error } = await _supabase
+                    .from('jobs')
+                    .update({ status: nextStatus })
+                    .eq('job_id', targetJobId);
+
+                if (error) throw error;
+                alert(`✓ Post state modified to: ${nextStatus.toUpperCase()}`);
+                await loadCompleteJobPayload();
+            } catch (err) { alert("State modification crashed: " + err.message); }
+        }
+
+        // 🗑️ Permanent Purge Hook
+        async function purgeJobPostGate() {
+            if(!confirm("🚨 CRITICAL ALERT: Wipe this job post completely? This cascades and removes matching statistics.")) return;
+            try {
+                const { error } = await _supabase.from('jobs').delete().eq('job_id', targetJobId);
+                if (error) throw error;
+                alert("✓ Vacancy purged successfully.");
+                window.location.href = "jobs.html";
+            } catch (err) { alert(err.message); }
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        window.onload = initJobDetailsRoom;
+    </script>
+</body>
+</html>
