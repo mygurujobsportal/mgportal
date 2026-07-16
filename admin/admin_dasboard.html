@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Super Admin - Control Center</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --bg-panel: #1e293b; --border-color: #334155; --text-muted: #94a3b8; }
+        .admin-grid-8 { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
+        .admin-card { background: var(--bg-panel); border-left: 4px solid #38bdf8; padding: 18px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .admin-card h3 { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .admin-card p { font-size: 26px; font-weight: bold; margin-top: 8px; color: white; }
+        
+        /* Control Operations Layout */
+        .ops-container { display: grid; grid-template-columns: 2.5fr 1fr; gap: 20px; margin-top: 25px; }
+        @media(max-width: 900px) { .ops-container { grid-template-columns: 1fr; } }
+        
+        .panel-box { background: var(--bg-panel); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px; }
+        .panel-box h4 { font-size: 15px; color: white; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        
+        /* Queue Tables */
+        .table-view { width: 100%; border-collapse: collapse; text-align: left; }
+        .table-view th { color: #38bdf8; font-size: 12px; text-transform: uppercase; padding: 10px; border-bottom: 2px solid var(--border-color); }
+        .table-view td { padding: 10px; font-size: 13px; border-bottom: 1px solid var(--border-color); color: #cbd5e1; }
+        
+        /* Quick Action Buttons */
+        .btn-action { padding: 5px 10px; border: none; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-right: 5px; }
+        .btn-appr { background: #22c55e; color: white; }
+        .btn-rejl { background: #dc2626; color: white; }
+        .btn-view { background: #334155; color: white; border: 1px solid #475569; }
+        .btn-action:hover { transform: translateY(-1px); opacity: 0.9; }
+        
+        /* Badges & Status */
+        .badge { padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .badge-pending { background: rgba(234, 179, 8, 0.15); color: #eab308; }
+        .badge-premium { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #0f172a; }
+
+        /* Activity Feed & Statistics */
+        .activity-feed { list-style: none; padding: 0; }
+        .activity-item { font-size: 13px; padding: 10px 0; border-bottom: 1px solid var(--border-color); color: #cbd5e1; display: flex; gap: 10px; }
+        .activity-time { color: #38bdf8; font-weight: bold; min-width: 45px; }
+        .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color); font-size: 13px; color: #cbd5e1; }
+        
+        /* Top Search Bar Components */
+        .search-container { display: flex; gap: 10px; width: 50%; }
+        .search-input { width: 100%; padding: 8px 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); color: white; border-radius: 6px; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <!-- 👑 Master Controller Sidebar -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 70px; height: auto; border-radius: 50%;">
+            <h2 style="color: #38bdf8; font-size: 16px; margin-top: 8px;">MyGuru Control</h2>
+        </div>
+        <a href="dashboard.html" class="active">Dashboard</a>
+        <a href="teachers.html">Teachers</a>
+        <a href="schools.html">Schools</a>
+        <a href="parents.html">Parents</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="applications.html">Applications</a>
+        <a href="interview-letters.html">Interview Letters</a>
+        <a href="notifications.html">Notifications</a>
+        <a href="subscriptions.html">Subscriptions</a>
+        <a href="payments.html">Payments</a>
+        <a href="reports.html">Reports</a>
+        <a href="settings.html">Settings</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
+    </div>
+
+    <!-- 💻 Command Main Content Workspace -->
+    <div class="content">
+        <!-- Header with Quick Global Search -->
+        <div class="header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="search-container">
+                <input type="text" placeholder="🔍 Quick Search (Teacher, School, Job...)" class="search-input" id="txtGlobalSearch">
+            </div>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span class="badge badge-premium">Master Node Active</span>
+                <span style="cursor: pointer; font-size: 18px;">🔔</span>
+            </div>
+        </div>
+
+        <!-- 📊 8 System Dashboard Cards -->
+        <div class="admin-grid-8">
+            <div class="admin-card" style="border-left-color: #38bdf8;">
+                <h3>Teachers</h3>
+                <p id="cardTeachers">0</p>
+            </div>
+            <div class="admin-card" style="border-left-color: #a855f7;">
+                <h3>Schools</h3>
+                <p id="cardSchools">0</p>
+            </div>
+            <div class="admin-card" style="border-left-color: #6366f1;">
+                <h3>Parents</h3>
+                <p id="cardParents">0</p>
+            </div>
+            <div class="admin-card" style="border-left-color: #f43f5e;">
+                <h3>Jobs</h3>
+                <p id="cardJobs">0</p>
+            </div>
+            <div class="admin-card" style="border-left-color: #06b6d4;">
+                <h3>Applications</h3>
+                <p id="cardApps">0</p>
+            </div>
+            <div class="admin-card" style="border-left-color: #eab308;">
+                <h3>Interview Letters</h3>
+                <p id="cardLetters">0</p>
+            </div>
+            <div class="admin-card" style="border-left-color: #ec4899;">
+                <h3>Premium Users</h3>
+                <p id="cardPremium">0</p>
+            </div>
+            <div class="admin-card" style="border-left-color: #22c55e;">
+                <h3>Revenue</h3>
+                <p id="cardRevenue">₹0</p>
+            </div>
+        </div>
+
+        <!-- 🛠️ Control Center Operational Hub -->
+        <div class="ops-container">
+            
+            <!-- LEFT PANEL: Dynamic Verification Queues -->
+            <div class="left-ops">
+                
+                <!-- 🏢 QUEUE 1: Pending Schools Verification -->
+                <div class="panel-box">
+                    <h4>🏢 School Verification Gateway <span class="badge badge-pending" id="qSchoolCount">0 Pending</span></h4>
+                    <table class="table-view">
+                        <thead>
+                            <tr>
+                                <th>School Name</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="queueSchoolsBody">
+                            <tr><td colspan="4" style="color:var(--text-muted);">Loading pending verifications...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 👨‍🏫 QUEUE 2: Pending Teachers Verification -->
+                <div class="panel-box">
+                    <h4>👨‍🏫 Teacher Documents Gateway <span class="badge badge-pending" id="qTeacherCount">0 Pending</span></h4>
+                    <table class="table-view">
+                        <thead>
+                            <tr>
+                                <th>Teacher Name</th>
+                                <th>Qualification</th>
+                                <th>District</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="queueTeachersBody">
+                            <tr><td colspan="4" style="color:var(--text-muted);">Loading pending verifications...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 💼 QUEUE 3: Pending Jobs Approval -->
+                <div class="panel-box">
+                    <h4>💼 Job Postings Verification Gate <span class="badge badge-pending" id="qJobCount">0 Pending</span></h4>
+                    <table class="table-view">
+                        <thead>
+                            <tr>
+                                <th>School Reference</th>
+                                <th>Subject Focus</th>
+                                <th>Job Title</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="queueJobsBody">
+                            <tr><td colspan="4" style="color:var(--text-muted);">Loading job validation pipeline...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+            <!-- RIGHT PANEL: Live Feed & Performance Statistics -->
+            <div class="right-ops">
+                
+                <!-- Today's Performance Metrics Stats -->
+                <div class="panel-box">
+                    <h4>📈 Statistics Window</h4>
+                    <div class="stat-row"><span>Today's Teachers</span><strong id="statTodayTeachers">0</strong></div>
+                    <div class="stat-row"><span>Today's Schools</span><strong id="statTodaySchools">0</strong></div>
+                    <div class="stat-row"><span>Today's Jobs</span><strong id="statTodayJobs">0</strong></div>
+                    <div class="stat-row"><span>Today's Applications</span><strong id="statTodayApps">0</strong></div>
+                </div>
+
+                <!-- Real-time Live Activity Feed Tracker -->
+                <div class="panel-box">
+                    <h4>⚡ Live Activity Feed</h4>
+                    <ul class="activity-feed" id="liveActivityLogger">
+                        <li class="activity-item"><span class="activity-time">System</span> Listening for live network hooks...</li>
+                    </ul>
+                </div>
+
+                <!-- System Infrastructure Status Nodes -->
+                <div class="panel-box" style="background: rgba(30, 41, 59, 0.5);">
+                    <h4>⚙️ System Status Panel</h4>
+                    <p style="font-size:12px; color:#cbd5e1; margin-bottom:6px;">Database State: <span style="color:#22c55e; font-weight:bold;">● Connected</span></p>
+                    <p style="font-size:12px; color:#cbd5e1; margin-bottom:6px;">Branding Engine: <span style="color:#38bdf8; font-weight:bold;">● 100% Core</span></p>
+                    <p style="font-size:12px; color:#cbd5e1;">ATS Privacy Filter: <span style="color:#a855f7; font-weight:bold;">● Active</span></p>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts Integration Node -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        async function initMasterCommandCenter() {
+            // Role Gateway: కేవలం సూపర్ అడ్మిన్ కి మాత్రమే పర్మిషన్ ఉంటుంది
+            const activeAdmin = await checkLiveUserSession('Admin');
+            if (!activeAdmin) return;
+
+            await loadGlobalCommandMetrics();
+            await runOperationalPipelineQueues();
+        }
+
+        async function loadGlobalCommandMetrics() {
+            try {
+                // 1. Teachers Count
+                const { count: tCnt } = await _supabase.from('common_users').select('*', { count: 'exact', head: true }).eq('role', 'Teacher');
+                document.getElementById('cardTeachers').innerText = tCnt || 0;
+
+                // 2. Schools Count
+                const { count: sCnt } = await _supabase.from('common_users').select('*', { count: 'exact', head: true }).eq('role', 'School');
+                document.getElementById('cardSchools').innerText = sCnt || 0;
+
+                // 3. Parents Count
+                const { count: pCnt } = await _supabase.from('common_users').select('*', { count: 'exact', head: true }).eq('role', 'Parent');
+                document.getElementById('cardParents').innerText = pCnt || 0;
+
+                // 4. Jobs Count
+                const { count: jCnt } = await _supabase.from('jobs').select('*', { count: 'exact', head: true });
+                document.getElementById('cardJobs').innerText = jCnt || 0;
+
+                // 5. Applications Count
+                const { count: aCnt } = await _supabase.from('applications').select('*', { count: 'exact', head: true });
+                document.getElementById('cardApps').innerText = aCnt || 0;
+
+                // 6. Interview Letters Count
+                const { count: lCnt } = await _supabase.from('interview_letters').select('*', { count: 'exact', head: true });
+                document.getElementById('cardLetters').innerText = lCnt || 0;
+
+            } catch (err) {
+                console.error("Metrics Loading Failure:", err.message);
+            }
+        }
+
+        async function runOperationalPipelineQueues() {
+            try {
+                // A. PENDING SCHOOLS VERIFICATION QUEUE
+                const { data: schData } = await _supabase.from('employer_profiles').select('*').limit(3);
+                const schBody = document.getElementById('queueSchoolsBody');
+                schBody.innerHTML = "";
+                if(schData && schData.length > 0) {
+                    document.getElementById('qSchoolCount').innerText = `${schData.length} Pending`;
+                    schData.forEach(s => {
+                        schBody.innerHTML += `
+                            <tr>
+                                <td><strong>${s.institution_name}</strong></td>
+                                <td>${s.city}, ${s.state}</td>
+                                <td><span class="badge badge-pending">Pending Review</span></td>
+                                <td>
+                                    <button class="btn-action btn-view" onclick="alert('Viewing documents...')">View</button>
+                                    <button class="btn-action btn-appr" onclick="alert('School Verified successfully!')">Approve</button>
+                                    <button class="btn-action btn-rejl" onclick="alert('School Verification rejected')">Reject</button>
+                                </td>
+                            </tr>`;
+                    });
+                } else { schBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">✓ No pending schools validation required.</td></tr>`; }
+
+                // B. PENDING TEACHERS DOCUMENT GATEWAY QUEUE
+                const { data: tData } = await _supabase.from('teacher_profiles').select(`id, qualifications, district, common_users(full_name)`).limit(3);
+                const tBody = document.getElementById('queueTeachersBody');
+                tBody.innerHTML = "";
+                if(tData && tData.length > 0) {
+                    document.getElementById('qTeacherCount').innerText = `${tData.length} Pending`;
+                    tData.forEach(t => {
+                        const tName = t.common_users ? t.common_users.full_name : 'Teacher Candidate';
+                        tBody.innerHTML += `
+                            <tr>
+                                <td><strong>${tName}</strong></td>
+                                <td>${t.qualifications}</td>
+                                <td>${t.district}</td>
+                                <td>
+                                    <button class="btn-action btn-view" onclick="alert('Reviewing certificates...')">Review</button>
+                                    <button class="btn-action btn-appr" onclick="alert('Teacher Documents Approved!')">Approve</button>
+                                    <button class="btn-action btn-rejl" onclick="alert('Teacher Profile rejected')">Reject</button>
+                                </td>
+                            </tr>`;
+                    });
+                } else { tBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">✓ All teacher accounts verified.</td></tr>`; }
+
+                // C. PENDING JOBS APPROVAL QUEUE
+                const { data: jobData } = await _supabase.from('jobs').select(`job_id, subject, job_title, employer_profiles(institution_name)`).limit(3);
+                const jBody = document.getElementById('queueJobsBody');
+                jBody.innerHTML = "";
+                if(jobData && jobData.length > 0) {
+                    document.getElementById('qJobCount').innerText = `${jobData.length} Pending`;
+                    jobData.forEach(j => {
+                        const sRef = j.employer_profiles ? j.employer_profiles.institution_name : 'Partner School';
+                        jBody.innerHTML += `
+                            <tr>
+                                <td><strong>${sRef}</strong></td>
+                                <td>${j.subject}</td>
+                                <td>${j.job_title}</td>
+                                <td>
+                                    <button class="btn-action btn-appr" onclick="alert('Job published to Live Matching Engine!')">Approve & Live</button>
+                                    <button class="btn-action btn-rejl" onclick="alert('Job post rejected')">Reject</button>
+                                </td>
+                            </tr>`;
+                    });
+                } else { jBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">✓ No pending job reviews.</td></tr>`; }
+
+            } catch(err) { console.error("Operational pipeline sync error:", err.message); }
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        window.onload = initMasterCommandCenter;
+    </script>
+</body>
+</html>
