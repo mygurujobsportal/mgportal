@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Admin - Support Desk</title>
+    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .desk-container { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; margin-top: 20px; }
+        @media(max-width: 850px) { .desk-container { grid-template-columns: 1fr; } }
+        
+        .panel-box { background: #1e293b; padding: 22px; border-radius: 12px; border: 1px solid #334155; }
+        .filter-bar { display: flex; gap: 10px; margin-bottom: 15px; }
+        .select-ctrl { padding: 8px 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: white; border-radius: 6px; font-size: 13px; outline: none; }
+        
+        /* Tickets Queue */
+        .ticket-list { list-style: none; padding: 0; margin: 0; max-height: 480px; overflow-y: auto; }
+        .ticket-card { background: rgba(15, 23, 42, 0.4); border: 1px solid #2e3c51; padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
+        .ticket-card:hover { border-color: #38bdf8; background: rgba(15, 23, 42, 0.6); }
+        .ticket-meta { display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-bottom: 4px; }
+        
+        /* Chat Reply Workspace */
+        .reply-workspace { background: #0f172a; border: 1px solid #334155; padding: 20px; border-radius: 10px; color: #cbd5e1; }
+        .msg-bubble { background: #1e293b; padding: 15px; border-radius: 8px; border: 1px solid #334155; color: #f8fafc; font-size: 14px; line-height: 1.5; margin-bottom: 15px; }
+        
+        .textarea-ctrl { width: 100%; padding: 10px; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: white; border-radius: 8px; font-size: 13px; outline: none; resize: none; box-sizing: border-box; }
+        .btn-reply { padding: 10px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; background: #22c55e; color: white; margin-top: 10px; }
+        .btn-reply:hover { transform: translateY(-1px); opacity: 0.9; }
+        
+        .badge-tag { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .bad-open { background: rgba(234, 179, 8, 0.15); color: #eab308; }
+        .bad-resolved { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+    </style>
+</head>
+<body>
+
+    <!-- 👑 Master Controller Sidebar -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 70px; height: auto; border-radius: 50%;">
+            <h2 style="color: #38bdf8; font-size: 16px; margin-top: 8px;">MyGuru Control</h2>
+        </div>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="teachers.html">Teachers</a>
+        <a href="schools.html">Schools</a>
+        <a href="parents.html">Parents</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="applications.html">Applications</a>
+        <a href="interview-letters.html">Interview Letters</a>
+        <a href="notifications.html">Notifications</a>
+        <a href="messages.html" class="active">Messages</a>
+        <a href="subscriptions.html">Subscriptions</a>
+        <a href="payments.html">Payments</a>
+        <a href="reports.html">Reports</a>
+        <a href="settings.html">Settings</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
+    </div>
+
+    <!-- 💻 Command Workspace Main Content -->
+    <div class="content">
+        <div class="header">
+            <h3>Support Intercom Desk (యూజర్ సపోర్ట్ అండ్ హెల్ప్‌డెస్క్)</h3>
+            <span class="tag" style="background: #a855f7;">Core Intercom Node</span>
+        </div>
+
+        <!-- 🛠️ Split Layout Grid -->
+        <div class="desk-container">
+            
+            <!-- LEFT BOX: Tickets Registry Queue -->
+            <div class="panel-box">
+                <div class="filter-bar">
+                    <select id="selectCategory" class="select-ctrl" onchange="fetchSupportTicketsQueue()">
+                        <option value="ALL">All Support Categories</option>
+                        <option value="Teacher Support">Teacher Support</option>
+                        <option value="School Support">School Support</option>
+                        <option value="Parent Support">Parent Support</option>
+                    </select>
+                </div>
+                
+                <ul class="ticket-list" id="ticketsQueueUl">
+                    <li style="color:#94a3b8; text-align:center; padding:20px;">Syncing support desk network nodes...</li>
+                </ul>
+            </div>
+
+            <!-- RIGHT BOX: Live Intercom Workspace -->
+            <div class="panel-box">
+                <h4 style="color: white; font-size: 14px; margin-top: 0; margin-bottom: 15px;">💬 Active Ticket Resolution Board</h4>
+                <div id="replyWorkspaceWrapper" class="reply-workspace">
+                    <div style="text-align:center; color:#94a3b8; padding:40px 0;">
+                        SELECT AN OPEN SUPPORT TICKET TO INITIALIZE SECURE ADMIN RESOLUTION ROUTINES.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts Integration Node -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        let cachedTicketsList = [];
+        let selectedTicketScope = null;
+
+        async function initSupportDesk() {
+            const activeAdmin = await checkLiveUserSession('Admin');
+            if (!activeAdmin) return;
+
+            await fetchSupportTicketsQueue();
+        }
+
+        async function fetchSupportTicketsQueue() {
+            try {
+                const categoryFilter = document.getElementById('selectCategory').value;
+                
+                // సపోర్ట్ మెసేజ్ లు లేదా టికెట్లు ఉన్న టేబుల్ నుండి డేటా లాగడం
+                let query = _supabase
+                    .from('support_tickets')
+                    .select(`
+                        id, user_id, category, subject, message, status, created_at,
+                        common_users ( full_name, role )
+                    `)
+                    .order('created_at', { ascending: false });
+
+                if (categoryFilter !== 'ALL') {
+                    query = query.eq('category', categoryFilter);
+                }
+
+                const { data: tickets, error } = await query;
+                if (error) throw error;
+
+                cachedTicketsList = tickets || [];
+                renderTicketsQueueList(cachedTicketsList);
+
+            } catch (err) { console.error("Helpdesk sync crash:", err.message); }
+        }
+
+        function renderTicketsQueueList(list) {
+            const ul = document.getElementById('ticketsQueueUl');
+            ul.innerHTML = "";
+
+            if (list.length === 0) {
+                ul.innerHTML = `<li style="text-align:center; color:#94a3b8; padding:20px;">✓ Support queue clear. No pending client inquiries.</li>`;
+                return;
+            }
+
+            list.forEach(ticket => {
+                const clientName = ticket.common_users ? ticket.common_users.full_name : 'Platform User';
+                const dateStr = new Date(ticket.created_at).toLocaleDateString('en-IN');
+                const badgeClass = `bad-${ticket.status}`;
+
+                ul.innerHTML += `
+                    <li class="ticket-card" onclick="loadTargetTicketIntoWorkspace('${ticket.id}')">
+                        <div class="ticket-meta">
+                            <span>📅 ${dateStr}</span>
+                            <span class="badge-tag ${badgeClass}">${ticket.status}</span>
+                        </div>
+                        <strong style="color:#f8fafc; display:block; font-size:13px; margin-bottom:3px;">${ticket.subject}</strong>
+                        <span style="color:#38bdf8; font-size:11px; font-weight:bold;">Scope: ${ticket.category} (${clientName})</span>
+                    </li>
+                `;
+            });
+        }
+
+        function loadTargetTicketIntoWorkspace(ticketId) {
+            selectedTicketScope = cachedTicketsList.find(t => t.id === ticketId);
+            if (!selectedTicketScope) return;
+
+            const targetWrapper = document.getElementById('replyWorkspaceWrapper');
+            const clientName = selectedTicketScope.common_users ? selectedTicketScope.common_users.full_name : 'Platform User';
+            const clientRole = selectedTicketScope.common_users ? selectedTicketScope.common_users.role : 'User';
+            const dateStr = new Date(selectedTicketScope.created_at).toLocaleString('en-IN');
+            const isOpen = selectedTicketScope.status === 'open';
+
+            targetWrapper.innerHTML = `
+                <div style="border-bottom: 1px solid #1e293b; padding-bottom: 12px; margin-bottom: 12px; font-size: 13px;">
+                    <span class="badge-tag bad-${selectedTicketScope.status}" style="float:right;">${selectedTicketScope.status}</span>
+                    <p style="margin: 3px 0;"><strong>Sender Account:</strong> ${clientName} (${clientRole})</p>
+                    <p style="margin: 3px 0;"><strong>Ticket Subject:</strong> ${selectedTicketScope.subject}</p>
+                    <p style="margin: 3px 0; color:#94a3b8;">Timestamp: ${dateStr}</p>
+                </div>
+
+                <div class="msg-bubble">${selectedTicketScope.message}</div>
+
+                ${isOpen ? `
+                    <div style="margin-top: 15px;">
+                        <label style="display:block; font-size:11px; font-weight:bold; color:#94a3b8; margin-bottom:6px; text-transform:uppercase;">🔒 DISPATCH ADMIN RESOLUTION REPLY</label>
+                        <textarea id="txtAdminReply" rows="4" class="textarea-ctrl" placeholder="యూజర్ సమస్యను పరిష్కరిస్తూ ఇక్కడ సమాధానం టైప్ చేయండి..."></textarea>
+                        <button class="btn-reply" onclick="submitTicketResolutionGate()">Transmit Reply & Close Ticket</button>
+                    </div>
+                ` : `
+                    <div style="text-align:center; color:#22c55e; font-size:13px; font-weight:bold; padding:10px; background:rgba(34,197,94,0.1); border-radius:6px;">
+                        ✓ This inquiry node has been audited and resolved by system administration.
+                    </div>
+                `}
+            `;
+        }
+
+        // ⚡ Submit Reply and Close Ticket Transaction Loop
+        async function submitTicketResolutionGate() {
+            if (!selectedTicketScope) return;
+            
+            const replyMsg = document.getElementById('txtAdminReply').value.trim();
+            if (!replyMsg) return alert("Resolution response text body cannot be empty.");
+
+            if (!confirm("Commit this message loop? This closes the support ticket node and broadcasts an intercom alert to the client dashboard.")) return;
+
+            try {
+                // 1. టికెట్ స్టేటస్ ను resolved గా అప్‌డేట్ చేయడం
+                const { error: ticketErr } = await _supabase
+                    .from('support_tickets')
+                    .update({ status: 'resolved' })
+                    .eq('id', selectedTicketScope.id);
+
+                if (ticketErr) throw ticketErr;
+
+                // 2. యూజర్ డాష్‌బోర్డ్ లో అలర్ట్ రావడం కోసం notifications టేబుల్ లోకి రికార్డు పంపడం
+                const { error: noticeErr } = await _supabase
+                    .from('notifications')
+                    .insert([{
+                        user_id: selectedTicketScope.user_id,
+                        title: `Helpdesk Resolution: ${selectedTicketScope.subject}`,
+                        message: `Admin Response: ${replyMsg}`,
+                        type: 'admin_notice',
+                        is_read: false
+                    }]);
+
+                if (noticeErr) throw noticeErr;
+
+                alert("✓ Resolution successfully transmitted! Support loop marked closed.");
+                
+                document.getElementById('replyWorkspaceWrapper').innerHTML = `
+                    <div style="text-align:center; color:#22c55e; padding:40px 0; font-weight:bold;">
+                        ✓ LOOP COMPLETED. DATA STACKS SYNCED SUCCESSFULLY.
+                    </div>`;
+
+                await fetchSupportTicketsQueue();
+
+            } catch (err) { alert("Helpdesk dispatch failed: " + err.message); }
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        window.onload = initSupportDesk;
+    </script>
+</body>
+</html>
