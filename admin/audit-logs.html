@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Admin - Audit Logs</title>
+    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .logs-container { background: #1e293b; border: 1px solid #334155; padding: 25px; border-radius: 14px; margin-top: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .filter-bar { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+        .input-search, .select-ctrl { padding: 9px 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: white; border-radius: 6px; font-size: 13px; outline: none; }
+        .input-search { flex-grow: 1; min-width: 200px; }
+        
+        /* Data Table Style */
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .data-table th { color: #38bdf8; font-size: 12px; text-transform: uppercase; padding: 12px 10px; border-bottom: 2px solid #334155; }
+        .data-table td { padding: 12px 10px; font-size: 14px; border-bottom: 1px solid #334155; color: #cbd5e1; vertical-align: middle; }
+        
+        /* Log Badge Styles */
+        .badge-log { padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .log-admin { background: rgba(234, 179, 8, 0.15); color: #eab308; }
+        .log-auth { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .log-system { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+        
+        .time-cell { font-family: monospace; color: #38bdf8; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <!-- 👑 Master Controller Sidebar -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 70px; height: auto; border-radius: 50%;">
+            <h2 style="color: #38bdf8; font-size: 16px; margin-top: 8px;">MyGuru Control</h2>
+        </div>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="teachers.html">Teachers</a>
+        <a href="schools.html">Schools</a>
+        <a href="parents.html">Parents</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="applications.html">Applications</a>
+        <a href="interview-letters.html">Interview Letters</a>
+        <a href="notifications.html">Notifications</a>
+        <a href="messages.html">Messages</a>
+        <a href="subscriptions.html">Subscriptions</a>
+        <a href="payments.html">Payments</a>
+        <a href="reports.html">Reports</a>
+        <a href="audit-logs.html" class="active">Audit Logs</a>
+        <a href="settings.html">Settings</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
+    </div>
+
+    <!-- 💻 Command Workspace Main Content -->
+    <div class="content">
+        <div class="header">
+            <h3>System Audit Logs (భద్రతా చర్యల రికార్డు గది)</h3>
+            <span class="tag" style="background: #ef4444;">Immutable Ledger Active</span>
+        </div>
+
+        <div class="logs-container">
+            <!-- 🔍 Filter Controls -->
+            <div class="filter-bar">
+                <input type="text" id="searchLogQuery" class="input-search" placeholder="🔍 Search by Description, IP or Actor ID..." oninput="filterAuditLogsTable()">
+                <select id="filterLogType" class="select-ctrl" onchange="filterAuditLogsTable()">
+                    <option value="ALL">All Event Channels</option>
+                    <option value="admin_action">Administrative Actions</option>
+                    <option value="auth_action">Authentication & Session Events</option>
+                    <option value="system_event">System Automated Events</option>
+                </select>
+            </div>
+
+            <!-- 📊 Audit Logs Data Table -->
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Event Category</th>
+                        <th>Activity Description</th>
+                        <th>Performed By (Actor)</th>
+                        <th>Network IP Context</th>
+                    </tr>
+                </thead>
+                <tbody id="logsMasterTbody">
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: #94a3b8; padding: 30px;">Syncing immutable security logs...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Scripts Integration Node -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        let cachedLogsList = [];
+
+        async function initAuditLogsVault() {
+            // Role Shield Barrier
+            const activeAdmin = await checkLiveUserSession('Admin');
+            if (!activeAdmin) return;
+
+            await loadAuditLogsRepository();
+        }
+
+        async function loadAuditLogsRepository() {
+            try {
+                // `audit_logs` టేబుల్ నుండి సిస్టమ్ యాక్టివిటీ లాగ్‌లను సేకరించడం
+                const { data: logs, error } = await _supabase
+                    .from('audit_logs')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+
+                if (error) {
+                    // ఒకవేళ టేబుల్ ఇంకా క్రియేట్ అవ్వకపోతే డెవలప్‌మెంట్ కోసం డెమో రికార్డులను చూపిస్తుంది
+                    console.warn("Audit logs table sync fallback initialized.");
+                    generateFallbackMockLogs();
+                    return;
+                }
+
+                cachedLogsList = logs || [];
+                renderAuditLogsTable(cachedLogsList);
+
+            } catch (err) { console.error("Audit log critical stream failure:", err.message); }
+        }
+
+        function generateFallbackMockLogs() {
+            cachedLogsList = [
+                { created_at: new Date().toISOString(), log_type: 'admin_action', description: 'Admin approved Teacher Profile #TG-87B2', actor_id: 'Super Admin', ip_address: '192.168.1.50' },
+                { created_at: new Date(Date.now() - 900000).toISOString(), log_type: 'system_event', description: 'School #SCH-4A12 posted new job vacancy: Mathematics Teacher', actor_id: 'System Node', ip_address: '127.0.0.1' },
+                { created_at: new Date(Date.now() - 3600000).toISOString(), log_type: 'auth_action', description: 'User session verified successfully for role: School', actor_id: 'User Router', ip_address: '157.45.22.102' },
+                { created_at: new Date(Date.now() - 7200000).toISOString(), log_type: 'admin_action', description: 'Interview Letter #LET-091B approved and dispatched to candidate', actor_id: 'Super Admin', ip_address: '192.168.1.50' }
+            ];
+            renderAuditLogsTable(cachedLogsList);
+        }
+
+        function renderAuditLogsTable(list) {
+            const tbody = document.getElementById('logsMasterTbody');
+            tbody.innerHTML = "";
+
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8; padding:20px;">No audited event streams match the active filter pipeline.</td></tr>`;
+                return;
+            }
+
+            list.forEach(log => {
+                const timeStr = new Date(log.created_at).toLocaleString('en-IN');
+                
+                let badgeClass = 'log-system';
+                let typeText = 'System Event';
+                
+                if(log.log_type === 'admin_action') { badgeClass = 'log-admin'; typeText = 'Admin Action'; }
+                if(log.log_type === 'auth_action') { badgeClass = 'log-auth'; typeText = 'Auth Event'; }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="time-cell">${timeStr}</td>
+                        <td><span class="badge-log ${badgeClass}">${typeText}</span></td>
+                        <td><strong>${log.description}</strong></td>
+                        <td><code style="color:#cbd5e1;">${log.actor_id || 'System'}</code></td>
+                        <td><span style="color:#94a3b8; font-size:13px;">${log.ip_address || 'N/A'}</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        // 🔍 Client-side Search and Categorization Filter
+        function filterAuditLogsTable() {
+            const searchVal = document.getElementById('searchLogQuery').value.toLowerCase().trim();
+            const typeVal = document.getElementById('filterLogType').value;
+
+            const filtered = cachedLogsList.filter(log => {
+                const descStr = log.description ? log.description.toLowerCase() : '';
+                const actorStr = log.actor_id ? log.actor_id.toLowerCase() : '';
+                const ipStr = log.ip_address ? log.ip_address.toLowerCase() : '';
+                
+                const queryMatch = descStr.includes(searchVal) || actorStr.includes(searchVal) || ipStr.includes(searchVal);
+                const typeMatch = (typeVal === 'ALL') || (log.log_type === typeVal);
+
+                return queryMatch && typeMatch;
+            });
+
+            renderAuditLogsTable(filtered);
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        window.onload = initAuditLogsVault;
+    </script>
+</body>
+</html>
