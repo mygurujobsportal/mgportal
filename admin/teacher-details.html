@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Admin - Teacher Comprehensive Profile</title>
+    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .details-container { max-width: 900px; margin: 20px auto; display: flex; flex-direction: column; gap: 20px; }
+        .profile-card { background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); position: relative; }
+        .stamp-status { position: absolute; top: 25px; right: 25px; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        
+        /* Layout Structure */
+        .profile-header { display: flex; align-items: center; gap: 20px; border-bottom: 1px solid #334155; padding-bottom: 20px; margin-bottom: 20px; }
+        .big-avatar { width: 90px; height: 90px; background: #334155; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; color: #94a3b8; }
+        .header-meta h2 { color: #38bdf8; font-size: 24px; margin-bottom: 5px; }
+        
+        /* Grid Info Columns */
+        .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        @media(max-width: 650px) { .info-grid { grid-template-columns: 1fr; } }
+        .info-block { background: rgba(15, 23, 42, 0.4); padding: 12px 16px; border-radius: 8px; border: 1px solid #2e3c51; }
+        .info-block label { display: block; font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; }
+        .info-block p { font-size: 14px; color: white; margin: 0; word-break: break-all; }
+        
+        .tag-pool { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
+        .tag-pill { background: #334155; color: #e2e8f0; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; }
+        
+        /* Document / Actions Bar */
+        .doc-link { color: #38bdf8; font-weight: bold; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+        .doc-link:hover { text-decoration: underline; }
+        .action-hub { border-top: 1px solid #334155; padding-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; margin-top: 10px; }
+        
+        /* Buttons */
+        .btn-ctrl { padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-ctrl-appr { background: #22c55e; color: white; }
+        .btn-ctrl-rejl { background: #ca8a04; color: white; }
+        .btn-ctrl-susp { background: #ea580c; color: white; }
+        .btn-ctrl-del { background: #dc2626; color: white; }
+        .btn-ctrl:hover { transform: translateY(-1px); opacity: 0.9; }
+        
+        /* Notification Quick Box */
+        .notify-box { background: #0f172a; border: 1px solid #334155; padding: 20px; border-radius: 10px; display: flex; flex-direction: column; gap: 12px; }
+    </style>
+</head>
+<body>
+
+    <!-- 👑 Master Controller Sidebar -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 70px; height: auto; border-radius: 50%;">
+            <h2 style="color: #38bdf8; font-size: 16px; margin-top: 8px;">MyGuru Control</h2>
+        </div>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="teachers.html" class="active">Teachers</a>
+        <a href="schools.html">Schools</a>
+        <a href="parents.html">Parents</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="applications.html">Applications</a>
+        <a href="interview-letters.html">Interview Letters</a>
+        <a href="notifications.html">Notifications</a>
+        <a href="subscriptions.html">Subscriptions</a>
+        <a href="payments.html">Payments</a>
+        <a href="reports.html">Reports</a>
+        <a href="settings.html">Settings</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
+    </div>
+
+    <!-- 💻 Command Main Content Workspace -->
+    <div class="content">
+        <div class="header">
+            <h3> ಉపాధ్యాయుని సమగ్ర ప్రొఫైల్ (Admin View)</h3>
+            <a href="teachers.html" class="tag" style="background:#475569; text-decoration:none;">← Back Vault</a>
+        </div>
+
+        <div class="details-container">
+            
+            <!-- MASTER BLOCK 1: Profile & Credentials -->
+            <div class="profile-card">
+                <span id="lblStatusStamp" class="stamp-status" style="background:#475569; color:white;">Loading</span>
+                
+                <div class="profile-header">
+                    <div class="big-avatar">👨‍🏫</div>
+                    <div class="header-meta">
+                        <h2 id="lblFullName">Candidate Name</h2>
+                        <p id="lblAccountType" style="color:var(--text-muted); font-size:14px; margin:0;">Account Scope: Teacher | ID: --</p>
+                    </div>
+                </div>
+
+                <!-- Complete 360 Visibility Info Grid (Admin Only Privilege) -->
+                <div class="info-grid">
+                    <div class="info-block">
+                        <label>📞 Private Mobile Number</label>
+                        <p id="lblMobile">Loading...</p>
+                    </div>
+                    <div class="info-block">
+                        <label>📧 Secure Email Address</label>
+                        <p id="lblEmail">Loading...</p>
+                    </div>
+                    <div class="info-block">
+                        <label>🎓 Qualification</label>
+                        <p id="lblQual">Loading...</p>
+                    </div>
+                    <div class="info-block">
+                        <label>⏳ Total Experience</label>
+                        <p id="lblExp">Loading...</p>
+                    </div>
+                    <div class="info-block">
+                        <label>📍 District</label>
+                        <p id="lblDistrict">Loading...</p>
+                    </div>
+                    <div class="info-block">
+                        <label>🗺️ State</label>
+                        <p id="lblState">Loading...</p>
+                    </div>
+                    <div class="info-block" style="grid-column: span 2;">
+                        <label>🏠 Full Residential Address</label>
+                        <p id="lblAddress">Not Specified / Loaded</p>
+                    </div>
+                    <div class="info-block" style="grid-column: span 2;">
+                        <label>📚 Core Subjects Expertises</label>
+                        <div id="boxSubjects" class="tag-pool"><span class="tag-pill">N/A</span></div>
+                    </div>
+                    <div class="info-block" style="grid-column: span 2;">
+                        <label>🛠️ Technical & Digital Skills</label>
+                        <div id="boxSkills" class="tag-pool"><span class="tag-pill">N/A</span></div>
+                    </div>
+                    <div class="info-block">
+                        <label>📁 Resume File / Repository</label>
+                        <span id="boxResume">Checking...</span>
+                    </div>
+                    <div class="info-block">
+                        <label>🪪 Identity Verification Node</label>
+                        <p id="lblIdentityDoc">[Aadhaar Redacted for Security]</p>
+                    </div>
+                </div>
+
+                <!-- Administrative Operations Hub -->
+                <div class="action-hub">
+                    <button class="btn-ctrl btn-ctrl-appr" onclick="changeTeacherStatusGate('active')">Verify & Approve</button>
+                    <button class="btn-ctrl btn-ctrl-rejl" onclick="changeTeacherStatusGate('pending')">Reset to Pending</button>
+                    <button class="btn-ctrl btn-ctrl-susp" onclick="changeTeacherStatusGate('suspended')">Suspend Account</button>
+                    <button class="btn-ctrl btn-ctrl-del" onclick="purgeTeacherAccountGate()">Purge / Delete</button>
+                </div>
+            </div>
+
+            <!-- MASTER BLOCK 2: Direct Intercom Notification Broadcast -->
+            <div class="notify-box">
+                <h4 style="color:white; margin:0;">💬 Send Direct Notification to this Teacher</h4>
+                <textarea id="txtAdminMessage" rows="3" style="width:100%; padding:10px; background:rgba(15,23,42,0.6); border:1px solid #334155; color:white; border-radius:6px; font-size:13px; outline:none; resize:none;" placeholder="ఉపాధ్యాయునికి పంపాల్సిన సమాచారం లేదా అప్రూవల్/రిజెక్షన్ అలర్ట్ ఇక్కడ టైప్ చేయండి..."></textarea>
+                <button class="btn-ctrl btn-ctrl-appr" style="align-self:flex-start; font-size:12px; padding:8px 16px;" onclick="dispatchDirectAdminNotice()">Broadcast Notice</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts Integration Area -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        let targetTeacherId = null;
+
+        async function initTeacherDetailsRoom() {
+            const activeAdmin = await checkLiveUserSession('Admin');
+            if (!activeAdmin) return;
+
+            const urlParams = new URLSearchParams(window.location.search);
+            targetTeacherId = urlParams.get('id');
+
+            if (!targetTeacherId) {
+                alert("Invalid Scope Context.");
+                window.location.href = "teachers.html";
+                return;
+            }
+
+            await loadCompleteTeacherPayload();
+        }
+
+        async function loadCompleteTeacherPayload() {
+            try {
+                // Admin Shield Join Query - Full Visibility Fetch
+                const { data: user, error } = await _supabase
+                    .from('common_users')
+                    .select(`
+                        id, full_name, email, phone, status, subscription,
+                        teacher_profiles ( qualifications, experience_years, state, district, full_address, subjects, skills, resume_url )
+                    `)
+                    .eq('id', targetTeacherId)
+                    .single();
+
+                if (error) throw error;
+
+                // Bind Benign User Level Metrics
+                document.getElementById('lblFullName').innerText = user.full_name;
+                document.getElementById('lblAccountType').innerText = `Account Scope: Teacher | ID: #TG-${user.id.split('-')[0].toUpperCase()}`;
+                document.getElementById('lblEmail').innerText = user.email || 'N/A';
+                document.getElementById('lblMobile').innerText = user.phone || 'N/A';
+
+                // Manage Status Stamp Styling
+                const stamp = document.getElementById('lblStatusStamp');
+                stamp.innerText = user.status || 'pending';
+                if(user.status === 'active') stamp.style.background = '#22c55e';
+                if(user.status === 'pending') stamp.style.background = '#ca8a04';
+                if(user.status === 'suspended') stamp.style.background = '#dc2626';
+
+                // Profile Section Mapping
+                const tProf = user.teacher_profiles || {};
+                document.getElementById('lblQual').innerText = tProf.qualifications || 'Not Provided';
+                document.getElementById('lblExp').innerText = `${tProf.experience_years || 0} Years`;
+                document.getElementById('lblState').innerText = tProf.state || 'N/A';
+                document.getElementById('lblDistrict').innerText = tProf.district || 'N/A';
+                document.getElementById('lblAddress').innerText = tProf.full_address || 'Address context empty';
+
+                // Bind Subjects List Array
+                const subBox = document.getElementById('boxSubjects');
+                subBox.innerHTML = "";
+                if(tProf.subjects && Array.isArray(tProf.subjects)) {
+                    tProf.subjects.forEach(s => subBox.innerHTML += `<span class="tag-pill">${s}</span>`);
+                } else { subBox.innerHTML = `<span style="color:var(--text-muted); font-size:13px;">N/A</span>`; }
+
+                // Bind Skills List Array
+                const skillBox = document.getElementById('boxSkills');
+                skillBox.innerHTML = "";
+                if(tProf.skills && Array.isArray(tProf.skills)) {
+                    tProf.skills.forEach(sk => skillBox.innerHTML += `<span class="tag-pill" style="border:1px solid #38bdf8; color:#38bdf8; background:none;">${sk}</span>`);
+                } else { skillBox.innerHTML = `<span style="color:var(--text-muted); font-size:13px;">N/A</span>`; }
+
+                // Resume Handler Logic
+                const resBox = document.getElementById('boxResume');
+                if(tProf.resume_url) {
+                    resBox.innerHTML = `<a href="${tProf.resume_url}" target="_blank" class="doc-link">📄 View & Download Resume</a>`;
+                } else { resBox.innerHTML = `<span style="color:#ef4444; font-size:13px; font-weight:bold;">⚠️ Not Uploaded</span>`; }
+
+            } catch (err) { console.error("Critical Payload Loading Failure:", err.message); }
+        }
+
+        // 🛡️ Account Status Modification Gateway
+        async function changeTeacherStatusGate(nextStatus) {
+            if(!confirm(`Confirm changing teacher operational state to ${nextStatus.toUpperCase()}?`)) return;
+            try {
+                const { error } = await _supabase.from('common_users').update({ status: nextStatus }).eq('id', targetTeacherId);
+                if (error) throw error;
+                alert(`✓ System updated: Teacher state is now ${nextStatus.toUpperCase()}`);
+                await loadCompleteTeacherPayload();
+            } catch (err) { alert("Operational failure: " + err.message); }
+        }
+
+        // 🗑️ Purge Account
+        async function purgeTeacherAccountGate() {
+            if(!confirm("🚨 WARNING: Are you sure you want to delete this teacher permanently?")) return;
+            try {
+                const { error } = await _supabase.from('common_users').delete().eq('id', targetTeacherId);
+                if (error) throw error;
+                alert("✓ Account wiped successfully.");
+                window.location.href = "teachers.html";
+            } catch (err) { alert(err.message); }
+        }
+
+        // 💬 Direct Notice Dispatcher
+        async function dispatchDirectAdminNotice() {
+            const msg = document.getElementById('txtAdminMessage').value.trim();
+            if(!msg) return alert("Notice body cannot be empty.");
+            try {
+                const { error } = await _supabase.from('notifications').insert([{
+                    user_id: targetTeacherId,
+                    title: 'System Admin Broadcast',
+                    message: msg,
+                    type: 'admin_notice',
+                    is_read: false
+                }]);
+                if (error) throw error;
+                alert("✓ Custom push notification sent to teacher's console.");
+                document.getElementById('txtAdminMessage').value = "";
+            } catch (err) { alert("Broadcast failed: " + err.message); }
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        window.onload = initTeacherDetailsRoom;
+    </script>
+</body>
+</html>
