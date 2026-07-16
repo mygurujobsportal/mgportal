@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Admin - Applications Pipeline</title>
+    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .vault-container { background: #1e293b; border: 1px solid #334155; padding: 25px; border-radius: 14px; margin-top: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .filter-bar { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+        .input-search, .select-ctrl { padding: 9px 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: white; border-radius: 6px; font-size: 13px; outline: none; }
+        .input-search { flex-grow: 1; min-width: 200px; }
+        
+        /* Data Table Style */
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .data-table th { color: #38bdf8; font-size: 12px; text-transform: uppercase; padding: 12px 10px; border-bottom: 2px solid #334155; }
+        .data-table td { padding: 12px 10px; font-size: 14px; border-bottom: 1px solid #334155; color: #cbd5e1; vertical-align: middle; }
+        
+        /* Action Buttons */
+        .btn-adm { padding: 6px 12px; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; text-decoration: none; text-align: center; display: inline-block; }
+        .btn-adm-view { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; }
+        .btn-adm:hover { transform: translateY(-1px); opacity: 0.9; }
+
+        /* Managed ATS Status Badges */
+        .status-badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .st-applied { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+        .st-viewed { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+        .st-shortlisted { background: rgba(99, 102, 241, 0.15); color: #6366f1; }
+        .st-admin_review { background: rgba(234, 179, 8, 0.15); color: #eab308; }
+        .st-selected { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .st-rejected { background: rgba(220, 38, 38, 0.15); color: #ef4444; }
+    </style>
+</head>
+<body>
+
+    <!-- 👑 Master Controller Sidebar -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 70px; height: auto; border-radius: 50%;">
+            <h2 style="color: #38bdf8; font-size: 16px; margin-top: 8px;">MyGuru Control</h2>
+        </div>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="teachers.html">Teachers</a>
+        <a href="schools.html">Schools</a>
+        <a href="parents.html">Parents</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="applications.html" class="active">Applications</a>
+        <a href="interview-letters.html">Interview Letters</a>
+        <a href="notifications.html">Notifications</a>
+        <a href="subscriptions.html">Subscriptions</a>
+        <a href="payments.html">Payments</a>
+        <a href="reports.html">Reports</a>
+        <a href="settings.html">Settings</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
+    </div>
+
+    <!-- 💻 Command Workspace Main Content -->
+    <div class="content">
+        <div class="header">
+            <h3>Applications Pipeline (మొత్తం దరఖాస్తుల నిఘా కేంద్రం)</h3>
+            <span class="tag" style="background: #06b6d4;">ATS Flow Control</span>
+        </div>
+
+        <div class="vault-container">
+            <!-- 🔍 Filter Controls -->
+            <div class="filter-bar">
+                <input type="text" id="searchAppQuery" class="input-search" placeholder="🔍 Search by Teacher, School, or Job Title..." oninput="filterApplicationsTable()">
+                <select id="filterStatus" class="select-ctrl" onchange="filterApplicationsTable()">
+                    <option value="ALL">All ATS States</option>
+                    <option value="applied">Applied</option>
+                    <option value="viewed">Viewed</option>
+                    <option value="shortlisted">Shortlisted</option>
+                    <option value="admin_review">🚨 Admin Review Queue</option>
+                    <option value="selected">Selected / Joined</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+
+            <!-- 📊 Applications Master Table -->
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Teacher Name</th>
+                        <th>Target Institution</th>
+                        <th>Position Applied</th>
+                        <th>ATS Pipeline Status</th>
+                        <th>Applied Date</th>
+                        <th>Operational Hub</th>
+                    </tr>
+                </thead>
+                <tbody id="appsMasterTbody">
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #94a3b8; padding: 30px;">Loading recruitment pipeline nodes...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Scripts Integration Node -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        let cachedAppsList = [];
+
+        async function initApplicationsPipeline() {
+            // Master Role Gateway Shield
+            const activeAdmin = await checkLiveUserSession('Admin');
+            if (!activeAdmin) return;
+
+            await loadApplicationsRepository();
+        }
+
+        async function loadApplicationsRepository() {
+            try {
+                // Multi-Table Relational JOIN: అప్లికేషన్ తో పాటు టీచర్ పేరు, జాబ్ టైటిల్, స్కూల్ పేరు లాగడం
+                const { data: apps, error } = await _supabase
+                    .from('applications')
+                    .select(`
+                        application_id,
+                        status,
+                        created_at,
+                        common_users ( full_name ),
+                        jobs ( job_title, employer_profiles ( institution_name ) )
+                    `)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                cachedAppsList = apps || [];
+                renderApplicationsTable(cachedAppsList);
+
+            } catch (err) {
+                console.error("Recruitment pipeline sync failure:", err.message);
+            }
+        }
+
+        function renderApplicationsTable(list) {
+            const tbody = document.getElementById('appsMasterTbody');
+            tbody.innerHTML = "";
+
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:20px;">No application nodes match the set viewport filters.</td></tr>`;
+                return;
+            }
+
+            list.forEach(a => {
+                const teacherName = a.common_users ? a.common_users.full_name : 'Teacher Candidate';
+                const jobTitle = a.jobs ? a.jobs.job_title : 'Vacancy';
+                const schoolName = (a.jobs && a.jobs.employer_profiles) ? a.jobs.employer_profiles.institution_name : 'Partner School';
+                const appliedDate = new Date(a.created_at).toLocaleDateString('en-IN');
+                
+                // Pipeline Managed Status Class Customizer
+                let statusClass = `st-${a.status}`;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${teacherName}</strong></td>
+                        <td>${schoolName}</td>
+                        <td><span style="color:#38bdf8;">${jobTitle}</span></td>
+                        <td><span class="status-badge ${statusClass}">${a.status || 'applied'}</span></td>
+                        <td>${appliedDate}</td>
+                        <td>
+                            <a href="application-details.html?id=${a.application_id}" class="btn-adm btn-adm-view">Audit Pipeline</a>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // 🔍 Real-time Live Text & Status Filter Engine
+        function filterApplicationsTable() {
+            const searchVal = document.getElementById('searchAppQuery').value.toLowerCase().trim();
+            const statusVal = document.getElementById('filterStatus').value;
+
+            const filtered = cachedAppsList.filter(a => {
+                const tName = a.common_users ? a.common_users.full_name.toLowerCase() : '';
+                const jTitle = a.jobs ? a.jobs.job_title.toLowerCase() : '';
+                const sName = (a.jobs && a.jobs.employer_profiles) ? a.jobs.employer_profiles.institution_name.toLowerCase() : '';
+                
+                const textMatch = tName.includes(searchVal) || jTitle.includes(searchVal) || sName.includes(searchVal);
+                const statusMatch = (statusVal === 'ALL') || (a.status === statusVal);
+
+                return textMatch && statusMatch;
+            });
+
+            renderApplicationsTable(filtered);
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        window.onload = initApplicationsPipeline;
+    </script>
+</body>
+</html>
