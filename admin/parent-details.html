@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Admin - Parent Comprehensive Profile</title>
+    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .details-container { max-width: 900px; margin: 20px auto; display: flex; flex-direction: column; gap: 20px; }
+        .profile-card { background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); position: relative; }
+        .stamp-status { position: absolute; top: 25px; right: 25px; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        
+        /* Layout Structure */
+        .profile-header { display: flex; align-items: center; gap: 20px; border-bottom: 1px solid #334155; padding-bottom: 20px; margin-bottom: 20px; }
+        .big-avatar { width: 90px; height: 90px; background: #334155; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; color: #94a3b8; }
+        .header-meta h2 { color: #38bdf8; font-size: 24px; margin-bottom: 5px; }
+        
+        /* Grid Info Columns */
+        .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        @media(max-width: 650px) { .info-grid { grid-template-columns: 1fr; } }
+        .info-block { background: rgba(15, 23, 42, 0.4); padding: 12px 16px; border-radius: 8px; border: 1px solid #2e3c51; }
+        .info-block label { display: block; font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; }
+        .info-block p { font-size: 14px; color: white; margin: 0; word-break: break-all; }
+        
+        .action-hub { border-top: 1px solid #334155; padding-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; margin-top: 10px; }
+        
+        /* Buttons */
+        .btn-ctrl { padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-ctrl-susp { background: #ea580c; color: white; }
+        .btn-ctrl-del { background: #dc2626; color: white; }
+        .btn-ctrl:hover { transform: translateY(-1px); opacity: 0.9; }
+        
+        /* Notification Box */
+        .notify-box { background: #0f172a; border: 1px solid #334155; padding: 20px; border-radius: 10px; display: flex; flex-direction: column; gap: 12px; }
+    </style>
+</head>
+<body>
+
+    <!-- 👑 Master Controller Sidebar -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 70px; height: auto; border-radius: 50%;">
+            <h2 style="color: #38bdf8; font-size: 16px; margin-top: 8px;">MyGuru Control</h2>
+        </div>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="teachers.html">Teachers</a>
+        <a href="schools.html">Schools</a>
+        <a href="parents.html" class="active">Parents</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="applications.html">Applications</a>
+        <a href="interview-letters.html">Interview Letters</a>
+        <a href="notifications.html">Notifications</a>
+        <a href="subscriptions.html">Subscriptions</a>
+        <a href="payments.html">Payments</a>
+        <a href="reports.html">Reports</a>
+        <a href="settings.html">Settings</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
+    </div>
+
+    <!-- 💻 Command Main Content Workspace -->
+    <div class="content">
+        <div class="header">
+            <h3>👪 తల్లిదండ్రుల సమగ్ర ప్రొఫైల్ (Admin Workspace)</h3>
+            <a href="parents.html" class="tag" style="background:#475569; text-decoration:none;">← Back Vault</a>
+        </div>
+
+        <div class="details-container">
+            
+            <!-- MASTER BLOCK 1: Parent Identity Profile -->
+            <div class="profile-card">
+                <span id="lblStatusStamp" class="stamp-status" style="background:#475569; color:white;">Loading</span>
+                
+                <div class="profile-header">
+                    <div class="big-avatar">👪</div>
+                    <div class="header-meta">
+                        <h2 id="lblFullName">Parent Full Name</h2>
+                        <p id="lblAccountType" style="color:#94a3b8; font-size:14px; margin:0;">Account Scope: Parent | ID: --</p>
+                    </div>
+                </div>
+
+                <!-- Complete 3 visibility parameters Grid (Admin Only Privileges) -->
+                <div class="info-grid">
+                    <div class="info-block">
+                        <label>📞 Private Mobile Number</label>
+                        <p id="lblMobile">Loading...</p>
+                    </div>
+                    <div class="info-block">
+                        <label>📧 Private Email Address</label>
+                        <p id="lblEmail">Loading...</p>
+                    </div>
+                    <div class="info-block">
+                        <label>📍 District</label>
+                        <p id="lblDistrict">Loading...</p>
+                    </div>
+                    <div class="info-block">
+                        <label>🗺️ State</label>
+                        <p id="lblState">Loading...</p>
+                    </div>
+                    <div class="info-block" style="grid-column: span 2;">
+                        <label>🏠 Full Residential / Communication Address</label>
+                        <p id="lblAddress">Not Specified / Loaded</p>
+                    </div>
+                </div>
+
+                <!-- Administrative Actions Hub -->
+                <div class="action-hub">
+                    <button id="btnToggleSuspension" class="btn-ctrl btn-ctrl-susp" onclick="toggleParentAccountState()">Suspend Account</button>
+                    <button class="btn-ctrl btn-ctrl-del" onclick="purgeParentAccountGate()">Delete Permanently</button>
+                </div>
+            </div>
+
+            <!-- MASTER BLOCK 2: Direct Intercom Notification Broadcast -->
+            <div class="notify-box">
+                <h4 style="color:white; margin:0;">💬 Send Direct Notification to this Parent</h4>
+                <textarea id="txtAdminMessage" rows="3" style="width:100%; padding:10px; background:rgba(15,23,42,0.6); border:1px solid #334155; color:white; border-radius:6px; font-size:13px; outline:none; resize:none;" placeholder="తల్లిదండ్రులకు పంపాల్సిన అకౌంట్ అప్‌డేట్స్ లేదా సమాచారం ఇక్కడ టైప్ చేయండి..."></textarea>
+                <button class="btn-ctrl btn-ctrl-susp" style="align-self:flex-start; font-size:12px; padding:8px 16px; background:#22c55e;" onclick="dispatchDirectParentNotice()">Broadcast Notice</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts Integration Node -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        let targetParentId = null;
+        let currentParentStatus = 'active';
+
+        async function initParentDetailsRoom() {
+            const activeAdmin = await checkLiveUserSession('Admin');
+            if (!activeAdmin) return;
+
+            const urlParams = new URLSearchParams(window.location.search);
+            targetParentId = urlParams.get('id');
+
+            if (!targetParentId) {
+                alert("Invalid Scope Context.");
+                window.location.href = "parents.html";
+                return;
+            }
+
+            await loadCompleteParentPayload();
+        }
+
+        async function loadCompleteParentPayload() {
+            try {
+                const { data: user, error } = await _supabase
+                    .from('common_users')
+                    .select(`
+                        id, full_name, email, phone, status,
+                        parent_profiles ( state, district, full_address )
+                    `)
+                    .eq('id', targetParentId)
+                    .single();
+
+                if (error) throw error;
+
+                // Bind User Account Level Metrics
+                document.getElementById('lblFullName').innerText = user.full_name;
+                document.getElementById('lblAccountType').innerText = `Account Scope: Parent | ID: #PT-${user.id.split('-')[0].toUpperCase()}`;
+                document.getElementById('lblEmail').innerText = user.email || 'N/A';
+                document.getElementById('lblMobile').innerText = user.phone || 'N/A';
+                currentParentStatus = user.status || 'active';
+
+                // Manage Status Stamp Styling
+                const stamp = document.getElementById('lblStatusStamp');
+                stamp.innerText = currentParentStatus;
+                
+                const suspBtn = document.getElementById('btnToggleSuspension');
+                if(currentParentStatus === 'active') {
+                    stamp.style.background = '#22c55e';
+                    suspBtn.innerText = "Suspend Account";
+                    suspBtn.style.background = "#ea580c";
+                } else {
+                    stamp.style.background = '#dc2626';
+                    suspBtn.innerText = "Activate / Unsuspend";
+                    suspBtn.style.background = "#22c55e";
+                }
+
+                // Profile Sections Mapping
+                const pProf = user.parent_profiles || {};
+                document.getElementById('lblState').innerText = pProf.state || 'N/A';
+                document.getElementById('lblDistrict').innerText = pProf.district || 'N/A';
+                document.getElementById('lblAddress').innerText = pProf.full_address || 'Address context empty';
+
+            } catch (err) { console.error("Critical Parent Payload Loading Failure:", err.message); }
+        }
+
+        // 🛡️ Account Status Modification Gateway (Toggle Suspend)
+        async function toggleParentAccountState() {
+            const nextStatus = currentParentStatus === 'suspended' ? 'active' : 'suspended';
+            if(!confirm(`Confirm changing parent account state to ${nextStatus.toUpperCase()}?`)) return;
+            try {
+                const { error } = await _supabase.from('common_users').update({ status: nextStatus }).eq('id', targetParentId);
+                if (error) throw error;
+                alert(`✓ System updated: Parent account is now ${nextStatus.toUpperCase()}`);
+                await loadCompleteParentPayload();
+            } catch (err) { alert("Operational failure: " + err.message); }
+        }
+
+        // 🗑️ Purge Account Completely
+        async function purgeParentAccountGate() {
+            if(!confirm("🚨 CRITICAL ALERT: Are you sure you want to delete this parent account permanently? This cannot be undone!")) return;
+            try {
+                const { error } = await _supabase.from('common_users').delete().eq('id', targetParentId);
+                if (error) throw error;
+                alert("✓ Parent account completely expunged.");
+                window.location.href = "parents.html";
+            } catch (err) { alert(err.message); }
+        }
+
+        // 💬 Direct Parent Notice Dispatcher
+        async function dispatchDirectParentNotice() {
+            const msg = document.getElementById('txtAdminMessage').value.trim();
+            if(!msg) return alert("Notice body cannot be empty.");
+            try {
+                const { error } = await _supabase.from('notifications').insert([{
+                    user_id: targetParentId,
+                    title: 'System Admin Alert',
+                    message: msg,
+                    type: 'admin_notice',
+                    is_read: false
+                }]);
+                if (error) throw error;
+                alert("✓ Custom push notification sent to parent console.");
+                document.getElementById('txtAdminMessage').value = "";
+            } catch (err) { alert("Broadcast failed: " + err.message); }
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        window.onload = initParentDetailsRoom;
+    </script>
+</body>
+</html>
