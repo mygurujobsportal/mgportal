@@ -46,15 +46,16 @@ function routeUserToDashboard(role) {
     const lowerRole = role.toLowerCase();
     
     if (lowerRole === 'teacher') {
-        window.location.href = 'teacher/teacher_dashboard.html';
+        window.location.href = '../teacher/teacher_dashboard.html';
     } else if (lowerRole === 'employer' || lowerRole === 'school') {
-        window.location.href = 'employer/employer-dashboard.html'; // మీ ఎంప్లాయర్ ఫోల్డర్ పాత్
+        // ⚠️ టాబ్‌లో లోకల్ ఫైల్స్ రన్ అవుతున్నప్పుడు ఒక అడుగు వెనక్కి (../) వెళ్లి employer ఫోల్డర్ వెతకాలి
+        window.location.href = '../employer/employer_dashboard.html'; 
     } else if (lowerRole === 'parent') {
-        window.location.href = 'parent/parent_dashboard.html';
+        window.location.href = '../parent/parent_dashboard.html';
     } else if (lowerRole === 'admin') {
-        window.location.href = 'admin/admin_dashboard.html';
+        window.location.href = '../admin/admin_dashboard.html';
     } else {
-        window.location.href = 'index.html';
+        window.location.href = '../index.html';
     }
 }
 
