@@ -34,6 +34,7 @@
             <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 80px; height: auto; border-radius: 50%;">
             <h2>MyGuru Jobs</h2>
         </div>
+        <!-- 🎯 డ్యాష్‌బోర్డ్ నావిగేషన్ లింక్ ఇక్కడ పక్కాగా ఉంది -->
         <a href="employer_dashboard.html">Dashboard</a>
         <a href="profile.html">My Profile</a>
         <a href="post-job.html">Post Job</a>
@@ -43,7 +44,7 @@
         <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
     </div>
 
-    <!-- 💻 మెయిన్ కంటెంట్ సెక్షన్ -->
+    <!-- 💻 メイン కంటెంట్ సెక్షన్ -->
     <div class="content">
         <div class="header" style="display: flex; justify-content: space-between; align-items: center;">
             <h3>పోస్ట్ చేసిన ఉద్యోగాల నిర్వహణ</h3>
@@ -63,7 +64,6 @@
         let currentEmployerId = null;
 
         async function initMyJobsPage() {
-            // auth.js ద్వారా సెషన్ వెరిఫికేషన్
             const session = await checkLiveUserSession('School');
             if (!session) return;
 
@@ -73,12 +73,12 @@
 
         async function fetchAndRenderPostedJobs() {
             try {
-                // 1. ఈ ఎంప్లాయర్ పోస్ట్ చేసిన జాబ్స్ ని లోడ్ చేయడం
+                // 🎯 1. కాలమ్ పేరు 'school_id' కి మరియు 'created_at' కి మార్చాం
                 const { data: jobs, error: jobErr } = await _supabase
                     .from('jobs')
                     .select('*')
-                    .eq('employer_id', currentEmployerId)
-                    .order('posted_at', { ascending: false });
+                    .eq('school_id', currentEmployerId)
+                    .order('created_at', { ascending: false });
 
                 if (jobErr) throw jobErr;
 
@@ -90,15 +90,16 @@
                     return;
                 }
 
-                // 2. ప్రతి జాబ్ కి వచ్చిన అప్లికేషన్ల కౌంట్ ని ఒకేసారి తెచ్చుకోవడం
                 const jobIds = jobs.map(j => j.job_id);
+                
+                // 🎯 2. కేవలం ఈ స్కూల్ జాబ్స్ ఐడీలకు సంబంధించిన అప్లికేషన్లను మాత్రమే ফিল্টার చేసి తెస్తున్నాం
                 const { data: appCounts, error: appErr } = await _supabase
                     .from('applications')
-                    .select('job_id');
+                    .select('job_id')
+                    .in('job_id', jobIds);
                 
                 if (appErr) throw appErr;
 
-                // మ్యాపింగ్ కౌంటర్ బిల్డర్
                 const countMap = {};
                 if(appCounts) {
                     appCounts.forEach(app => {
@@ -106,22 +107,22 @@
                     });
                 }
 
-                // కార్డ్స్ డిజైన్ రెండరింగ్
                 jobs.forEach(job => {
                     const applicantsCount = countMap[job.job_id] || 0;
-                    const formattedDate = new Date(job.posted_at).toLocaleDateString('en-IN');
+                    // 🎯 'created_at' కి మార్చాం
+                    const formattedDate = job.created_at ? new Date(job.created_at).toLocaleDateString('en-IN') : 'N/A';
                     
                     const cardHtml = `
                         <div class="emp-job-card">
                             <div class="job-meta">
-                                <h4>${job.job_title}</h4>
+                                <h4>${job.title || 'No Title'}</h4> 
                                 <div class="badge-holder">
-                                    <span class="job-badge">${job.subject}</span>
-                                    <span class="job-badge">${job.job_type || 'Full Time'}</span>
-                                    <span class="job-badge job-badge-live status-live">Active</span>
+                                    <span class="job-badge">${job.subject || 'General'}</span>
+                                    <span class="job-badge">${job.experience_required || 'Fresher/Exp'}</span>
+                                    <span class="job-badge job-badge-live status-live">${job.status || 'Active'}</span>
                                 </div>
                                 <p style="margin-top:10px;"><strong>Posted on:</strong> ${formattedDate}</p>
-                                <p><strong>Location:</strong> ${job.location}, ${job.district}</p>
+                                <p><strong>Location:</strong> ${job.location || 'N/A'}</p>
                                 <p><strong>Applicants:</strong> <span style="color:#38bdf8; font-weight:bold;">${applicantsCount} Teachers</span></p>
                             </div>
                             <div class="card-actions">
@@ -140,12 +141,10 @@
             }
         }
 
-        // 🚀 Applicants బటన్ నొక్కినప్పుడు ఆ జాబ్ ఐడీని URL పారామీటర్‌గా పంపడం
         function goToApplicantsPage(jobId) {
             window.location.href = `applicants.html?job_id=${jobId}`;
         }
 
-        // 🗑️ జాబ్ డిలీట్ చేసే ఫంక్షన్
         async function deleteJobGate(jobId) {
             if (!confirm("Are you sure you want to delete this job requirement permanently?")) return;
 
@@ -158,7 +157,7 @@
                 if (error) throw error;
 
                 alert("✓ Job requirement deleted successfully!");
-                fetchAndRenderPostedJobs(); // లిస్ట్ రీలోడ్
+                fetchAndRenderPostedJobs();
             } catch (err) {
                 alert("Delete failed: " + err.message);
             }
