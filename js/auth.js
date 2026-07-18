@@ -25,29 +25,19 @@ async function checkLiveUserSession(requiredRole) {
 
         // Role Matching Barrier (toLowerCase వాడటం వల్ల కేస్-మిస్మ్యాచ్ సమస్య రాదు)
         if (requiredRole && user.role.toLowerCase() !== requiredRole.toLowerCase()) {
-                if (requiredRole && user.role.toLowerCase() !== requiredRole.toLowerCase()) {
             alert("⚠️ Unauthorized Access Detected!");
             window.location.href = "../index.html";
             return null;
         }
 
-        // 🎯 సుపాబేస్ ఆథ్ మరియు మెటాడేటా లోపల మొబైల్ నంబర్ కోసం డీప్ స్కాన్ లేయర్
-        const extractedMobile = session.user.phone || 
-                               session.user.mobile || 
-                               session.user.user_metadata?.mobile || 
-                               session.user.user_metadata?.phone || 
-                               user.mobile || 
-                               user.phone || '';
-
         return {
             id: session.user.id,
             role: user.role,
             email: session.user.email,
-            phone: extractedMobile, // 🔥 ఇక్కడ పక్కాగా స్కాన్ చేసిన మొబైల్ నంబర్ వెళ్తుంది
+            phone: session.user.phone || session.user.user_metadata?.mobile || user.mobile || '',
             profileData: user.profileData || {}
         };
     } catch (e) {
-
         console.error("Auth Session Outage:", e);
         window.location.href = "../index.html";
         return null;
@@ -87,3 +77,4 @@ async function logoutSessionRouter() {
     localStorage.removeItem('myguru_user');
     window.location.href = "../index.html"; // రూట్ లాగిన్ పేజీకి రీడైరెక్ట్
 }
+
