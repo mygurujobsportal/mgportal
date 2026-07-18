@@ -173,7 +173,7 @@
             
             // 3. ఆత్ సెషన్ లేదా లోకల్ స్టోరేజ్ బ్యాకప్స్
             authEmailBackup = session.email || session.user?.email || cachedUser.email || '';
-            authMobileBackup = session.phone || session.mobile || session.user?.phone || 
+            authMobileBackup = session.mobile || session.mobile || session.user?.phone || 
                                session.user_metadata?.mobile || cachedUser.mobile || cachedUser.phone || '';
 
             if (!authMobileBackup && cachedUser.profileData) {
