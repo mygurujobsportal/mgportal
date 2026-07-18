@@ -30,7 +30,13 @@ async function checkLiveUserSession(requiredRole) {
             return null;
         }
 
-        return user;
+        return {
+            id: session.user.id,
+            role: user.role,
+            email: session.user.email,
+            phone: session.user.phone || session.user.user_metadata?.mobile || user.mobile || '',
+            profileData: user.profileData || {}
+        };
     } catch (e) {
         console.error("Auth Session Outage:", e);
         window.location.href = "../index.html";
