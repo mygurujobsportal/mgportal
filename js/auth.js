@@ -34,7 +34,7 @@ async function checkLiveUserSession(requiredRole) {
             id: session.user.id,
             role: user.role,
             email: session.user.email,
-            mobile: session.user.mobile || session.user.user_metadata?.mobile || user.mobile || '',
+            mobile: session.user.mobile || user.mobile || '',
             profileData: user.profileData || {}
         };
     } catch (e) {
