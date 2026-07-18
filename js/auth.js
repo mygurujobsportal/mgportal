@@ -1,80 +1,267 @@
-// MyGuru Secure Session Validation & Routing Engine
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Employer - Update Profile</title>
+    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .profile-wrapper { background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 16px; max-width: 800px; margin: 20px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .section-title { font-size: 16px; color: #38bdf8; text-transform: uppercase; border-bottom: 1px solid #334155; padding-bottom: 8px; margin: 25px 0 15px 0; font-weight: bold; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px; }
+        @media(max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-size: 13px; font-weight: bold; color: #cbd5e1; margin-bottom: 6px; }
+        .input-ctrl { padding: 10px; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: white; border-radius: 8px; font-size: 14px; outline: none; }
+        .input-ctrl:focus { border-color: #3b82f6; }
+        .btn-row { display: flex; gap: 15px; margin-top: 30px; justify-content: flex-end; }
+        .btn { padding: 12px 25px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-save { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
+        .btn-preview { background: #334155; color: white; border: 1px solid #475569; }
+        .btn:hover { transform: translateY(-2px); }
+    </style>
+</head>
+<body>
 
-/**
- * 🔄 Active User Session Verification
- * బ్రౌజర్ లోకల్ డేటాను మరియు సుపాబేస్ నెట్‌వర్క్ ఆథ్ సెషన్ ని క్రాస్-వెరిఫై చేస్తుంది.
- */
-async function checkLiveUserSession(requiredRole) {
-    const cachedUser = localStorage.getItem('myguru_user');
-    if (!cachedUser) {
-        window.location.href = "../index.html"; // ఒకవేళ ఫోల్డర్ లోపల ఉంటే వెనక్కి పంపడానికి
-        return null;
-    }
-    
-    const user = JSON.parse(cachedUser);
+    <!-- 🧭 Left Menu / సైడ్‌బార్ సెక్షన్ -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 80px; height: auto; border-radius: 50%;">
+            <h2>MyGuru Jobs</h2>
+        </div>
+        <a href="employer_dashboard.html">Dashboard</a>
+        <a href="profile.html" class="active">My Profile</a>
+        <a href="post-job.html">Post Job</a>
+        <a href="jobs.html">My Jobs</a>
+        <a href="applicants.html">Applicants</a>
+        <a href="settings.html">Settings</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
+    </div>
 
-    try {
-        // Validate native session from supabase server
-        const { data: { session }, error } = await _supabase.auth.getSession();
-        
-        if (error || !session) {
-            localStorage.removeItem('myguru_user');
-            window.location.href = "../index.html";
-            return null;
+    <!-- 💻 మెయిన్ కంటెంట్ సెక్షన్ -->
+    <div class="content">
+        <div class="header">
+            <h3>Institution Profile Setup</h3>
+            <span class="tag" style="background: #3b82f6;">Mandatory Action</span>
+        </div>
+
+        <div class="profile-wrapper">
+            <form id="employer-profile-form" onsubmit="saveEmployerProfile(event)">
+                
+                <!-- SECTION 1: School Information -->
+                <div class="section-title">School Information</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>School Name *</label>
+                        <input type="text" id="txtSchoolName" class="input-ctrl" required placeholder="e.g., ABC International School">
+                    </div>
+                    <div class="form-group">
+                        <label>Principal Name</label>
+                        <input type="text" id="txtPrincipal" class="input-ctrl" placeholder="e.g., Dr. Ramesh Kumar">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Registered Email *</label>
+                        <input type="email" id="txtEmail" class="input-ctrl" required readonly style="background: #0f172a; color: #94a3b8;">
+                    </div>
+                    <div class="form-group">
+                        <label>Mobile Number *</label>
+                        <input type="text" id="txtMobile" class="input-ctrl" required readonly style="background: #0f172a; color: #94a3b8;">
+                    </div>
+                </div>
+
+                <!-- SECTION 2: Address -->
+                <div class="section-title">Address Location Details</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>State *</label>
+                        <input type="text" id="txtState" class="input-ctrl" required placeholder="e.g., Telangana">
+                    </div>
+                    <div class="form-group">
+                        <label>District *</label>
+                        <input type="text" id="txtDistrict" class="input-ctrl" required placeholder="e.g., Warangal">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>City / Town *</label>
+                        <input type="text" id="txtCity" class="input-ctrl" required placeholder="e.g., Hanamkonda">
+                    </div>
+                    <div class="form-group">
+                        <label>Pincode *</label>
+                        <input type="text" id="txtPincode" class="input-ctrl" required placeholder="506001">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Full Address Description</label>
+                    <input type="text" id="txtAddressLine" class="input-ctrl" placeholder="Street name, Landmark details...">
+                </div>
+
+                <!-- SECTION 3: School Details -->
+                <div class="section-title">School Specifications</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Affiliation Board</label>
+                        <select id="ddlBoard" class="input-ctrl">
+                            <option value="State Board">State Board (SSC)</option>
+                            <option value="CBSE">CBSE</option>
+                            <option value="ICSE">ICSE</option>
+                            <option value="IB">International Board (IB)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Instruction Medium</label>
+                        <select id="ddlMedium" class="input-ctrl">
+                            <option value="English">English Medium</option>
+                            <option value="Telugu">Telugu Medium</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>School Type</label>
+                        <select id="ddlSchoolType" class="input-ctrl">
+                            <option value="Co-Ed">Co-Educational</option>
+                            <option value="Girls">Girls Only</option>
+                            <option value="Boys">Boys Only</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Established Year</label>
+                        <input type="number" id="txtEstYear" class="input-ctrl" placeholder="e.g., 2005">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Official Website (If any)</label>
+                    <input type="url" id="txtWebsite" class="input-ctrl" placeholder="https://www.yourschool.com">
+                </div>
+                <div class="form-group">
+                    <label>Institution Short Description</label>
+                    <textarea id="txtDescription" class="input-ctrl" rows="3" placeholder="Tell teachers about your school campus environment..."></textarea>
+                </div>
+
+                <div class="btn-row">
+                    <button type="button" class="btn btn-preview" onclick="alert('Feature coming soon!')">Preview Profile</button>
+                    <button type="submit" class="btn btn-save">Save & Continue</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- స్క్రిప్ట్స్ లింకింగ్ ఆర్డర్ -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        let currentUserId = null;
+        let backupEmail = '';
+        let backupMobile = '';
+
+        async function initProfileSetup() {
+            // auth.js ద్వారా సెషన్ వెరిఫికేషన్
+            const session = await checkLiveUserSession('School');
+            if (!session) return;
+
+            currentUserId = session.id;
+            
+            // లోకల్ స్టోరేజ్ నుండి రిజిస్టర్డ్ యూజర్ డేటాను బ్యాకప్ గా తెచ్చుకోవడం
+            const cachedUser = JSON.parse(localStorage.getItem('myguru_user')) || {};
+            
+            // ఆత్ లెవెల్ ఈమెయిల్ మరియు మొబైల్ కలెక్ట్ చేయడం
+            backupEmail = session.email || session.user?.email || cachedUser.email || '';
+            backupMobile = session.phone || session.user?.phone || session.user_metadata?.mobile || cachedUser.mobile || '';
+
+            // ముందస్తుగా డీఫాల్ట్ ఆత్ డేటాను ఫీల్డ్స్‌ లో ఉంచడం
+            document.getElementById('txtEmail').value = backupEmail;
+            document.getElementById('txtMobile').value = backupMobile || 'Not Set';
+            
+            // డేటాబేస్ టేబుల్ లో ఆల్రెడీ మిగతా ప్రొఫైల్ వివరాలు ఉంటే లోడ్ చేయడం
+            await fetchExistingSchoolProfile();
         }
 
-        // Role Matching Barrier (toLowerCase వాడటం వల్ల కేస్-మిస్మ్యాచ్ సమస్య రాదు)
-        if (requiredRole && user.role.toLowerCase() !== requiredRole.toLowerCase()) {
-            alert("⚠️ Unauthorized Access Detected!");
-            window.location.href = "../index.html";
-            return null;
+        async function fetchExistingSchoolProfile() {
+            try {
+                // టేబుల్ పేరును మీ సుపాబేస్ స్ట్రక్చర్ 'school_profiles' కి మ్యాచ్ చేసాం
+                const { data, error } = await _supabase
+                    .from('school_profiles')
+                    .select('*')
+                    .eq('id', currentUserId)
+                    .maybeSingle();
+
+                if (error) throw error;
+
+                if (data) {
+                    // సుపాబేస్ కాలమ్ పేర్లకు మ్యాచ్ చేసి డేటాను లోడ్ చేస్తున్నాం
+                    document.getElementById('txtSchoolName').value = data.school_name || '';
+                    document.getElementById('txtPrincipal').value = data.principal_name || '';
+                    
+                    // 🎯 ఒకవేళ టేబుల్ లో 'mobile' లేదా 'email' ఖాళీగా ఉంటే పాత ఆత్ బ్యాకప్ ని వాడుకుంటుంది
+                    document.getElementById('txtMobile').value = data.mobile || backupMobile || 'Not Set';
+                    document.getElementById('txtEmail').value = data.email || backupEmail || '';
+                    
+                    document.getElementById('txtState').value = data.state || '';
+                    document.getElementById('txtDistrict').value = data.district || '';
+                    document.getElementById('txtAddressLine').value = data.address || '';
+                    if (data.board) document.getElementById('ddlBoard').value = data.board;
+                    if (data.school_type) document.getElementById('ddlSchoolType').value = data.school_type;
+                    document.getElementById('txtDescription').value = data.about || '';
+                }
+            } catch (err) {
+                console.error("Profile Fetch Failure:", err.message);
+            }
         }
 
-        return {
-            id: session.user.id,
-            role: user.role,
-            email: session.user.email,
-            mobile: session.user.mobile ||session.data.mobile || user.mobile || '',
-            profileData: user.profileData || {}
-        };
-    } catch (e) {
-        console.error("Auth Session Outage:", e);
-        window.location.href = "../index.html";
-        return null;
-    }
-}
+        async function saveEmployerProfile(event) {
+            event.preventDefault();
 
-/**
- * 🚪 Landing Destination Router
- * ఫోల్డర్ స్ట్రక్చర్ ప్రకారం పాత్‌లను ఇక్కడ సరిచేశాం 🛠️
- */
-function routeUserToDashboard(role) {
-    const lowerRole = role.toLowerCase();
-    
-    if (lowerRole === 'teacher') {
-        window.location.href = '../teacher/teacher_dashboard.html';
-    } else if (lowerRole === 'employer' || lowerRole === 'school') {
-        // ⚠️ టాబ్‌లో లోకల్ ఫైల్స్ రన్ అవుతున్నప్పుడు ఒక అడుగు వెనక్కి (../) వెళ్లి employer ఫోల్డర్ వెతకాలి
-        window.location.href = './employer/employer_dashboard.html'; 
-    } else if (lowerRole === 'parent') {
-        window.location.href = '../parent/parent_dashboard.html';
-    } else if (lowerRole === 'admin') {
-        window.location.href = '../admin/admin_dashboard.html';
-    } else {
-        window.location.href = '../index.html';
-    }
-}
+            // సుపాబేస్ టేబుల్ కాలమ్ స్కీమాకు పక్కాగా మ్యాప్ చేసిన ప్యాకెట్
+            const profilePacket = {
+                id: currentUserId,
+                school_name: document.getElementById('txtSchoolName').value.trim(),
+                principal_name: document.getElementById('txtPrincipal').value.trim(),
+                mobile: document.getElementById('txtMobile').value,
+                email: document.getElementById('txtEmail').value,
+                state: document.getElementById('txtState').value.trim(),
+                district: document.getElementById('txtDistrict').value.trim(),
+                address: document.getElementById('txtAddressLine').value.trim(),
+                board: document.getElementById('ddlBoard').value,
+                school_type: document.getElementById('ddlSchoolType').value,
+                about: document.getElementById('txtDescription').value.trim(),
+                updated_at: new Date().toISOString()
+            };
 
-/**
- * 🛑 Sign Out Session Closure
- */
-async function logoutSessionRouter() {
-    try {
-        await _supabase.auth.signOut();
-    } catch(e) {
-        console.error("SignOut Exception:", e);
-    }
-    localStorage.removeItem('myguru_user');
-    window.location.href = "../index.html"; // రూట్ లాగిన్ పేజీకి రీడైరెక్ట్
-}
+            try {
+                // 'school_profiles' టేబుల్‌లోకి అప్‌సర్ట్ చేస్తున్నాం
+                const { error } = await _supabase
+                    .from('school_profiles')
+                    .upsert(profilePacket);
 
+                if (error) throw error;
+
+                alert("✓ Profile updated successfully!");
+                
+                const cached = JSON.parse(localStorage.getItem('myguru_user')) || {};
+                cached.profileData = profilePacket;
+                localStorage.setItem('myguru_user', JSON.stringify(cached));
+
+                // రీడైరెక్షన్‌ను కొత్త ఫైల్ 'employer_dashboard.html' కి మార్చాం
+                window.location.href = "employer_dashboard.html";
+
+            } catch (err) {
+                alert("Error saving profile: " + err.message);
+            }
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        window.onload = initProfileSetup;
+    </script>
+</body>
+</html>
