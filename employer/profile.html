@@ -32,7 +32,6 @@
             <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 80px; height: auto; border-radius: 50%;">
             <h2>MyGuru Jobs</h2>
         </div>
-        <!-- 🎯 ఇక్కడ పాత్‌ను employer_dashboard.html గా మార్చాం -->
         <a href="employer_dashboard.html">Dashboard</a>
         <a href="profile.html" class="active">My Profile</a>
         <a href="post-job.html">Post Job</a>
@@ -65,15 +64,16 @@
                     </div>
                 </div>
                 <div class="form-row">
-    <div class="form-group">
-        <label>Registered Email *</label>
-        <input type="email" id="txtEmail" class="input-ctrl" required readonly style="background: #0f172a; color: #94a3b8;">
-    </div>
-    <div class="form-group">
-        <label>Mobile Number *</label>
-        <input type="text" id="txtMobile" class="input-ctrl" required readonly style="background: #0f172a; color: #94a3b8;">
-    </div>
-</div>
+                    <div class="form-group">
+                        <label>Registered Email *</label>
+                        <input type="email" id="txtEmail" class="input-ctrl" required readonly style="background: #0f172a; color: #94a3b8;">
+                    </div>
+                    <div class="form-group">
+                        <label>Mobile Number *</label>
+                        <input type="text" id="txtMobile" class="input-ctrl" required readonly style="background: #0f172a; color: #94a3b8;">
+                    </div>
+                </div>
+
                 <!-- SECTION 2: Address -->
                 <div class="section-title">Address Location Details</div>
                 <div class="form-row">
@@ -158,33 +158,26 @@
     <script src="../js/auth.js"></script>
     <script>
         let currentUserId = null;
+        let backupEmail = '';
+        let backupMobile = '';
 
-                        async function initProfileSetup() {
+        async function initProfileSetup() {
             // auth.js ద్వారా సెషన్ వెరిఫికేషన్
             const session = await checkLiveUserSession('School');
             if (!session) return;
 
             currentUserId = session.id;
             
-            // 🎯 లోకల్ స్టోరేజ్ నుండి రిజిస్టర్డ్ యూజర్ డేటాను బ్యాకప్ గా తెచ్చుకోవడం
+            // లోకల్ స్టోరేజ్ నుండి రిజిస్టర్డ్ యూజర్ డేటాను బ్యాకప్ గా తెచ్చుకోవడం
             const cachedUser = JSON.parse(localStorage.getItem('myguru_user')) || {};
             
-            // ==========================================
-            // 🔍 EMAIL Extraction (సుపాబేస్ లేదా క్యాష్ నుండి)
-            // ==========================================
-            const registeredEmail = session.email || session.user?.email || cachedUser.email || cachedUser.user?.email || '';
-            document.getElementById('txtEmail').value = registeredEmail;
-            
-            // ==========================================
-            // 🔍 MOBILE Extraction (సుపాబేస్ లేదా క్యాష్ నుండి)
-            // ==========================================
-            const registeredMobile = session.phone || session.user?.phone || 
-                                     session.user_metadata?.mobile || 
-                                     cachedUser.mobile || cachedUser.phone || 
-                                     cachedUser.user?.phone || 'Not Set';
-            document.getElementById('txtMobile').value = registeredMobile;
-            
-            console.log("Extracted Auth Data -> Email:", registeredEmail, " | Mobile:", registeredMobile);
+            // ఆత్ లెవెల్ ఈమెయిల్ మరియు మొబైల్ కలెక్ట్ చేయడం
+            backupEmail = session.email || session.user?.email || cachedUser.email || '';
+            backupMobile = session.phone || session.user?.phone || session.user_metadata?.mobile || cachedUser.mobile || '';
+
+            // ముందస్తుగా డీఫాల్ట్ ఆత్ డేటాను ఫీల్డ్స్‌ లో ఉంచడం
+            document.getElementById('txtEmail').value = backupEmail;
+            document.getElementById('txtMobile').value = backupMobile || 'Not Set';
             
             // డేటాబేస్ టేబుల్ లో ఆల్రెడీ మిగతా ప్రొఫైల్ వివరాలు ఉంటే లోడ్ చేయడం
             await fetchExistingSchoolProfile();
@@ -192,7 +185,7 @@
 
         async function fetchExistingSchoolProfile() {
             try {
-                // 🎯 టేబుల్ పేరును మీ సుపాబేస్ స్ట్రక్చర్ 'school_profiles' కి మార్చాం
+                // టేబుల్ పేరును మీ సుపాబేస్ స్ట్రక్చర్ 'school_profiles' కి మ్యాచ్ చేసాం
                 const { data, error } = await _supabase
                     .from('school_profiles')
                     .select('*')
@@ -202,19 +195,20 @@
                 if (error) throw error;
 
                 if (data) {
-                    // 🎯 మీ సుపాబేస్ కాలమ్ పేర్లకు మ్యాచ్ చేశాం
+                    // సుపాబేస్ కాలమ్ పేర్లకు మ్యాచ్ చేసి డేటాను లోడ్ చేస్తున్నాం
                     document.getElementById('txtSchoolName').value = data.school_name || '';
                     document.getElementById('txtPrincipal').value = data.principal_name || '';
-                    document.getElementById('txtMobile').value = data.mobile || '';
+                    
+                    // 🎯 ఒకవేళ టేబుల్ లో 'mobile' లేదా 'email' ఖాళీగా ఉంటే పాత ఆత్ బ్యాకప్ ని వాడుకుంటుంది
+                    document.getElementById('txtMobile').value = data.mobile || backupMobile || 'Not Set';
+                    document.getElementById('txtEmail').value = data.email || backupEmail || '';
+                    
                     document.getElementById('txtState').value = data.state || '';
                     document.getElementById('txtDistrict').value = data.district || '';
                     document.getElementById('txtAddressLine').value = data.address || '';
                     if (data.board) document.getElementById('ddlBoard').value = data.board;
                     if (data.school_type) document.getElementById('ddlSchoolType').value = data.school_type;
                     document.getElementById('txtDescription').value = data.about || '';
-                } else {
-                    const cachedUser = JSON.parse(localStorage.getItem('myguru_user'));
-                    document.getElementById('txtMobile').value = cachedUser?.mobile || 'Not Set';
                 }
             } catch (err) {
                 console.error("Profile Fetch Failure:", err.message);
@@ -224,7 +218,7 @@
         async function saveEmployerProfile(event) {
             event.preventDefault();
 
-            // 🎯 సుపాబేస్ టేబుల్ కాలమ్ స్కీమాకు పక్కాగా మ్యాప్ చేసిన ప్యాకెట్
+            // సుపాబేస్ టేబుల్ కాలమ్ స్కీమాకు పక్కాగా మ్యాప్ చేసిన ప్యాకెట్
             const profilePacket = {
                 id: currentUserId,
                 school_name: document.getElementById('txtSchoolName').value.trim(),
@@ -241,7 +235,7 @@
             };
 
             try {
-                // 🎯 'school_profiles' టేబుల్‌లోకి అప్‌సర్ట్ చేస్తున్నాం
+                // 'school_profiles' టేబుల్‌లోకి అప్‌సర్ట్ చేస్తున్నాం
                 const { error } = await _supabase
                     .from('school_profiles')
                     .upsert(profilePacket);
@@ -254,7 +248,7 @@
                 cached.profileData = profilePacket;
                 localStorage.setItem('myguru_user', JSON.stringify(cached));
 
-                // 🎯 రీడైరెక్షన్‌ను కొత్త ఫైల్ 'employer_dashboard.html' కి మార్చాం
+                // రీడైరెక్షన్‌ను కొత్త ఫైల్ 'employer_dashboard.html' కి మార్చాం
                 window.location.href = "employer_dashboard.html";
 
             } catch (err) {
