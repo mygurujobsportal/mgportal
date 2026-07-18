@@ -157,49 +157,35 @@
     <script src="../js/supabase.js"></script>
     <script src="../js/auth.js"></script>
     <script>
-                let currentUserId = null;
-        let backupEmail = '';
-        let backupMobile = '';
+                        let currentUserId = null;
+        let authEmailBackup = '';
+        let authMobileBackup = '';
 
         async function initProfileSetup() {
-            // auth.js ద్వారా సెషన్ వెరిఫికేషన్
+            // 1. auth.js ద్వారా సెషన్ వెరిఫికేషన్
             const session = await checkLiveUserSession('School');
             if (!session) return;
 
             currentUserId = session.id;
             
-            // బ్రౌజర్ లోకల్ స్టోరేజ్ నుండి పూర్తి రా డేటాను కలెక్ట్ చేయడం
-            const cachedRaw = localStorage.getItem('myguru_user');
-            const cachedUser = cachedRaw ? JSON.parse(cachedRaw) : {};
+            // 2. బ్రౌజర్ లోకల్ స్టోరేజ్ డేటా కలెక్ట్ చేయడం
+            const cachedUser = JSON.parse(localStorage.getItem('myguru_user')) || {};
             
-            // ==========================================
-            // 🔍 EMAIL Extraction (ఆథ్ సెషన్ లేదా క్యాష్ నుండి)
-            // ==========================================
-            backupEmail = session.email || session.user?.email || cachedUser.email || cachedUser.user?.email || '';
-            document.getElementById('txtEmail').value = backupEmail;
-            
-            // ==========================================
-            // 🔍 MOBILE Extraction (ప్రతి సాధ్యమయ్యే కీ ని చెక్ చేస్తున్నాం)
-            // ==========================================
-            backupMobile = session.phone || 
-                           session.mobile || 
-                           session.user?.phone || 
-                           session.user?.user_metadata?.mobile || 
-                           session.user_metadata?.mobile || 
-                           cachedUser.mobile || 
-                           cachedUser.phone || 
-                           cachedUser.user?.phone || '';
-                           
-            // ఒకవేళ పైన దొరకకపోతే స్టోరేజ్ ఆబ్జెక్ట్ లోపల లోతుగా వెతుకుతుంది
-            if (!backupMobile && cachedUser.profileData) {
-                backupMobile = cachedUser.profileData.mobile || cachedUser.profileData.contact_phone || '';
+            // 3. ఆత్ సెషన్ లేదా లోకల్ స్టోరేజ్ బ్యాకప్స్
+            authEmailBackup = session.email || session.user?.email || cachedUser.email || '';
+            authMobileBackup = session.phone || session.mobile || session.user?.phone || 
+                               session.user_metadata?.mobile || cachedUser.mobile || cachedUser.phone || '';
+
+            if (!authMobileBackup && cachedUser.profileData) {
+                authMobileBackup = cachedUser.profileData.mobile || cachedUser.profileData.contact_phone || '';
             }
 
-            document.getElementById('txtMobile').value = backupMobile || 'Not Set';
+            // డీఫాల్ట్‌గా ఆత్ ఈమెయిల్ ని స్క్రీన్ పై సెట్ చేస్తున్నాం
+            document.getElementById('txtEmail').value = authEmailBackup;
             
-            console.log("🎯 Live Auth Verification -> Email:", backupEmail, " | Mobile:", backupMobile);
+            console.log("Stage 1 -> Auth Details Grabbed:", { authEmailBackup, authMobileBackup });
             
-            // డేటాబేస్ టేబుల్ (school_profiles) నుండి వివరాలు లోడ్ చేయడం
+            // 4. డేటాబేస్ టేబుల్ (school_profiles) నుండి వివరాలు లోడ్ చేయడం
             await fetchExistingSchoolProfile();
         }
 
@@ -214,33 +200,40 @@
 
                 if (error) throw error;
 
+                // 🎯 టేబుల్ లో రికార్డ్ దొరికితే
                 if (data) {
-                    console.log("📦 Supabase Table Record Found:", data);
+                    console.log("Stage 2 -> Supabase Table Record Found:", data);
                     
                     document.getElementById('txtSchoolName').value = data.school_name || '';
                     document.getElementById('txtPrincipal').value = data.principal_name || '';
-                    
-                    // టేబుల్ లో డేటా ఉంటే దాన్ని ప్రైమరీగా తీసుకుంటుంది, లేదంటే ఆత్ బ్యాకప్ ని ఉంచుతుంది
-                    document.getElementById('txtMobile').value = data.mobile || backupMobile || 'Not Set';
-                    document.getElementById('txtEmail').value = data.email || backupEmail || '';
-                    
                     document.getElementById('txtState').value = data.state || '';
                     document.getElementById('txtDistrict').value = data.district || '';
                     document.getElementById('txtAddressLine').value = data.address || '';
                     if (data.board) document.getElementById('ddlBoard').value = data.board;
                     if (data.school_type) document.getElementById('ddlSchoolType').value = data.school_type;
                     document.getElementById('txtDescription').value = data.about || '';
+                    
+                    // 🎯 ప్రైమరీగా టేబుల్ లోని మొబైల్/ఈమెయిల్ ని వాడతాం, లేదంటే ఆత్ బ్యాకప్ కి వెళ్తాం
+                    document.getElementById('txtMobile').value = data.mobile || authMobileBackup || 'Not Set';
+                    document.getElementById('txtEmail').value = data.email || authEmailBackup || '';
+                } 
+                // 🎯 ఒకవేళ కొత్త యూజర్ అయ్యుండి టేబుల్ లో ఇంకా రికార్డ్ లేకపోతే
+                else {
+                    console.log("Stage 2 -> No record in table yet. Setting backup mobile.");
+                    document.getElementById('txtMobile').value = authMobileBackup || 'Not Set';
                 }
+
             } catch (err) {
                 console.error("Profile Fetch Failure:", err.message);
+                // ఎర్రర్ వచ్చినా కనీసం ఆత్ బ్యాకప్ మొబైల్ ని స్క్రీన్ పై ఉంచుతుంది
+                document.getElementById('txtMobile').value = authMobileBackup || 'Not Set';
             }
         }
-
 
         async function saveEmployerProfile(event) {
             event.preventDefault();
 
-            // సుపాబేస్ టేబుల్ కాలమ్ స్కీమాకు పక్కాగా మ్యాప్ చేసిన ప్యాకెట్
+            // సుపాబేస్ టేబుల్ కాలమ్ స్కీమాకు ప్యాకెట్
             const profilePacket = {
                 id: currentUserId,
                 school_name: document.getElementById('txtSchoolName').value.trim(),
@@ -257,7 +250,6 @@
             };
 
             try {
-                // 'school_profiles' టేబుల్‌లోకి అప్‌సర్ట్ చేస్తున్నాం
                 const { error } = await _supabase
                     .from('school_profiles')
                     .upsert(profilePacket);
@@ -270,7 +262,6 @@
                 cached.profileData = profilePacket;
                 localStorage.setItem('myguru_user', JSON.stringify(cached));
 
-                // రీడైరెక్షన్‌ను కొత్త ఫైల్ 'employer_dashboard.html' కి మార్చాం
                 window.location.href = "employer_dashboard.html";
 
             } catch (err) {
@@ -284,6 +275,7 @@
         });
 
         window.onload = initProfileSetup;
+
     </script>
 </body>
 </html>
