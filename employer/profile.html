@@ -26,13 +26,14 @@
 </head>
 <body>
 
-    <!-- 🧭 Left Menu / సైడ్‌బార్ സെക്ഷൻ -->
+    <!-- 🧭 Left Menu / సైడ్‌బార్ సెక్షన్ -->
     <div class="sidebar">
         <div style="text-align: center; padding: 10px;">
             <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 80px; height: auto; border-radius: 50%;">
             <h2>MyGuru Jobs</h2>
         </div>
-        <a href="dashboard.html">Dashboard</a>
+        <!-- 🎯 ఇక్కడ పాత్‌ను employer_dashboard.html గా మార్చాం -->
+        <a href="employer_dashboard.html">Dashboard</a>
         <a href="profile.html" class="active">My Profile</a>
         <a href="post-job.html">Post Job</a>
         <a href="jobs.html">My Jobs</a>
@@ -160,23 +161,20 @@
         let currentUserId = null;
 
         async function initProfileSetup() {
-            // auth.js ద్వారా సెషన్ వెరిఫికేషన్
             const session = await checkLiveUserSession('School');
             if (!session) return;
 
             currentUserId = session.id;
-            
-            // Central User Hub నుండి Email లోడ్ చేయడం
             document.getElementById('txtEmail').value = session.email || '';
             
-            // డేటాబేస్ లో ఆల్రెడీ ప్రొఫైల్ ఉంటే లోడ్ చేయడం
             await fetchExistingSchoolProfile();
         }
 
         async function fetchExistingSchoolProfile() {
             try {
+                // 🎯 టేబుల్ పేరును మీ సుపాబేస్ స్ట్రక్చర్ 'school_profiles' కి మార్చాం
                 const { data, error } = await _supabase
-                    .from('employer_profiles')
+                    .from('school_profiles')
                     .select('*')
                     .eq('id', currentUserId)
                     .maybeSingle();
@@ -184,24 +182,19 @@
                 if (error) throw error;
 
                 if (data) {
-                    document.getElementById('txtSchoolName').value = data.institution_name || '';
+                    // 🎯 మీ సుపాబేస్ కాలమ్ పేర్లకు మ్యాచ్ చేశాం
+                    document.getElementById('txtSchoolName').value = data.school_name || '';
                     document.getElementById('txtPrincipal').value = data.principal_name || '';
-                    document.getElementById('txtMobile').value = data.contact_phone || '';
+                    document.getElementById('txtMobile').value = data.mobile || '';
                     document.getElementById('txtState').value = data.state || '';
                     document.getElementById('txtDistrict').value = data.district || '';
-                    document.getElementById('txtCity').value = data.city || '';
-                    document.getElementById('txtPincode').value = data.pincode || '';
-                    document.getElementById('txtAddressLine').value = data.address_line || '';
+                    document.getElementById('txtAddressLine').value = data.address || '';
                     if (data.board) document.getElementById('ddlBoard').value = data.board;
-                    if (data.medium) document.getElementById('ddlMedium').value = data.medium;
                     if (data.school_type) document.getElementById('ddlSchoolType').value = data.school_type;
-                    document.getElementById('txtEstYear').value = data.est_year || '';
-                    document.getElementById('txtWebsite').value = data.website || '';
-                    document.getElementById('txtDescription').value = data.description || '';
+                    document.getElementById('txtDescription').value = data.about || '';
                 } else {
-                    // ఒకవేళ కొత్త యూజర్ అయితే తాత్కాలికంగా మొబైల్ ని కామన్ యూజర్స్ నుండి తెచ్చుకోవచ్చు
                     const cachedUser = JSON.parse(localStorage.getItem('myguru_user'));
-                    document.getElementById('txtMobile').value = cachedUser.mobile || 'Not Set';
+                    document.getElementById('txtMobile').value = cachedUser?.mobile || 'Not Set';
                 }
             } catch (err) {
                 console.error("Profile Fetch Failure:", err.message);
@@ -211,40 +204,38 @@
         async function saveEmployerProfile(event) {
             event.preventDefault();
 
+            // 🎯 సుపాబేస్ టేబుల్ కాలమ్ స్కీమాకు పక్కాగా మ్యాప్ చేసిన ప్యాకెట్
             const profilePacket = {
                 id: currentUserId,
-                institution_name: document.getElementById('txtSchoolName').value.trim(),
+                school_name: document.getElementById('txtSchoolName').value.trim(),
                 principal_name: document.getElementById('txtPrincipal').value.trim(),
-                contact_phone: document.getElementById('txtMobile').value,
+                mobile: document.getElementById('txtMobile').value,
+                email: document.getElementById('txtEmail').value,
                 state: document.getElementById('txtState').value.trim(),
                 district: document.getElementById('txtDistrict').value.trim(),
-                city: document.getElementById('txtCity').value.trim(),
-                pincode: document.getElementById('txtPincode').value.trim(),
-                address_line: document.getElementById('txtAddressLine').value.trim(),
+                address: document.getElementById('txtAddressLine').value.trim(),
                 board: document.getElementById('ddlBoard').value,
-                medium: document.getElementById('ddlMedium').value,
                 school_type: document.getElementById('ddlSchoolType').value,
-                est_year: parseInt(document.getElementById('txtEstYear').value) || null,
-                website: document.getElementById('txtWebsite').value.trim(),
-                description: document.getElementById('txtDescription').value.trim()
+                about: document.getElementById('txtDescription').value.trim(),
+                updated_at: new Date().toISOString()
             };
 
             try {
+                // 🎯 'school_profiles' టేబుల్‌లోకి అప్‌సర్ట్ చేస్తున్నాం
                 const { error } = await _supabase
-                    .from('employer_profiles')
+                    .from('school_profiles')
                     .upsert(profilePacket);
 
                 if (error) throw error;
 
                 alert("✓ Profile updated successfully!");
                 
-                // లోకల్ స్టోరేజ్ అప్‌డేట్ చేయడం
-                const cached = JSON.parse(localStorage.getItem('myguru_user'));
+                const cached = JSON.parse(localStorage.getItem('myguru_user')) || {};
                 cached.profileData = profilePacket;
                 localStorage.setItem('myguru_user', JSON.stringify(cached));
 
-                // విజయవంతంగా సేవ్ అయ్యాక డాష్‌బోర్డ్‌కు రీడైరెక్ట్ చేయడం
-                window.location.href = "dashboard.html";
+                // 🎯 రీడైరెక్షన్‌ను కొత్త ఫైల్ 'employer_dashboard.html' కి మార్చాం
+                window.location.href = "employer_dashboard.html";
 
             } catch (err) {
                 alert("Error saving profile: " + err.message);
