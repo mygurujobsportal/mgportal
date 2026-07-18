@@ -159,18 +159,32 @@
     <script>
         let currentUserId = null;
 
-                async function initProfileSetup() {
-            // auth.js ద్వారా సెషన్ వెరిఫికేషన్ (సుపాబేస్ లైవ్ యూజర్ ని తెస్తుంది)
+                        async function initProfileSetup() {
+            // auth.js ద్వారా సెషన్ వెరిఫికేషన్
             const session = await checkLiveUserSession('School');
             if (!session) return;
 
             currentUserId = session.id;
             
-            // 🎯 సుపాబేస్ ఆథెంటికేషన్ లో రిజిస్టర్ అయిన Email మరియు Phone ని ఇక్కడ సెట్ చేస్తున్నాం
-            document.getElementById('txtEmail').value = session.email || '';
+            // 🎯 లోకల్ స్టోరేజ్ నుండి రిజిస్టర్డ్ యూజర్ డేటాను బ్యాకప్ గా తెచ్చుకోవడం
+            const cachedUser = JSON.parse(localStorage.getItem('myguru_user')) || {};
             
-            // సుపాబేస్ సైన్-అప్ లో ఫోన్ నెంబర్ ఉంటే అది 'phone' కాలమ్ లో ఉంటుంది
-            document.getElementById('txtMobile').value = session.phone || session.user_metadata?.mobile || 'Not Available';
+            // ==========================================
+            // 🔍 EMAIL Extraction (సుపాబేస్ లేదా క్యాష్ నుండి)
+            // ==========================================
+            const registeredEmail = session.email || session.user?.email || cachedUser.email || cachedUser.user?.email || '';
+            document.getElementById('txtEmail').value = registeredEmail;
+            
+            // ==========================================
+            // 🔍 MOBILE Extraction (సుపాబేస్ లేదా క్యాష్ నుండి)
+            // ==========================================
+            const registeredMobile = session.phone || session.user?.phone || 
+                                     session.user_metadata?.mobile || 
+                                     cachedUser.mobile || cachedUser.phone || 
+                                     cachedUser.user?.phone || 'Not Set';
+            document.getElementById('txtMobile').value = registeredMobile;
+            
+            console.log("Extracted Auth Data -> Email:", registeredEmail, " | Mobile:", registeredMobile);
             
             // డేటాబేస్ టేబుల్ లో ఆల్రెడీ మిగతా ప్రొఫైల్ వివరాలు ఉంటే లోడ్ చేయడం
             await fetchExistingSchoolProfile();
