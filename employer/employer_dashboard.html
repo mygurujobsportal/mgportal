@@ -103,42 +103,40 @@
 
             currentEmployerId = activeUser.id;
             
-            // ప్రొఫైల్ కంప్లీషన్ చెక్ (First Time Login Barrier)
+            // 🎯 సుపాబేస్ టేబుల్ స్ట్రక్చర్ ప్రకారం 'school_name' చెక్ చేస్తున్నాం
             const profile = activeUser.profileData || {};
-            if (!profile.institution_name) {
-                alert("📢 Please complete your Institution Profile details first!");
+            if (!profile.school_name) {
+                alert("📢 Please complete your School Profile details first!");
                 window.location.href = "profile.html";
                 return;
             }
 
-            // స్క్రీన్ పై వివరాలు సెట్ చేయడం
-            document.getElementById('welcome-msg').innerText = `Welcome back, ${profile.institution_name}`;
+            // స్క్రీన్ పై స్కూల్ పేరు సెట్ చేయడం
+            document.getElementById('welcome-msg').innerText = `Welcome back, ${profile.school_name}`;
             
-            // ప్రీమియం సబ్‌స్క్రిప్షన్ ప్లాన్ చెక్
             if(activeUser.subscription === 'premium') {
                 const badge = document.getElementById('premium-status');
                 badge.innerText = "⭐ Premium Plan";
                 badge.style.background = "linear-gradient(135deg, #fbbf24, #f59e0b)";
             }
 
-            // డేటాబేస్ నుండి కౌంటర్స్ మరియు యాక్టివిటీ లోడ్ చేయడం
+            // కౌంటర్స్ లోడ్ చేయడం
             await loadDashboardMetrics();
         }
 
         async function loadDashboardMetrics() {
             try {
-                // 1. పోస్ట్ చేసిన జాబ్స్ కౌంట్
+                // 🎯 మీ టేబుల్ కాలమ్ 'school_id' కి మ్యాచ్ చేస్తున్నాం
                 const { data: jobs, error: jobErr } = await _supabase
                     .from('jobs')
                     .select('job_id')
-                    .eq('employer_id', currentEmployerId);
+                    .eq('school_id', currentEmployerId);
                 
                 if (jobErr) throw jobErr;
                 document.getElementById('lblTotalJobs').innerText = jobs ? jobs.length : 0;
-                document.getElementById('lblActiveJobs').innerText = jobs ? jobs.length : 0; // తాత్కాలికంగా ఆక్టివ్ జాబ్స్ కౌంట్
+                document.getElementById('lblActiveJobs').innerText = jobs ? jobs.length : 0;
 
-                // 2. ఈ ఎంప్లాయర్ జాబ్స్ కి వచ్చిన అప్లికేషన్ల కౌంట్
-                const jobIdsArray = jobs.map(j => j.job_id);
+                const jobIdsArray = jobs ? jobs.map(j => j.job_id) : [];
                 
                 if (jobIdsArray.length > 0) {
                     const { data: apps, error: appErr } = await _supabase
