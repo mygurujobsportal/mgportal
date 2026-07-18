@@ -1,7 +1,3 @@
-I did. But still the same issue there. Mobile number not being displayed. 
-
-You check the code after I modified as you said. ⬇️
-
 <!DOCTYPE html>
 <html lang="te">
 <head>
@@ -139,9 +135,11 @@ You check the code after I modified as you said. ⬇️
                         <input type="number" id="txtEstYear" class="input-ctrl" placeholder="e.g., 2005">
                     </div>
                 </div>
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label>Official Website (If any)</label>
-                    <input type="url" id="txtWebsite" class="input-ctrl" placeholder="https://www.yourschool.com">
+                <div class="form-row">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Official Website (If any)</label>
+                        <input type="url" id="txtWebsite" class="input-ctrl" placeholder="https://www.yourschool.com">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Institution Short Description</label>
@@ -161,55 +159,35 @@ You check the code after I modified as you said. ⬇️
     <script src="../js/supabase.js"></script>
     <script src="../js/auth.js"></script>
     <script>
-                let currentUserId = null;
-        let backupEmail = '';
-        let backupMobile = '';
+        let currentUserId = null;
 
         async function initProfileSetup() {
-            // auth.js ద్వారా సెషన్ వెరిఫికేషన్
+            // 🎯 పాత సెక్యూర్ కనెక్షన్ గేట్వే ని యథాతథంగా పిలుస్తున్నాం
             const session = await checkLiveUserSession('School');
-            if (!session) return;
+            if (!session) return; // ఒకవేళ ఫెయిల్ అయితే auth.js నిష్క్రమింపజేస్తుంది
 
-            currentUserId = session.id;
+            // 🎯 సుపాబేస్ ఆథ్ స్ట్రక్చర్ నుండి భద్రంగా ID ని రాబట్టడం
+            currentUserId = session.id || (session.user ? session.user.id : null);
             
-            // బ్రౌజర్ లోకల్ స్టోరేజ్ నుండి పూర్తి రా డేటాను కలెక్ట్ చేయడం
-            const cachedRaw = localStorage.getItem('myguru_user');
-            const cachedUser = cachedRaw ? JSON.parse(cachedRaw) : {};
-            
-            // ==========================================
-            // 🔍 EMAIL Extraction (ఆథ్ సెషన్ లేదా క్యాష్ నుండి)
-            // ==========================================
-            backupEmail = session.email || session.user?.email || cachedUser.email || cachedUser.user?.email || '';
-            document.getElementById('txtEmail').value = backupEmail;
-            
-            // ==========================================
-            // 🔍 MOBILE Extraction (ప్రతి సాధ్యమయ్యే కీ ని చెక్ చేస్తున్నాం)
-            // ==========================================
-            backupMobile = session.phone || 
-                           session.mobile || 
-                           session.user?.phone || 
-                           session.user?.user_metadata?.mobile || 
-                           session.user_metadata?.mobile || 
-                           cachedUser.mobile || 
-                           cachedUser.phone || 
-                           cachedUser.user?.phone || '';
-                           
-            // ఒకవేళ పైన దొరకకపోతే స్టోరేజ్ ఆబ్జెక్ట్ లోపల లోతుగా వెతుకుతుంది
-            if (!backupMobile && cachedUser.profileData) {
-                backupMobile = cachedUser.profileData.mobile || cachedUser.profileData.contact_phone || '';
+            if (!currentUserId) {
+                // బ్యాకప్ సేఫ్టీ లేయర్ ఫర్ లోకల్ డేటా
+                const cachedUser = JSON.parse(localStorage.getItem('myguru_user')) || {};
+                currentUserId = cachedUser.id;
             }
 
-            document.getElementById('txtMobile').value = backupMobile || 'Not Set';
+            // 🎯 మీరు మొదట పంపిన పక్కా వర్కింగ్ ఈమెయిల్ లోడింగ్ మెథడ్
+            const cachedUser = JSON.parse(localStorage.getItem('myguru_user')) || {};
+            document.getElementById('txtEmail').value = session.email || cachedUser.email || '';
             
-            console.log("🎯 Live Auth Verification -> Email:", backupEmail, " | Mobile:", backupMobile);
-            
-            // డేటాబేస్ టేబుల్ (school_profiles) నుండి వివరాలు లోడ్ చేయడం
+            // డేటాబేస్ టేబుల్ (school_profiles) నుండి మిగతా వివరాలు మరియు మొబైల్ ని లాగడం
             await fetchExistingSchoolProfile();
         }
 
         async function fetchExistingSchoolProfile() {
+            if (!currentUserId) return;
+            
             try {
-                // సుపాబేస్ టేబుల్ నుండి లైవ్ రికార్డ్ చెక్
+                // మీ సుపాబేస్ టేబుల్ 'school_profiles' నుండి డేటా కలెక్షన్
                 const { data, error } = await _supabase
                     .from('school_profiles')
                     .select('*')
@@ -219,32 +197,40 @@ You check the code after I modified as you said. ⬇️
                 if (error) throw error;
 
                 if (data) {
-                    console.log("📦 Supabase Table Record Found:", data);
-                    
+                    // టేబుల్ డేటాను ఫీల్డ్స్ కి మ్యాప్ చేయడం
                     document.getElementById('txtSchoolName').value = data.school_name || '';
                     document.getElementById('txtPrincipal').value = data.principal_name || '';
-                    
-                    // టేబుల్ లో డేటా ఉంటే దాన్ని ప్రైమరీగా తీసుకుంటుంది, లేదంటే ఆత్ బ్యాకప్ ని ఉంచుతుంది
-                    document.getElementById('txtMobile').value = data.mobile || backupMobile || 'Not Set';
-                    document.getElementById('txtEmail').value = data.email || backupEmail || '';
-                    
                     document.getElementById('txtState').value = data.state || '';
                     document.getElementById('txtDistrict').value = data.district || '';
+                    document.getElementById('txtCity').value = data.city || '';
+                    document.getElementById('txtPincode').value = data.pincode || '';
                     document.getElementById('txtAddressLine').value = data.address || '';
+                    document.getElementById('txtWebsite').value = data.website || '';
                     if (data.board) document.getElementById('ddlBoard').value = data.board;
+                    if (data.medium) document.getElementById('ddlMedium').value = data.medium;
                     if (data.school_type) document.getElementById('ddlSchoolType').value = data.school_type;
+                    if (data.established_year) document.getElementById('txtEstYear').value = data.established_year;
                     document.getElementById('txtDescription').value = data.about || '';
+                    
+                    // 🔥 [FIX]: నేరుగా సుపాబేస్ డేటాబేస్ కాలమ్ లోని "mobile" టెక్స్ట్ ని ఇక్కడ లోడ్ చేస్తున్నాం
+                    document.getElementById('txtMobile').value = data.mobile || '';
+                    
+                    // ఒకవేళ టేబుల్ లో ఈమెయిల్ ఉంటే దాన్ని కూడా భద్రపరుస్తుంది
+                    if (data.email) document.getElementById('txtEmail').value = data.email;
+                } else {
+                    // కొత్త యూజర్ రికార్డ్ లేకపోతే లోకల్ స్టోరేజ్ బ్యాకప్
+                    const cachedUser = JSON.parse(localStorage.getItem('myguru_user')) || {};
+                    document.getElementById('txtMobile').value = cachedUser.mobile || cachedUser.phone || '';
                 }
             } catch (err) {
                 console.error("Profile Fetch Failure:", err.message);
             }
         }
 
-
         async function saveEmployerProfile(event) {
             event.preventDefault();
 
-            // సుపాబేస్ టేబుల్ కాలమ్ స్కీమాకు పక్కాగా మ్యాప్ చేసిన ప్యాకెట్
+            // సుపాబేస్ టేబుల్ కాలమ్స్ కి పక్కాగా మ్యాప్ చేసిన డేటా ప్యాకెట్
             const profilePacket = {
                 id: currentUserId,
                 school_name: document.getElementById('txtSchoolName').value.trim(),
@@ -253,15 +239,19 @@ You check the code after I modified as you said. ⬇️
                 email: document.getElementById('txtEmail').value,
                 state: document.getElementById('txtState').value.trim(),
                 district: document.getElementById('txtDistrict').value.trim(),
+                city: document.getElementById('txtCity').value.trim(),
+                pincode: document.getElementById('txtPincode').value.trim(),
                 address: document.getElementById('txtAddressLine').value.trim(),
                 board: document.getElementById('ddlBoard').value,
+                medium: document.getElementById('ddlMedium').value,
                 school_type: document.getElementById('ddlSchoolType').value,
+                established_year: document.getElementById('txtEstYear').value ? parseInt(document.getElementById('txtEstYear').value) : null,
+                website: document.getElementById('txtWebsite').value.trim(),
                 about: document.getElementById('txtDescription').value.trim(),
                 updated_at: new Date().toISOString()
             };
 
             try {
-                // 'school_profiles' టేబుల్‌లోకి అప్‌సర్ట్ చేస్తున్నాం
                 const { error } = await _supabase
                     .from('school_profiles')
                     .upsert(profilePacket);
@@ -274,7 +264,6 @@ You check the code after I modified as you said. ⬇️
                 cached.profileData = profilePacket;
                 localStorage.setItem('myguru_user', JSON.stringify(cached));
 
-                // రీడైరెక్షన్‌ను కొత్త ఫైల్ 'employer_dashboard.html' కి మార్చాం
                 window.location.href = "employer_dashboard.html";
 
             } catch (err) {
