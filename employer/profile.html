@@ -190,9 +190,9 @@
             await fetchExistingSchoolProfile();
         }
 
-                        async function fetchExistingSchoolProfile() {
+                async function fetchExistingSchoolProfile() {
             try {
-                // 1. సుపాబేస్ టేబుల్ నుండి ప్రొఫైల్ రికార్డ్ లాగుతున్నాం
+                // సుపాబేస్ టేబుల్ నుండి రికార్డ్ లాగుతున్నాం
                 const { data, error } = await _supabase
                     .from('school_profiles')
                     .select('*')
@@ -201,31 +201,25 @@
 
                 if (error) throw error;
 
-                // 2. 🎯 [EXTRA SECURITY LAYER] నేరుగా సుపాబేస్ కోర్ ఆథ్ నుండి లైవ్ యూజర్ ఆబ్జెక్ట్ ని లాగడం
-                let liveAuthUser = null;
-                try {
-                    const { data: authData } = await _supabase.auth.getUser();
-                    if (authData && authData.user) {
-                        liveAuthUser = authData.user;
-                    }
-                } catch (e) {
-                    console.error("Core auth fetch skipped:", e);
-                }
-
-                // ఆత్ నుండి వచ్చే లైవ్ బ్యాకప్స్
-                const liveMobileBackup = liveAuthUser?.phone || liveAuthUser?.user_metadata?.mobile || liveAuthUser?.user_metadata?.phone || authMobileBackup || '';
-                const liveEmailBackup = liveAuthUser?.email || authEmailBackup || '';
-
-                // 3. టేబుల్ లో డేటా దొరికితే (పాత యూజర్ అయితే)
+                // 🎯 టేబుల్ లో డేటా దొరికితే (పాత యూజర్ అయితే)
                 if (data) {
                     console.log("📦 Supabase Table Record Found:", data);
                     
                     document.getElementById('txtSchoolName').value = data.school_name || '';
                     document.getElementById('txtPrincipal').value = data.principal_name || '';
                     
-                    // 🔥 టేబుల్ లోని మొబైల్ ని ఫస్ట్ ప్రిఫరెన్స్ ఇస్తాం, లేదంటే లైవ్ ఆత్ బ్యాకప్ కి వెళ్తాం
-                    document.getElementById('txtMobile').value = data.mobile || liveMobileBackup || 'Not Set';
-                    document.getElementById('txtEmail').value = data.email || liveEmailBackup || '';
+                    // 🔥 ఇక్కడ మార్పు: సుపాబేస్ టేబుల్ లో ఉన్న మొబైల్ నెంబర్ ని డైరెక్ట్ గా ఎక్కిస్తున్నాం (No conditions!)
+                    if (data.mobile) {
+                        document.getElementById('txtMobile').value = data.mobile;
+                    } else {
+                        document.getElementById('txtMobile').value = authMobileBackup || 'Not Set';
+                    }
+                    
+                    if (data.email) {
+                        document.getElementById('txtEmail').value = data.email;
+                    } else {
+                        document.getElementById('txtEmail').value = authEmailBackup || '';
+                    }
                     
                     document.getElementById('txtState').value = data.state || '';
                     document.getElementById('txtDistrict').value = data.district || '';
@@ -234,11 +228,10 @@
                     if (data.school_type) document.getElementById('ddlSchoolType').value = data.school_type;
                     document.getElementById('txtDescription').value = data.about || '';
                 } 
-                // 4. ఒకవేళ కొత్త యూజర్ అయ్యుండి టేబుల్ లో ఇంకా రికార్డ్ లేకపోతే
+                // 🎯 ఒకవేళ కొత్త యూజర్ అయ్యుండి టేబుల్ లో ఇంకా రికార్డ్ లేకపోతే
                 else {
-                    console.log("📢 No record in table yet. Using live auth backup.");
-                    document.getElementById('txtMobile').value = liveMobileBackup || 'Not Set';
-                    document.getElementById('txtEmail').value = liveEmailBackup || '';
+                    console.log("📢 No record in table yet. Using auth backup.");
+                    document.getElementById('txtMobile').value = authMobileBackup || 'Not Set';
                 }
 
             } catch (err) {
@@ -246,6 +239,26 @@
                 document.getElementById('txtMobile').value = authMobileBackup || 'Not Set';
             }
         }
+
+
+        async function saveEmployerProfile(event) {
+            event.preventDefault();
+
+            // సుపాబేస్ టేబుల్ కాలమ్ స్కీమాకు ప్యాకెట్
+            const profilePacket = {
+                id: currentUserId,
+                school_name: document.getElementById('txtSchoolName').value.trim(),
+                principal_name: document.getElementById('txtPrincipal').value.trim(),
+                mobile: document.getElementById('txtMobile').value,
+                email: document.getElementById('txtEmail').value,
+                state: document.getElementById('txtState').value.trim(),
+                district: document.getElementById('txtDistrict').value.trim(),
+                address: document.getElementById('txtAddressLine').value.trim(),
+                board: document.getElementById('ddlBoard').value,
+                school_type: document.getElementById('ddlSchoolType').value,
+                about: document.getElementById('txtDescription').value.trim(),
+                updated_at: new Date().toISOString()
+            };
 
             try {
                 const { error } = await _supabase
