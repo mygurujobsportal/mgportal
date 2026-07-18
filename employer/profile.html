@@ -184,7 +184,8 @@
             document.getElementById('txtEmail').value = authEmailBackup;
             
             console.log("Stage 1 -> Auth Details Grabbed:", { authEmailBackup, authMobileBackup });
-            
+            alert("Auth Mobile: " + authMobileBackup + " | Auth Email: " + authEmailBackup);
+
             // 4. డేటాబేస్ టేబుల్ (school_profiles) నుండి వివరాలు లోడ్ చేయడం
             await fetchExistingSchoolProfile();
         }
