@@ -190,9 +190,9 @@
             await fetchExistingSchoolProfile();
         }
 
-        async function fetchExistingSchoolProfile() {
+                async function fetchExistingSchoolProfile() {
             try {
-                // సుపాబేస్ టేబుల్ నుండి లైవ్ రికార్డ్ చెక్
+                // సుపాబేస్ టేబుల్ నుండి రికార్డ్ లాగుతున్నాం
                 const { data, error } = await _supabase
                     .from('school_profiles')
                     .select('*')
@@ -201,35 +201,45 @@
 
                 if (error) throw error;
 
-                // 🎯 టేబుల్ లో రికార్డ్ దొరికితే
+                // 🎯 టేబుల్ లో డేటా దొరికితే (పాత యూజర్ అయితే)
                 if (data) {
-                    console.log("Stage 2 -> Supabase Table Record Found:", data);
+                    console.log("📦 Supabase Table Record Found:", data);
                     
                     document.getElementById('txtSchoolName').value = data.school_name || '';
                     document.getElementById('txtPrincipal').value = data.principal_name || '';
+                    
+                    // 🔥 ఇక్కడ మార్పు: సుపాబేస్ టేబుల్ లో ఉన్న మొబైల్ నెంబర్ ని డైరెక్ట్ గా ఎక్కిస్తున్నాం (No conditions!)
+                    if (data.mobile) {
+                        document.getElementById('txtMobile').value = data.mobile;
+                    } else {
+                        document.getElementById('txtMobile').value = authMobileBackup || 'Not Set';
+                    }
+                    
+                    if (data.email) {
+                        document.getElementById('txtEmail').value = data.email;
+                    } else {
+                        document.getElementById('txtEmail').value = authEmailBackup || '';
+                    }
+                    
                     document.getElementById('txtState').value = data.state || '';
                     document.getElementById('txtDistrict').value = data.district || '';
                     document.getElementById('txtAddressLine').value = data.address || '';
                     if (data.board) document.getElementById('ddlBoard').value = data.board;
                     if (data.school_type) document.getElementById('ddlSchoolType').value = data.school_type;
                     document.getElementById('txtDescription').value = data.about || '';
-                    
-                    // 🎯 ప్రైమరీగా టేబుల్ లోని మొబైల్/ఈమెయిల్ ని వాడతాం, లేదంటే ఆత్ బ్యాకప్ కి వెళ్తాం
-                    document.getElementById('txtMobile').value = data.mobile || authMobileBackup || 'Not Set';
-                    document.getElementById('txtEmail').value = data.email || authEmailBackup || '';
                 } 
                 // 🎯 ఒకవేళ కొత్త యూజర్ అయ్యుండి టేబుల్ లో ఇంకా రికార్డ్ లేకపోతే
                 else {
-                    console.log("Stage 2 -> No record in table yet. Setting backup mobile.");
+                    console.log("📢 No record in table yet. Using auth backup.");
                     document.getElementById('txtMobile').value = authMobileBackup || 'Not Set';
                 }
 
             } catch (err) {
                 console.error("Profile Fetch Failure:", err.message);
-                // ఎర్రర్ వచ్చినా కనీసం ఆత్ బ్యాకప్ మొబైల్ ని స్క్రీన్ పై ఉంచుతుంది
                 document.getElementById('txtMobile').value = authMobileBackup || 'Not Set';
             }
         }
+
 
         async function saveEmployerProfile(event) {
             event.preventDefault();
