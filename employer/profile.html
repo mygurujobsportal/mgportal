@@ -157,7 +157,7 @@
     <script src="../js/supabase.js"></script>
     <script src="../js/auth.js"></script>
     <script>
-        let currentUserId = null;
+                let currentUserId = null;
         let backupEmail = '';
         let backupMobile = '';
 
@@ -168,24 +168,44 @@
 
             currentUserId = session.id;
             
-            // లోకల్ స్టోరేజ్ నుండి రిజిస్టర్డ్ యూజర్ డేటాను బ్యాకప్ గా తెచ్చుకోవడం
-            const cachedUser = JSON.parse(localStorage.getItem('myguru_user')) || {};
+            // బ్రౌజర్ లోకల్ స్టోరేజ్ నుండి పూర్తి రా డేటాను కలెక్ట్ చేయడం
+            const cachedRaw = localStorage.getItem('myguru_user');
+            const cachedUser = cachedRaw ? JSON.parse(cachedRaw) : {};
             
-            // ఆత్ లెవెల్ ఈమెయిల్ మరియు మొబైల్ కలెక్ట్ చేయడం
-            backupEmail = session.email || session.user?.email || cachedUser.email || '';
-            backupMobile = session.phone || session.user?.phone || session.user_metadata?.mobile || cachedUser.mobile || '';
-
-            // ముందస్తుగా డీఫాల్ట్ ఆత్ డేటాను ఫీల్డ్స్‌ లో ఉంచడం
+            // ==========================================
+            // 🔍 EMAIL Extraction (ఆథ్ సెషన్ లేదా క్యాష్ నుండి)
+            // ==========================================
+            backupEmail = session.email || session.user?.email || cachedUser.email || cachedUser.user?.email || '';
             document.getElementById('txtEmail').value = backupEmail;
+            
+            // ==========================================
+            // 🔍 MOBILE Extraction (ప్రతి సాధ్యమయ్యే కీ ని చెక్ చేస్తున్నాం)
+            // ==========================================
+            backupMobile = session.phone || 
+                           session.mobile || 
+                           session.user?.phone || 
+                           session.user?.user_metadata?.mobile || 
+                           session.user_metadata?.mobile || 
+                           cachedUser.mobile || 
+                           cachedUser.phone || 
+                           cachedUser.user?.phone || '';
+                           
+            // ఒకవేళ పైన దొరకకపోతే స్టోరేజ్ ఆబ్జెక్ట్ లోపల లోతుగా వెతుకుతుంది
+            if (!backupMobile && cachedUser.profileData) {
+                backupMobile = cachedUser.profileData.mobile || cachedUser.profileData.contact_phone || '';
+            }
+
             document.getElementById('txtMobile').value = backupMobile || 'Not Set';
             
-            // డేటాబేస్ టేబుల్ లో ఆల్రెడీ మిగతా ప్రొఫైల్ వివరాలు ఉంటే లోడ్ చేయడం
+            console.log("🎯 Live Auth Verification -> Email:", backupEmail, " | Mobile:", backupMobile);
+            
+            // డేటాబేస్ టేబుల్ (school_profiles) నుండి వివరాలు లోడ్ చేయడం
             await fetchExistingSchoolProfile();
         }
 
         async function fetchExistingSchoolProfile() {
             try {
-                // టేబుల్ పేరును మీ సుపాబేస్ స్ట్రక్చర్ 'school_profiles' కి మ్యాచ్ చేసాం
+                // సుపాబేస్ టేబుల్ నుండి లైవ్ రికార్డ్ చెక్
                 const { data, error } = await _supabase
                     .from('school_profiles')
                     .select('*')
@@ -195,11 +215,12 @@
                 if (error) throw error;
 
                 if (data) {
-                    // సుపాబేస్ కాలమ్ పేర్లకు మ్యాచ్ చేసి డేటాను లోడ్ చేస్తున్నాం
+                    console.log("📦 Supabase Table Record Found:", data);
+                    
                     document.getElementById('txtSchoolName').value = data.school_name || '';
                     document.getElementById('txtPrincipal').value = data.principal_name || '';
                     
-                    // 🎯 ఒకవేళ టేబుల్ లో 'mobile' లేదా 'email' ఖాళీగా ఉంటే పాత ఆత్ బ్యాకప్ ని వాడుకుంటుంది
+                    // టేబుల్ లో డేటా ఉంటే దాన్ని ప్రైమరీగా తీసుకుంటుంది, లేదంటే ఆత్ బ్యాకప్ ని ఉంచుతుంది
                     document.getElementById('txtMobile').value = data.mobile || backupMobile || 'Not Set';
                     document.getElementById('txtEmail').value = data.email || backupEmail || '';
                     
@@ -214,6 +235,7 @@
                 console.error("Profile Fetch Failure:", err.message);
             }
         }
+
 
         async function saveEmployerProfile(event) {
             event.preventDefault();
