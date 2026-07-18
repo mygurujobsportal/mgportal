@@ -67,11 +67,11 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Registered Email *</label>
-                        <input type="email" id="email" class="input-ctrl" required readonly style="background: #0f172a; color: #94a3b8;">
+                        <input type="email" id="txtEmail" class="input-ctrl" required readonly style="background: #0f172a; color: #94a3b8;">
                     </div>
                     <div class="form-group">
                         <label>Mobile Number *</label>
-                        <input type="text" id="mobile" class="input-ctrl" required readonly style="background: #0f172a; color: #94a3b8;">
+                        <input type="text" id="txtMobile" class="input-ctrl" required readonly style="background: #0f172a; color: #94a3b8;">
                     </div>
                 </div>
 
@@ -160,13 +160,20 @@
     <script>
         let currentUserId = null;
 
-        async function initProfileSetup() {
+                async function initProfileSetup() {
+            // auth.js ద్వారా సెషన్ వెరిఫికేషన్ (సుపాబేస్ లైవ్ యూజర్ ని తెస్తుంది)
             const session = await checkLiveUserSession('School');
             if (!session) return;
 
             currentUserId = session.id;
+            
+            // 🎯 సుపాబేస్ ఆథెంటికేషన్ లో రిజిస్టర్ అయిన Email మరియు Phone ని ఇక్కడ సెట్ చేస్తున్నాం
             document.getElementById('txtEmail').value = session.email || '';
             
+            // సుపాబేస్ సైన్-అప్ లో ఫోన్ నెంబర్ ఉంటే అది 'phone' కాలమ్ లో ఉంటుంది
+            document.getElementById('txtMobile').value = session.phone || session.user_metadata?.mobile || 'Not Available';
+            
+            // డేటాబేస్ టేబుల్ లో ఆల్రెడీ మిగతా ప్రొఫైల్ వివరాలు ఉంటే లోడ్ చేయడం
             await fetchExistingSchoolProfile();
         }
 
