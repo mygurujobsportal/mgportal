@@ -30,11 +30,18 @@ async function checkLiveUserSession(requiredRole) {
             return null;
         }
 
+        // 🎯 [SAFE FIX]: క్రాష్ అవ్వకుండా సుపాబేస్ ఆథ్ మరియు మెటాడేటా నుండి మొబైల్ నంబర్ లాగడం
+        const liveMobile = session.user.phone || 
+                           session.user.user_metadata?.mobile || 
+                           session.user.user_metadata?.phone || 
+                           user.mobile || '';
+
         return {
             id: session.user.id,
             role: user.role,
             email: session.user.email,
-            mobile: session.user.mobile ||session.data.mobile || user.mobile || '',
+            mobile: liveMobile, // profileData బ్యాకప్ కోసమే కాకుండా నేరుగా యాక్సెస్ చేయడానికి
+            phone: liveMobile,  // 🎯 ప్రొఫైల్ పేజీ లోని 'session.phone' కి మ్యాచ్ అవ్వడానికి ఇది కూడా ఇస్తున్నాం
             profileData: user.profileData || {}
         };
     } catch (e) {
