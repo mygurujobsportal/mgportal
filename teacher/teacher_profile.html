@@ -7,66 +7,38 @@
     <link rel="stylesheet" href="../css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 🎛️ Layout & Grid Splitting */
-        .workspace-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 25px; margin-top: 20px; }
-        @media(max-width: 1024px) { .workspace-grid { grid-template-columns: 1fr; } }
+        .profile-view-card { max-width: 700px; margin: 30px auto; background: #1e293b; border: 1px solid #334155; padding: 35px; border-radius: 16px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         
-        .profile-container { display: grid; grid-template-columns: 1fr; gap: 20px; }
-        .section-box { background: #1e293b; border: 1px solid #334155; padding: 25px; border-radius: 12px; position: relative; }
-        .section-title { font-size: 15px; color: #38bdf8; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 5px; text-transform: uppercase; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .form-group { display: flex; flex-direction: column; margin-bottom: 10px; }
-        .form-group label { font-size: 11px; color: #94a3b8; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
-        .form-group input, .form-group select, .form-group textarea { padding: 10px; background: #0f172a; border: 1px solid #2e3c51; border-radius: 6px; color: white; font-size: 14px; }
+        /* 📸 Photo & Badge Styling */
+        .avatar-zone { position: relative; width: 120px; height: 140px; margin: 0 auto 15px auto; border: 2px solid #38bdf8; border-radius: 8px; background: #0f172a; overflow: hidden; }
+        .avatar-zone img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* 🔒 Lock & Append Fields Styles */
-        .form-group input:disabled, .form-group select:disabled { background: #131a26; color: #64748b; border-color: #1e293b; cursor: not-allowed; }
-        .append-zone { background: rgba(56, 189, 248, 0.02); border: 1px dashed #334155; padding: 12px; border-radius: 6px; margin-top: 8px; display: none; }
+        .mg-id-node { font-family: 'Courier New', monospace; font-size: 16px; color: #38bdf8; font-weight: bold; letter-spacing: 1px; margin-bottom: 5px; }
+        .teacher-name { font-size: 24px; font-weight: bold; color: white; margin-bottom: 5px; }
+        
+        /* 👑 Premium Badges */
+        .badge-premium { display: inline-block; padding: 4px 12px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 25px; }
+        .badge-free { display: inline-block; padding: 4px 12px; background: rgba(148, 163, 184, 0.1); color: #94a3b8; border: 1px solid #334155; border-radius: 20px; font-size: 11px; font-weight: bold; margin-bottom: 25px; }
 
-        .sticky-counter { position: sticky; top: 10px; background: #0f172a; padding: 15px; border-radius: 10px; border: 1px solid #4f46e5; display: flex; justify-content: space-between; align-items: center; z-index: 100; margin-bottom: 15px; }
-        .progress-bg { background: #1e293b; border-radius: 10px; height: 12px; width: 50%; overflow: hidden; }
-        .progress-fill { background: linear-gradient(90deg, #10b981, #34d399); height: 100%; width: 0%; transition: width 0.3s; }
+        /* 📋 Grid Data Info Box */
+        .info-ledger-box { text-align: left; background: #0f172a; border: 1px solid #2e3c51; padding: 20px; border-radius: 12px; margin-bottom: 25px; }
+        .ledger-row { display: flex; padding: 10px 0; border-bottom: 1px solid #1e293b; font-size: 14px; }
+        .ledger-row:last-child { border: none; }
+        .ledger-row .lbl { width: 180px; font-weight: bold; color: #94a3b8; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+        .ledger-row .val { flex: 1; color: white; font-weight: 500; }
 
-        /* 📄 🖨️ Beautiful Dynamic Resume Preview Paper Terminal */
-        .resume-preview-panel { background: #ffffff; color: #0f172a; border-radius: 12px; padding: 30px; position: sticky; top: 85px; height: fit-content; box-shadow: 0 10px 30px rgba(0,0,0,0.5); overflow: hidden; border: 1px solid #e2e8f0; }
-        .resume-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 20px; }
-        .resume-title-block h3 { font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 5px; }
-        .resume-title-block p { font-size: 13px; color: #475569; font-weight: 600; }
-        .resume-photo-box { width: 95px; height: 115px; border: 2px solid #0f172a; background: #f1f5f9; border-radius: 6px; overflow: hidden; }
-        .resume-photo-box img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .resume-section { margin-bottom: 18px; }
-        .resume-section-title { font-size: 13px; font-weight: 800; color: #0f172a; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .resume-row { display: flex; margin-bottom: 6px; font-size: 13px; }
-        .resume-row .lbl { width: 130px; font-weight: 700; color: #334155; }
-        .resume-row .val { flex: 1; color: #000000; font-weight: 500; }
-        
-        /* 🪙 Watermark Effect */
-        .resume-preview-panel::before {
-            content: "MYGURU JOB PORTAL"; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg);
-            font-size: 42px; font-weight: 950; color: rgba(15, 23, 42, 0.04); white-space: nowrap; pointer-events: none; z-index: 0;
-        }
-        .resume-content-wrapper { position: relative; z-index: 1; }
-
-        .action-btn-group { display: flex; gap: 10px; margin-top: 15px; }
-        .btn-action { padding: 10px; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; font-size: 13px; text-align: center; display: block; width: 100%; }
-        
-        .lock-badge { position: absolute; top: 25px; right: 25px; background: #065f46; color: #a7f3d0; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; display: none; }
-
-        /* 🖨️ STRICT PDF PRINT SPECIFICATIONS */
-        @media print {
-            body { background: white !important; color: black !important; }
-            .sidebar, .sticky-counter, #master-profile-form, .action-btn-group, .header, .lock-badge { display: none !important; }
-            .content { padding: 0 !important; margin: 0 !important; width: 100% !important; }
-            .workspace-grid { display: block !important; }
-            .resume-preview-panel { border: none !important; box-shadow: none !important; padding: 0 !important; width: 100% !important; position: relative !important; top: 0 !important; }
-            .resume-preview-panel::before { color: rgba(0, 0, 0, 0.05) !important; }
-        }
+        /* 🔘 Bottom Buttons Deck */
+        .btn-deck { display: flex; gap: 15px; margin-top: 15px; }
+        .btn-action { flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer; text-align: center; text-decoration: none; transition: 0.2s; }
+        .btn-edit { background: #3b82f6; color: white; }
+        .btn-edit:hover { background: #2563eb; }
+        .btn-print { background: linear-gradient(135deg, #a855f7, #ec4899); color: white; }
+        .btn-print:hover { filter: brightness(1.1); }
     </style>
 </head>
 <body>
 
-    <!-- 🧭 Navigation Sidebar -->
+    <!-- 🧭 Sidebar Navigation -->
     <div class="sidebar">
         <div style="text-align: center; padding: 10px;">
             <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 80px; height: auto; border-radius: 50%;">
@@ -83,196 +55,72 @@
         <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
     </div>
 
+    <!-- 💻 Main Content View -->
     <div class="content">
         <div class="header">
-            <h3>ఉపాధ్యాయ ప్రొఫైల్ మేనేజ్‌మెంట్ Terminal</h3>
+            <h3>ఉపాధ్యాయ అధికారిక ప్రొఫైల్ (Profile Dashboard)</h3>
         </div>
 
-        <!-- Sticky Progress Counter -->
-        <div class="sticky-counter">
-            <div>
-                <span style="color: white; font-weight: bold;">Profile Completion:</span>
-                <span id="txtPercent" style="color: #10b981; font-weight: bold; margin-left: 5px;">0%</span>
+        <div class="profile-view-card">
+            <!-- Photograph -->
+            <div class="avatar-zone">
+                <img id="facultyAvatar" src="https://via.placeholder.com/150/0f172a/ffffff?text=Faculty" alt="Faculty Photo">
             </div>
-            <div class="progress-bg">
-                <div id="meterFill" class="progress-fill"></div>
-            </div>
-        </div>
 
-        <!-- 🎛️ Main 2-Column Split Workspace Grid -->
-        <div class="workspace-grid">
+            <!-- Alphanumeric MGID Node -->
+            <div class="mg-id-node" id="txtMgId">MG-----</div>
             
-            <!-- ⬅️ Left Column: Secure Append-Only Input Form -->
-            <form id="master-profile-form" class="profile-container">
-                
-                <!-- Section 1: Personal Details -->
-                <div class="section-box">
-                    <div class="section-title">1. Personal Details</div>
-                    <div id="lock_personal" class="lock-badge">🔒 Locked Ledger</div>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Full Name *</label>
-                            <input type="text" id="p_name" required oninput="syncLivePreview()">
-                        </div>
-                        <div class="form-group">
-                            <label>Gender *</label>
-                            <select id="p_gender" required onchange="syncLivePreview()">
-                                <option value="">Select</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                            </select>
-                        </div>
-                        <div class="form-grid" style="grid-column: span 2; gap: 15px; padding: 0;">
-                            <div class="form-group">
-                                <label>State *</label>
-                                <input type="text" id="p_state" required placeholder="Telangana" oninput="syncLivePreview()">
-                            </div>
-                            <div class="form-group">
-                                <label>District *</label>
-                                <input type="text" id="p_district" required placeholder="Hanamkonda" oninput="syncLivePreview()">
-                            </div>
-                        </div>
-                    </div>
+            <!-- Full Name -->
+            <div class="teacher-name" id="txtFullName">Loading Profile...</div>
+            
+            <!-- Premium / Approved Badge -->
+            <div id="premiumBadgeNode" class="badge-free">Checking Ledger...</div>
+
+            <!-- Profile Info Box -->
+            <div class="info-ledger-box">
+                <div class="ledger-row">
+                    <span class="lbl">📱 Contact Mobile:</span>
+                    <span class="val" id="lblMobile" style="color:#64748b;">🔒 Protected Node</span>
                 </div>
-
-                <!-- Section 2: Contact Details -->
-                <div class="section-box">
-                    <div class="section-title">2. Contact Details (Hidden from Employers)</div>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Mobile Number (Read-only)</label>
-                            <input type="text" id="c_mobile" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label>Email Address (Read-only)</label>
-                            <input type="email" id="c_email" disabled>
-                        </div>
-                    </div>
+                <div class="ledger-row">
+                    <span class="lbl">📧 Email Address:</span>
+                    <span class="val" id="lblEmail" style="color:#64748b;">🔒 Protected Node</span>
                 </div>
-
-                <!-- Section 3: Qualifications (🔒 History Lock & Append) -->
-                <div class="section-box">
-                    <div class="section-title">3. Qualifications</div>
-                    <div id="lock_qual" class="lock-badge">📜 Active Record</div>
-                    <div class="form-group">
-                        <label>Registered Core Degrees</label>
-                        <input type="text" id="q_qual" placeholder="e.g., B.Sc, M.Sc Zoology, B.Ed" oninput="syncLivePreview()">
-                    </div>
-                    <div class="append-zone" id="qualAppendBox">
-                        <div class="form-group">
-                            <label style="color: #38bdf8;">+ Add Additional Degree/Diploma (అదనపు విద్యార్హత)</label>
-                            <input type="text" id="q_qual_new" placeholder="e.g., BLiSc, PGDCA" oninput="syncLivePreview()">
-                        </div>
-                    </div>
+                <div class="ledger-row">
+                    <span class="lbl">⚥ Gender & Bio:</span>
+                    <span class="val" id="lblGenderNode">-</span>
                 </div>
-
-                <!-- Section 4: Experience Details (🔒 History Lock & Append) -->
-                <div class="section-box">
-                    <div class="section-title">4. Teaching Experience</div>
-                    <div id="lock_exp" class="lock-badge">💼 Active Record</div>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Total Experience (Years)</label>
-                            <input type="number" id="e_exp" min="0" value="0" oninput="syncLivePreview()">
-                        </div>
-                        <div class="form-group">
-                            <label>Last Logged Institution</label>
-                            <input type="text" id="e_school" placeholder="School Name" oninput="syncLivePreview()">
-                        </div>
-                    </div>
-                    <div class="append-zone" id="expAppendBox">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label style="color: #38bdf8;">+ Add More Experience (Years)</label>
-                                <input type="number" id="e_exp_new" min="0" placeholder="Years" oninput="syncLivePreview()">
-                            </div>
-                            <div class="form-group">
-                                <label style="color: #38bdf8;">+ New Institution/School</label>
-                                <input type="text" id="e_school_new" placeholder="School Name" oninput="syncLivePreview()">
-                            </div>
-                        </div>
-                    </div>
+                <div class="ledger-row">
+                    <span class="lbl">📍 State & District:</span>
+                    <span class="val" id="lblLocationNode">-</span>
                 </div>
-
-                <!-- Section 5: Teaching Preferences -->
-                <div class="section-box">
-                    <div class="section-title">5. Teaching Preferences</div>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Expert Subjects *</label>
-                            <input type="text" id="t_subjects" required placeholder="e.g., Zoology, Biology" oninput="syncLivePreview()">
-                        </div>
-                        <div class="form-group">
-                            <label>Target Classes *</label>
-                            <input type="text" id="t_classes" required placeholder="e.g., 11th, 12th" oninput="syncLivePreview()">
-                        </div>
-                    </div>
-                    <div class="form-group" style="margin-top: 10px;">
-                        <label>About My Teaching Style (Bio)</label>
-                        <textarea id="t_about" rows="3" placeholder="Briefly describe your teaching method..." oninput="syncLivePreview()"></textarea>
-                    </div>
+                <div class="ledger-row">
+                    <span class="lbl">🎓 Core Qualifications:</span>
+                    <span class="val" id="lblQualifications">-</span>
                 </div>
-
-                <div class="btn-zone">
-                    <button type="submit" class="btn-p btn-save">Save Ledger & Sync Profile</button>
+                <div class="ledger-row">
+                    <span class="lbl">💼 Experience Track:</span>
+                    <span class="val" id="lblExperience">-</span>
                 </div>
-            </form>
-
-            <!-- ➡️ Right Column: Beautiful Live Resume Document Terminal Preview -->
-            <div>
-                <div class="resume-preview-panel" id="printResumeArea">
-                    <div class="resume-content-wrapper">
-                        
-                        <div class="resume-header">
-                            <div class="resume-title-block">
-                                <h3 id="view_name">Name Pending</h3>
-                                <p id="view_role">PROFESSIONAL BIOLOGY TEACHER</p>
-                            </div>
-                            <!-- Live Avatar Box (Uses system placeholder or Base64 uploaded photo) -->
-                            <div class="resume-photo-box">
-                                <img id="view_avatar" src="https://via.placeholder.com/150/f1f5f9/0f172a?text=MyGuru+Faculty" alt="Faculty Image">
-                            </div>
-                        </div>
-
-                        <div class="resume-section">
-                            <div class="resume-section-title">Personal Metadata</div>
-                            <div class="resume-row"><span class="lbl">Gender:</span><span class="val" id="view_gender">-</span></div>
-                            <div class="resume-row"><span class="lbl">Location Node:</span><span class="val" id="view_location">-</span></div>
-                            <div class="resume-row"><span class="lbl">Contact Phone:</span><span class="val" style="color:#64748b; font-size:11px;">🔒 Protected by Admin Channel</span></div>
-                        </div>
-
-                        <div class="resume-section">
-                            <div class="resume-section-title">Educational Profile</div>
-                            <div class="resume-row"><span class="lbl">Qualifications:</span><span class="val" id="view_qual">-</span></div>
-                        </div>
-
-                        <div class="resume-section">
-                            <div class="resume-section-title">Work & Experience Ledger</div>
-                            <div class="resume-row"><span class="lbl">Experience Matrix:</span><span class="val" id="view_exp">0 Years</span></div>
-                            <div class="resume-row"><span class="lbl">Institutions Served:</span><span class="val" id="view_schools">-</span></div>
-                        </div>
-
-                        <div class="resume-section">
-                            <div class="resume-section-title">Teaching Domains</div>
-                            <div class="resume-row"><span class="lbl">Expert Fields:</span><span class="val" id="view_subjects">-</span></div>
-                            <div class="resume-row"><span class="lbl">Target Segments:</span><span class="val" id="view_classes">-</span></div>
-                        </div>
-
-                        <div class="resume-section" style="margin-bottom:0;">
-                            <div class="resume-section-title">Pedagogical Statement (Bio)</div>
-                            <p id="view_about" style="font-size:12px; line-height:1.5; color:#334155; font-style:italic;">No pedagogical overview submitted.</p>
-                        </div>
-
-                    </div>
+                <div class="ledger-row">
+                    <span class="lbl">📚 Teaching Subjects:</span>
+                    <span class="val" id="lblSubjects">-</span>
                 </div>
-
-                <!-- Interactive Preview and Print Control Deck -->
-                <div class="action-btn-group">
-                    <button class="btn-action" style="background:#3b82f6; color:white;" onclick="alert('ఇదిగో మీ నిరూపితమైన లైవ్ రెజ్యూమ్ ప్రివ్యూ పక్కనే సిద్ధంగా ఉంది!')">👁️ Refresh Preview</button>
-                    <button class="btn-action" style="background:linear-gradient(135deg, #a855f7, #ec4899); color:white;" onclick="triggerSecurePrinter()">🖨️ Save as PDF / Print Official Resume</button>
+                <div class="ledger-row">
+                    <span class="lbl">🎯 Target Segments:</span>
+                    <span class="val" id="lblClasses">-</span>
+                </div>
+                <div class="ledger-row" style="flex-direction: column; align-items: flex-start; gap: 5px;">
+                    <span class="lbl">📝 Pedagogical Statement:</span>
+                    <span class="val" id="lblAbout" style="font-style: italic; color:#cbd5e1;">-</span>
                 </div>
             </div>
 
+            <!-- 🔘 Bottom Actions Deck -->
+            <div class="btn-deck">
+                <a href="edit-profile.html" class="btn-action btn-edit">📝 Update Profile</a>
+                <a href="print-profile.html" class="btn-action btn-print">🖨️ Preview & Print Resume</a>
+            </div>
         </div>
     </div>
 
@@ -280,23 +128,15 @@
     <script src="../js/auth.js"></script>
     <script>
         let currentTeacherId = null;
-        let isExistingUser = false;
-        let baseQual = "", baseExp = 0, baseSchools = "";
-        let profileStatus = 'pending';
 
-        async function initProfileManagement() {
+        async function loadProfileTerminal() {
             const session = await checkLiveUserSession('Teacher');
             if (!session) return;
             currentTeacherId = session.id;
 
-            document.getElementById('c_mobile').value = session.phone || session.mobile || '';
-            document.getElementById('c_email').value = session.email || '';
+            // 🔒 సెక్యూర్ ఆథ్ సెషన్ సింక్
+            document.getElementById('lblEmail').innerText = session.email || '-';
 
-            await fetchAndEnforceHistoryLock();
-        }
-
-        // 🔒 History Lock Logic: ఒకసారి డేటా ఉంటే ఎరేజ్ అవ్వకుండా ఫ్రీజ్ చేసి అపెండ్ ఆప్షన్ ఇస్తుంది
-        async function fetchAndEnforceHistoryLock() {
             try {
                 const { data: prof, error } = await _supabase
                     .from('teacher_profiles')
@@ -306,163 +146,39 @@
 
                 if (error && error.code !== 'PGRST116') throw error;
 
-                if (prof && prof.full_name) {
-                    isExistingUser = true;
-                    profileStatus = prof.profile_status || 'pending';
+                if (prof) {
+                    document.getElementById('txtFullName').innerText = prof.full_name || 'Name Pending';
+                    document.getElementById('lblMobile').innerText = prof.mobile || session.phone || '🔒 Protected';
+                    document.getElementById('lblGenderNode').innerText = prof.gender || '-';
+                    document.getElementById('lblLocationNode').innerText = `📍 ${prof.district || '-'}, ${prof.state || '-'}`;
+                    document.getElementById('lblQualifications').innerText = prof.qualifications || 'No qualifications listed';
+                    document.getElementById('lblExperience').innerText = `${prof.experience || 0} Years Active inside ${prof.school_name || 'Not logged'}`;
+                    document.getElementById('lblSubjects').innerText = prof.subjects || '-';
+                    document.getElementById('lblClasses').innerText = prof.address || '-'; // address mapped to target classes
+                    document.getElementById('lblAbout').innerText = prof.about || 'No bio overview provided yet.';
+                    
+                    // 📸 Avatar base64 parser
+                    if(prof.avatar_url) { document.getElementById('facultyAvatar').src = prof.avatar_url; }
 
-                    // 1. పర్సనల్ డీటెయిల్స్ నింపి లాక్ చేయడం (No Erase Gate)
-                    document.getElementById('p_name').value = prof.full_name;
-                    document.getElementById('p_name').disabled = true;
-                    document.getElementById('p_gender').value = prof.gender || '';
-                    document.getElementById('p_gender').disabled = true;
-                    document.getElementById('p_state').value = prof.state || '';
-                    document.getElementById('p_state').disabled = true;
-                    document.getElementById('p_district').value = prof.district || '';
-                    document.getElementById('p_district').disabled = true;
-                    document.getElementById('lock_personal').style.display = 'block';
+                    // 💎 Generate / Fetch Alphanumeric MGID (e.g., MG + Row Serial / Slice ID)
+                    const slicedId = currentTeacherId.substring(0, 5).toUpperCase();
+                    document.getElementById('txtMgId').innerText = `MG-${slicedId}`;
 
-                    // 2. క్వాలిఫికేషన్స్ రికార్డ్ లాక్ + అపెండ్ బాక్స్ ఆన్
-                    baseQual = prof.qualifications || "";
-                    document.getElementById('q_qual').value = baseQual;
-                    document.getElementById('q_qual').disabled = true;
-                    document.getElementById('qualAppendBox').style.display = 'block';
-                    document.getElementById('lock_qual').style.display = 'block';
-
-                    // 3. ఎక్స్ పీరియన్స్ రికార్డ్ లాక్ + అపెండ్ బాక్స్ ఆన్
-                    baseExp = parseInt(prof.experience) || 0;
-                    baseSchools = prof.school_name || "";
-                    document.getElementById('e_exp').value = baseExp;
-                    document.getElementById('e_exp').disabled = true;
-                    document.getElementById('e_school').value = baseSchools;
-                    document.getElementById('e_school').disabled = true;
-                    document.getElementById('expAppendBox').style.display = 'block';
-                    document.getElementById('lock_exp').style.display = 'block';
-
-                    // 4. ప్రిఫరెన్సెస్ (ఎడిట్ చేసుకోవచ్చు)
-                    document.getElementById('t_subjects').value = prof.subjects || '';
-                    document.getElementById('t_classes').value = prof.address || ''; 
-                    document.getElementById('t_about').value = prof.about || '';
+                    // 👑 Premium Status Node Check
+                    const badge = document.getElementById('premiumBadgeNode');
+                    if (prof.profile_status === 'approved') {
+                        badge.innerText = "👑 Premium Verified Member";
+                        badge.className = "badge-premium";
+                    } else {
+                        badge.innerText = "Standard Member (Pending)";
+                        badge.className = "badge-free";
+                    }
+                } else {
+                    document.getElementById('txtFullName').innerText = "Please complete your profile details!";
                 }
-                
-                syncLivePreview();
             } catch (err) {
-                console.error("Ledger Engine Defect:", err.message);
+                console.error("Terminal Outage:", err.message);
             }
-        }
-
-        // 👁️ Live Paper Preview Sync Engine
-        function syncLivePreview() {
-            const name = document.getElementById('p_name').value.trim();
-            const gender = document.getElementById('p_gender').value;
-            const state = document.getElementById('p_state').value.trim();
-            const dist = document.getElementById('p_district').value.trim();
-            
-            // Qualifications Merge Preview
-            let qual = document.getElementById('q_qual').value.trim();
-            const newQual = document.getElementById('q_qual_new') ? document.getElementById('q_qual_new').value.trim() : "";
-            if(newQual) qual = qual ? `${qual}, ${newQual}` : newQual;
-
-            // Experience Merge Preview
-            let exp = parseInt(document.getElementById('e_exp').value) || 0;
-            const newExp = document.getElementById('e_exp_new') ? parseInt(document.getElementById('e_exp_new').value) || 0 : 0;
-            const totalExp = exp + newExp;
-
-            // Schools Merge Preview
-            let schools = document.getElementById('e_school').value.trim();
-            const newSchool = document.getElementById('e_school_new') ? document.getElementById('e_school_new').value.trim() : "";
-            if(newSchool) schools = schools ? `${schools}, ${newSchool}` : newSchool;
-
-            const sub = document.getElementById('t_subjects').value.trim();
-            const cls = document.getElementById('t_classes').value.trim();
-            const about = document.getElementById('t_about').value.trim();
-
-            // UI Elements Rendering
-            document.getElementById('view_name').innerText = name || "Name Pending";
-            document.getElementById('view_gender').innerText = gender || "-";
-            document.getElementById('view_location').innerText = (dist || state) ? `${dist}, ${state}` : "-";
-            document.getElementById('view_qual').innerText = qual || "-";
-            document.getElementById('view_exp').innerText = `${totalExp} Years Ledger Locked`;
-            document.getElementById('view_schools').innerText = schools || "-";
-            document.getElementById('view_subjects').innerText = sub || "-";
-            document.getElementById('view_classes').innerText = cls || "-";
-            document.getElementById('view_about').innerText = about || "No pedagogical overview submitted.";
-
-            calculateRealtimeProgress();
-        }
-
-        function calculateRealtimeProgress() {
-            let score = 0;
-            if(isExistingUser || (document.getElementById('p_name').value.trim() && document.getElementById('p_gender').value)) score += 20;
-            if(isExistingUser || document.getElementById('q_qual').value.trim()) score += 25;
-            if(isExistingUser || document.getElementById('e_exp').value.trim() !== "") score += 20;
-            if(document.getElementById('t_subjects').value.trim() && document.getElementById('t_classes').value.trim()) score += 10;
-            score += 25; // Default Approved Nodes
-
-            document.getElementById('txtPercent').innerText = `${score}%`;
-            document.getElementById('meterFill').style.width = `${score}%`;
-            return score;
-        }
-
-        // 💾 Ledger Processing (Append-Only Engine)
-        document.getElementById('master-profile-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const currentPercentage = calculateRealtimeProgress();
-
-            let finalQualifications = document.getElementById('q_qual').value.trim();
-            let finalExperienceYears = parseInt(document.getElementById('e_exp').value) || 0;
-            let finalSchool = document.getElementById('e_school').value.trim();
-
-            if (isExistingUser) {
-                const addedQual = document.getElementById('q_qual_new').value.trim();
-                if(addedQual) finalQualifications = baseQual ? `${baseQual}, ${addedQual}` : addedQual;
-
-                const addedExp = parseInt(document.getElementById('e_exp_new').value) || 0;
-                finalExperienceYears = baseExp + addedExp;
-
-                const addedSchool = document.getElementById('e_school_new').value.trim();
-                if(addedSchool) finalSchool = baseSchools ? `${baseSchools}, ${addedSchool}` : addedSchool;
-            }
-
-            const payload = {
-                id: currentTeacherId,
-                full_name: document.getElementById('p_name').value,
-                gender: document.getElementById('p_gender').value,
-                state: document.getElementById('p_state').value,
-                district: document.getElementById('p_district').value,
-                mobile: document.getElementById('c_mobile').value,
-                qualifications: finalQualifications,
-                experience: finalExperienceYears,
-                school_name: finalSchool,
-                subjects: document.getElementById('t_subjects').value,
-                address: document.getElementById('t_classes').value, 
-                about: document.getElementById('t_about').value,
-                profile_status: currentPercentage === 100 ? 'approved' : 'pending',
-                updated_at: new Date().toISOString()
-            };
-
-            try {
-                const { error } = await _supabase.from('teacher_profiles').upsert(payload);
-                if (error) throw error;
-
-                // Cache refresh
-                const cached = JSON.parse(localStorage.getItem('myguru_user') || '{}');
-                cached.profileData = payload;
-                localStorage.setItem('myguru_user', JSON.stringify(cached));
-
-                alert("✓ మీ ప్రొఫైల్ లెడ్జర్ విజయవంతంగా సింక్ అయింది!");
-                window.location.reload();
-            } catch(err) {
-                alert("Error: " + err.message);
-            }
-        });
-
-        // 🖨️ PDF Printer Verification Node
-        function triggerSecurePrinter() {
-            if(profileStatus !== 'approved') {
-                alert("⚠️ దయచేసి అఫీషియల్ రెజ్యూమ్ ప్రింట్ లేదా PDF డౌన్‌లోడ్ చేయడానికి మీ ప్రొఫైల్‌ను 100% పూర్తిగా నింపండి!");
-                return;
-            }
-            window.print();
         }
 
         document.getElementById('logout-btn').addEventListener('click', async (e) => {
@@ -470,7 +186,7 @@
             await logoutSessionRouter();
         });
 
-        window.onload = initProfileManagement;
+        window.onload = loadProfileTerminal;
     </script>
 </body>
 </html>
