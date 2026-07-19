@@ -181,10 +181,6 @@ if (prof) {
     document.getElementById('lblClasses').innerText = prof.address || '-';
     document.getElementById('lblAbout').innerText = prof.about || 'No bio overview provided yet.';
 // ... (మిగతా కోడ్ అలాగే ఉంటుంది)
-
-                    document.getElementById('lblSubjects').innerText = prof.subjects || '-';
-                    document.getElementById('lblClasses').innerText = prof.address || '-'; // address mapped to target classes
-                    document.getElementById('lblAbout').innerText = prof.about || 'No bio overview provided yet.';
                     
                     // 📸 Avatar base64 parser
                     if(prof.avatar_url) { document.getElementById('facultyAvatar').src = prof.avatar_url; }
