@@ -129,7 +129,7 @@
                 // 🔒 ప్రైవసీ రూల్: కేవలం డిస్ప్లే చేయాల్సిన కాలమ్స్ మాత్రమే సెలెక్ట్ చేస్తున్నాం (No phone, No email)
                 let query = _supabase
                     .from('school_jobs')
-                    .select('id,job_title, district, state, subject, salary_package, required_qualification, experience_required, status')
+                    .select('id,job_title, district, state, subject, salary, qualification_required, required_experience, status')
                     .eq('status', 'open'); // కేవలం యాక్టివ్ జాబ్స్ మాత్రమే
 
                 if (subInput) query = query.ilike('subject', `%${subInput}%`);
