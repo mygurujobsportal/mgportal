@@ -75,7 +75,7 @@
             try {
                 // 🎯 1. కాలమ్ పేరు 'school_id' కి మరియు 'created_at' కి మార్చాం
                 const { data: jobs, error: jobErr } = await _supabase
-                    .from('jobs')
+                    .from('school_jobs')
                     .select('*')
                     .eq('school_id', currentEmployerId)
                     .order('created_at', { ascending: false });
