@@ -101,7 +101,7 @@
                 if (data) {
                     // టెక్స్ట్ ఫీల్డ్స్ లోకి డేటా ఎక్కించడం
                     document.getElementById('txtQualifications').value = data.qualifications || '';
-                    document.getElementById('txtExperience').value = data.experience_years || 0;
+                    document.getElementById('txtExperience').value = data.experience || 0;
                     
                     // Array గా ఉన్న సబ్జెక్టులను కామాలతో కూడిన స్ట్రింగ్ గా మార్చడం (e.g., ['Zoology', 'Biology'] -> "Zoology, Biology")
                     if (data.subjects && Array.isArray(data.subjects)) {
