@@ -71,9 +71,9 @@
             await fetchAndRenderPostedJobs();
         }
 
-        async function fetchAndRenderPostedJobs() {
+                async function fetchAndRenderPostedJobs() {
             try {
-                // 🎯 మీ స్కీమా ప్రకారం పక్కాగా 'school_jobs' నుండి డేటా తెస్తున్నాం
+                // 🎯 1. 'school_jobs' నుండి డేటా తెస్తున్నాం
                 const { data: jobs, error: jobErr } = await _supabase
                     .from('school_jobs')
                     .select('*')
@@ -90,41 +90,41 @@
                     return;
                 }
 
-                // 🎯 మీ స్కీమా ఐడీ 'id' కి మ్యాప్ చేశాం
                 const jobIds = jobs.map(j => j.id);
-                
-                // 🎯 అప్లికేషన్ల కౌంట్ ఫెచ్ చేయడం
-                const { data: appCounts, error: appErr } = await _supabase
-                    .from('applications')
-                    .select('job_id')
-                    .in('job_id', jobIds);
-                
-                if (appErr) throw appErr;
-
                 const countMap = {};
-                if(appCounts) {
-                    appCounts.forEach(app => {
-                        countMap[app.job_id] = (countMap[app.job_id] || 0) + 1;
-                    });
+                
+                // 🎯 2. అప్లికేషన్ల కౌంట్ క్వెరీ వల్ల కోడ్ బ్రేక్ అవ్వకుండా try-catch పెట్టాం
+                try {
+                    const { data: appCounts, error: appErr } = await _supabase
+                        .from('applications')
+                        .select('job_id')
+                        .in('job_id', jobIds);
+                    
+                    if (!appErr && appCounts) {
+                        appCounts.forEach(app => {
+                            countMap[app.job_id] = (countMap[app.job_id] || 0) + 1;
+                        });
+                    }
+                } catch (appTableCatch) {
+                    console.warn("Applications table not ready yet, setting counts to 0:", appTableCatch.message);
                 }
 
                 jobs.forEach(job => {
                     const applicantsCount = countMap[job.id] || 0;
                     const formattedDate = job.created_at ? new Date(job.created_at).toLocaleDateString('en-IN') : 'N/A';
                     
-                    // 🎯 అడ్మిన్ స్టేటస్ ని బట్టి బ్యాడ్జ్ కలర్ మార్చడం (Pending vs Approved)
-                    const statusText = job.admin_status || 'pending';
-                    const statusClass = statusText === 'approved' ? 'status-live' : ''; 
-                    const statusDisplay = statusText.charAt(0).toUpperCase() + statusText.slice(1);
+                    // 🎯 అడ్మిన్ స్టేటస్ ని బట్టి బ్యాడ్జ్ కలర్ మార్చడం
+                    const adminStatusText = job.admin_status || 'pending';
+                    const statusClass = adminStatusText === 'approved' ? 'status-live' : ''; 
+                    const statusDisplay = adminStatusText.charAt(0).toUpperCase() + adminStatusText.slice(1);
 
                     const cardHtml = `
                         <div class="emp-job-card">
                             <div class="job-meta">
-                                <!-- 🎯 మీ స్కీమా ప్రకారం job.job_title -->
                                 <h4>${job.job_title || 'No Title'}</h4> 
                                 <div class="badge-holder">
                                     <span class="job-badge">${job.subject || 'General'}</span>
-                                    <span class="job-badge">${job.experience_required} Yrs Exp</span>
+                                    <span class="job-badge">${job.experience_required || 0} Yrs Exp</span>
                                     <span class="job-badge job-badge-live ${statusClass}">${statusDisplay}</span>
                                 </div>
                                 <p style="margin-top:10px;"><strong>Posted on:</strong> ${formattedDate}</p>
@@ -135,7 +135,6 @@
                             <div class="card-actions">
                                 <button class="btn-sm btn-view" onclick="alert('Viewing feature coming soon!')">View</button>
                                 <button class="btn-sm btn-edit" onclick="alert('Edit feature coming soon!')">Edit</button>
-                                <!-- 🎯 డిలీట్ కోసం కరెక్ట్ 'id' పాస్ చేస్తున్నాం -->
                                 <button class="btn-sm btn-delete" onclick="deleteJobGate('${job.id}')">Delete</button>
                                 <button class="btn-sm btn-apps" onclick="goToApplicantsPage('${job.id}')">Applicants (${applicantsCount})</button>
                             </div>
