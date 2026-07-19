@@ -103,36 +103,53 @@
     <script src="../js/supabase.js"></script>
     <script src="../js/auth.js"></script>
     <script>
-        window.onload = async function() {
-            const session = await checkLiveUserSession('Teacher');
-            if(!session) return;
+    window.onload = async function() {
+        const session = await checkLiveUserSession('Teacher');
+        if(!session) return;
 
-            try {
-                const { data: prof } = await _supabase
-                    .from('teacher_profiles')
-                    .select('*')
-                    .eq('id', session.id)
-                    .single();
+        try {
+            const { data: prof } = await _supabase
+                .from('teacher_profiles')
+                .select('*')
+                .eq('id', session.id)
+                .single();
 
-                if(prof) {
-                    document.getElementById('pr_name').innerText = prof.full_name || 'Faculty Member';
-                    document.getElementById('pr_mgid').innerText = `FACULTY ID: MG-${session.id.substring(0, 5).toUpperCase()}`;
-                    document.getElementById('pr_gender').innerText = prof.gender || '-';
-                    document.getElementById('pr_location').innerText = `${prof.district || '-'}, ${prof.state || '-'}`;
-                    document.getElementById('pr_qual').innerText = prof.qualifications || '-';
-                    document.getElementById('pr_exp').innerText = `${prof.experience || 0} Years`;
-                    document.getElementById('pr_schools').innerText = prof.school_name || '-';
-                    document.getElementById('pr_subjects').innerText = prof.subjects || '-';
-                    document.getElementById('pr_classes').innerText = prof.address || '-';
-                    document.getElementById('pr_about').innerText = prof.about || 'Pedagogical layout active under standard terms.';
-                    
-                    if(prof.avatar_url) { document.getElementById('pr_avatar').src = prof.avatar_url; }
-                    else { document.getElementById('pr_avatar').style.display = 'none'; }
+            if(prof) {
+                document.getElementById('pr_name').innerText = prof.full_name || 'Faculty Member';
+                document.getElementById('pr_mgid').innerText = `FACULTY ID: MG-${session.id.substring(0, 5).toUpperCase()}`;
+                document.getElementById('pr_gender').innerText = prof.gender || '-';
+                document.getElementById('pr_location').innerText = `${prof.district || '-'}, ${prof.state || '-'}`;
+                document.getElementById('pr_qual').innerText = prof.qualifications || '-';
+                
+                // 🎯 PDF ప్రింట్ లో మల్టిపుల్ ఎక్స్ పీరియన్స్ హిస్టరీని క్లీన్ గా చూపించే పార్సర్ ఇంజన్
+                const rawExp = prof.school_name || "";
+                if(rawExp) {
+                    const blocks = rawExp.split('\n');
+                    let htmlContent = "";
+                    blocks.forEach(block => {
+                        if(block.trim()) {
+                            const cleanText = block.replace('[', '').replace(']', '');
+                            htmlContent += `<div style="margin-bottom: 8px; border-left: 2px solid #0f172a; padding-left: 10px; font-size: 13px; text-align: left;">${cleanText}</div>`;
+                        }
+                    });
+                    document.getElementById('pr_schools').innerHTML = htmlContent;
+                    document.getElementById('pr_exp').innerText = "Detailed Ledger Attached Below";
+                } else {
+                    document.getElementById('pr_schools').innerText = "-";
+                    document.getElementById('pr_exp').innerText = "0 Years";
                 }
-            } catch(err) {
-                console.error(err.message);
+
+                document.getElementById('pr_subjects').innerText = prof.subjects || '-';
+                document.getElementById('pr_classes').innerText = prof.address || '-';
+                document.getElementById('pr_about').innerText = prof.about || 'Pedagogical overview logged under official terms.';
+                
+                if(prof.avatar_url) { document.getElementById('pr_avatar').src = prof.avatar_url; }
+                else { document.getElementById('pr_avatar').style.display = 'none'; }
             }
+        } catch(err) {
+            console.error(err.message);
         }
+    }
     </script>
 </body>
 </html>
