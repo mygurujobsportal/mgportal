@@ -153,34 +153,10 @@
                     document.getElementById('lblGenderNode').innerText = prof.gender || '-';
                     document.getElementById('lblLocationNode').innerText = `📍 ${prof.district || '-'}, ${prof.state || '-'}`;
                     document.getElementById('lblQualifications').innerText = prof.qualifications || 'No qualifications listed';
-                    // ... (పైన ఉన్న కోడ్ అలాగే ఉంటుంది)
-if (prof) {
-    document.getElementById('txtFullName').innerText = prof.full_name || 'Name Pending';
-    document.getElementById('lblMobile').innerText = prof.mobile || session.phone || '🔒 Protected';
-    document.getElementById('lblGenderNode').innerText = prof.gender || '-';
-    document.getElementById('lblLocationNode').innerText = `📍 ${prof.district || '-'}, ${prof.state || '-'}`;
-    document.getElementById('lblQualifications').innerText = prof.qualifications || 'No qualifications listed';
-    
-    // 🎯 [పాత lblExperience లైన్ తీసేసి ఈ కింద కోడ్ పెట్టండి]
-    const rawExp = prof.school_name || "";
-    if(rawExp) {
-        const blocks = rawExp.split('\n');
-        let htmlContent = "";
-        blocks.forEach(block => {
-            if(block.trim()) {
-                const cleanText = block.replace('[', '').replace(']', '');
-                htmlContent += `<div style="margin-bottom: 8px; border-left: 2px solid #38bdf8; padding-left: 10px; font-size: 13px; text-align: left;">${cleanText}</div>`;
-            }
-        });
-        document.getElementById('lblExperience').innerHTML = htmlContent;
-    } else {
-        document.getElementById('lblExperience').innerText = "No experience track logged yet.";
-    }
-
-    document.getElementById('lblSubjects').innerText = prof.subjects || '-';
-    document.getElementById('lblClasses').innerText = prof.address || '-';
-    document.getElementById('lblAbout').innerText = prof.about || 'No bio overview provided yet.';
-// ... (మిగతా కోడ్ అలాగే ఉంటుంది)
+                    document.getElementById('lblExperience').innerText = `${prof.experience || 0} Years Active inside ${prof.school_name || 'Not logged'}`;
+                    document.getElementById('lblSubjects').innerText = prof.subjects || '-';
+                    document.getElementById('lblClasses').innerText = prof.address || '-'; // address mapped to target classes
+                    document.getElementById('lblAbout').innerText = prof.about || 'No bio overview provided yet.';
                     
                     // 📸 Avatar base64 parser
                     if(prof.avatar_url) { document.getElementById('facultyAvatar').src = prof.avatar_url; }
