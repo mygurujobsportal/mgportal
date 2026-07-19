@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru - Official Resume Terminal</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background: #f8fafc; color: #0f172a; font-family: 'Segoe UI', system-ui, sans-serif; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
+        
+        .control-deck { width: 100%; max-width: 750px; display: flex; justify-content: space-between; margin-bottom: 20px; background: #1e293b; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .btn-c { padding: 10px 20px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 13px; }
+        
+        /* 📄 Official Paper Matrix with Watermark */
+        .paper-sheet { background: white; width: 100%; max-width: 750px; min-height: 950px; padding: 50px; border-radius: 4px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); position: relative; overflow: hidden; }
+        
+        /* 🪙 Cross-Diagonal Official Watermark */
+        .paper-sheet::before {
+            content: "MYGURU JOB PORTAL"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-35deg);
+            font-size: 55px; font-weight: 900; color: rgba(15, 23, 42, 0.03); white-space: nowrap; pointer-events: none; z-index: 0;
+        }
+        .content-layer { position: relative; z-index: 1; }
+
+        .paper-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #0f172a; padding-bottom: 15px; margin-bottom: 25px; }
+        .school-branding img { height: 45px; border-radius: 4px; }
+        .title-block h2 { font-size: 24px; font-weight: 850; color: #0f172a; margin: 0 0 5px 0; }
+        .title-block p { font-size: 13px; color: #475569; font-weight: 700; font-family: monospace; }
+        
+        .faculty-photo { width: 100px; height: 120px; border: 2px solid #0f172a; border-radius: 4px; object-fit: cover; background: #f1f5f9; }
+
+        .p-section { margin-bottom: 22px; }
+        .p-section-title { font-size: 14px; font-weight: 800; color: #0f172a; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .p-row { display: flex; margin-bottom: 8px; font-size: 14px; line-height: 1.5; }
+        .p-row .lbl { width: 160px; font-weight: 700; color: #334155; }
+        .p-row .val { flex: 1; color: #000000; font-weight: 500; }
+
+        /* 🖨️ STRICT PDF PRINT RULES */
+        @media print {
+            body { background: white !important; padding: 0 !important; }
+            .control-deck { display: none !important; }
+            .paper-sheet { border: none !important; box-shadow: none !important; padding: 20px !important; }
+            .paper-sheet::before { color: rgba(0, 0, 0, 0.04) !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Upper Controls Node -->
+    <div class="control-deck">
+        <a href="profile.html" class="btn-c" style="background:#475569; color:white;">← Back to Profile</a>
+        <button class="btn-c" style="background: #10b981; color:white;" onclick="window.print()">🖨️ Confirm & Print / Save PDF</button>
+    </div>
+
+    <!-- The Paper Document Sheet -->
+    <div class="paper-sheet">
+        <div class="content-layer">
+            
+            <!-- Header Brandings -->
+            <div class="paper-header">
+                <div class="title-block">
+                    <h2 id="pr_name">Faculty Name</h2>
+                    <p id="pr_mgid">MG-XXXXX</p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <img id="pr_avatar" src="" alt="Faculty" class="faculty-photo">
+                    <div class="school-branding"><img src="../assets/logo.png" alt="MyGuru Brand"></div>
+                </div>
+            </div>
+
+            <!-- Sections Info -->
+            <div class="p-section">
+                <div class="p-section-title">Personal Information Ledger</div>
+                <div class="p-row"><span class="lbl">Gender Type:</span><span class="val" id="pr_gender">-</span></div>
+                <div class="p-row"><span class="lbl">Native Location:</span><span class="val" id="pr_location">-</span></div>
+                <div class="p-row"><span class="lbl">Account Verification:</span><span class="val" style="font-weight: bold; color: #047857;">Verified MyGuru Faculty Node</span></div>
+            </div>
+
+            <div class="p-section">
+                <div class="p-section-title">Academic Qualifications Matrix</div>
+                <div class="p-row"><span class="lbl">Degrees Profile:</span><span class="val" id="pr_qual">-</span></div>
+            </div>
+
+            <div class="p-section">
+                <div class="p-section-title">Professional Experience Log</div>
+                <div class="p-row"><span class="lbl">Total Duration:</span><span class="val" id="pr_exp">0 Years</span></div>
+                <div class="p-row"><span class="lbl">Served Institutions:</span><span class="val" id="pr_schools">-</span></div>
+            </div>
+
+            <div class="p-section">
+                <div class="p-section-title">Instructional Preferences</div>
+                <div class="p-row"><span class="lbl">Core Expertise:</span><span class="val" id="pr_subjects">-</span></div>
+                <div class="p-row"><span class="lbl">Target Segments:</span><span class="val" id="pr_classes">-</span></div>
+            </div>
+
+            <div class="p-section">
+                <div class="p-section-title">Pedagogical Philosophy (Bio)</div>
+                <p id="pr_about" style="font-size: 13px; line-height: 1.6; color: #334155; font-style: italic;"></p>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        window.onload = async function() {
+            const session = await checkLiveUserSession('Teacher');
+            if(!session) return;
+
+            try {
+                const { data: prof } = await _supabase
+                    .from('teacher_profiles')
+                    .select('*')
+                    .eq('id', session.id)
+                    .single();
+
+                if(prof) {
+                    document.getElementById('pr_name').innerText = prof.full_name || 'Faculty Member';
+                    document.getElementById('pr_mgid').innerText = `FACULTY ID: MG-${session.id.substring(0, 5).toUpperCase()}`;
+                    document.getElementById('pr_gender').innerText = prof.gender || '-';
+                    document.getElementById('pr_location').innerText = `${prof.district || '-'}, ${prof.state || '-'}`;
+                    document.getElementById('pr_qual').innerText = prof.qualifications || '-';
+                    document.getElementById('pr_exp').innerText = `${prof.experience || 0} Years`;
+                    document.getElementById('pr_schools').innerText = prof.school_name || '-';
+                    document.getElementById('pr_subjects').innerText = prof.subjects || '-';
+                    document.getElementById('pr_classes').innerText = prof.address || '-';
+                    document.getElementById('pr_about').innerText = prof.about || 'Pedagogical layout active under standard terms.';
+                    
+                    if(prof.avatar_url) { document.getElementById('pr_avatar').src = prof.avatar_url; }
+                    else { document.getElementById('pr_avatar').style.display = 'none'; }
+                }
+            } catch(err) {
+                console.error(err.message);
+            }
+        }
+    </script>
+</body>
+</html>
