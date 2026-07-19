@@ -60,7 +60,7 @@
     <script src="../js/supabase.js"></script>
     <script src="../js/auth.js"></script>
     <script>
-                let currentEmployerId = null;
+                        let currentEmployerId = null;
         let targetJobId = null;
 
         async function initApplicantsPage() {
@@ -69,7 +69,7 @@
 
             currentEmployerId = session.id;
 
-            // URL నుండి job_id పారామీటర్ రీడ్ చేయడం
+            // URL నుండి job_id పారామీటర్ రీడ్ చేయడం (ఇప్పుడు ఇది school_job_id కి మ్యాచ్ అవుతుంది)
             const urlParams = new URLSearchParams(window.location.search);
             targetJobId = urlParams.get('job_id');
 
@@ -78,23 +78,22 @@
 
         async function fetchApplicantsList() {
             try {
-                // 🎯 1. టేబుల్ పేరును 'job_applications' కి మార్చాం
-                // 🎯 2. 'application_id' ని 'id' గా మరియు రిలేషన్స్ ని 'school_jobs(job_title, school_id)' కి మార్చాం
+                // 🎯 1. మీ స్కీమా ప్రకారం కాలమ్స్ మరియు రిలేషన్స్ మార్చాం (school_job_id, employer_status)
                 let query = _supabase
                     .from('job_applications')
                     .select(`
                         id,
-                        status,
+                        employer_status,
                         applied_at,
-                        job_id,
+                        school_job_id,
                         teacher_id,
                         school_jobs ( job_title, school_id ),
-                        common_users ( full_name ),
                         teacher_profiles ( qualifications, experience_years, district )
                     `);
 
+                // 🎯 2. 'job_id' బదులు 'school_job_id' తో ఫిల్టర్ చేస్తున్నాం
                 if (targetJobId) {
-                    query = query.eq('job_id', targetJobId);
+                    query = query.eq('school_job_id', targetJobId);
                 }
 
                 const { data: apps, error } = await query.order('applied_at', { ascending: false });
@@ -103,7 +102,7 @@
                 const container = document.getElementById('applicants-container');
                 container.innerHTML = "";
 
-                // 🎯 3. 'employer_id' బదులు మీ స్కీమా కాలమ్ 'school_id' కి మ్యాచ్ చేశాం
+                // కరెంట్ ఎంప్లాయర్ కి చెందిన జాబ్స్ మాత్రమే ఫిల్టర్ చేయడం
                 const myApps = apps ? apps.filter(app => app.school_jobs && app.school_jobs.school_id === currentEmployerId) : [];
 
                 if (!myApps || myApps.length === 0) {
@@ -116,21 +115,22 @@
                 }
 
                 myApps.forEach(app => {
-                    const teacher = app.common_users || { full_name: 'Registered Teacher' };
                     const profile = app.teacher_profiles || { qualifications: 'N/A', experience_years: 0, district: 'N/A' };
                     const formattedDate = app.applied_at ? new Date(app.applied_at).toLocaleDateString('en-IN') : 'N/A';
                     
+                    // 🎯 3. 'status' బదులు మీ స్కీమా కాలమ్ 'employer_status' వాడుతున్నాం
+                    const empStatus = app.employer_status || 'pending';
                     let statusClass = 'status-pending';
-                    if (app.status === 'shortlisted') statusClass = 'status-shortlisted';
-                    if (app.status === 'selected') statusClass = 'status-selected';
-                    if (app.status === 'rejected') statusClass = 'status-rejected';
+                    if (empStatus === 'shortlisted') statusClass = 'status-shortlisted';
+                    if (empStatus === 'selected') statusClass = 'status-selected';
+                    if (empStatus === 'rejected') statusClass = 'status-rejected';
 
-                    // 🎯 4. వ్యూ బటన్ లింక్ లో 'app_id' బదులు కరెక్ట్ 'id' పాస్ చేశాం
+                    // పేరు కోసం ప్రస్తుతానికి 'Teacher Applicant' అని ఉంచి ప్రొఫైల్ వివరాలు చూపిస్తున్నాం
                     const cardHtml = `
                         <div class="applicant-card">
-                            <span class="badge-status ${statusClass}">${app.status || 'applied'}</span>
+                            <span class="badge-status ${statusClass}">${empStatus}</span>
                             <div class="applicant-info">
-                                <h4>${teacher.full_name}</h4>
+                                <h4>Teacher Applicant</h4>
                                 <p style="color: #94a3b8; font-size:11px; margin-bottom:10px;">Applied: ${formattedDate}</p>
                                 <p><strong>Qualification:</strong> ${profile.qualifications || 'N/A'}</p>
                                 <p><strong>Experience:</strong> ${profile.experience_years || 0} Years</p>
@@ -152,13 +152,13 @@
             }
         }
 
-        // 📝 Quick Status Update Logics (Shortlist / Reject Action)
+        // 📝 Quick Status Update Logics
         async function updateStatus(appId, nextStatus) {
             try {
-                // 🎯 5. ఇక్కడ కూడా టేబుల్ పేరు 'job_applications' మరియు కీ 'id' కి మార్చాం
+                // 🎯 4. అప్‌డేట్ చేసేటప్పుడు 'employer_status' కాలమ్‌ని మారుస్తున్నాం
                 const { error } = await _supabase
                     .from('job_applications')
-                    .update({ status: nextStatus })
+                    .update({ employer_status: nextStatus })
                     .eq('id', appId);
 
                 if (error) throw error;
