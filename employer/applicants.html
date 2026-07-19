@@ -60,7 +60,7 @@
     <script src="../js/supabase.js"></script>
     <script src="../js/auth.js"></script>
     <script>
-        let currentEmployerId = null;
+                let currentEmployerId = null;
         let targetJobId = null;
 
         async function initApplicantsPage() {
@@ -78,25 +78,23 @@
 
         async function fetchApplicantsList() {
             try {
+                // 🎯 1. టేబుల్ పేరును 'job_applications' కి మార్చాం
+                // 🎯 2. 'application_id' ని 'id' గా మరియు రిలేషన్స్ ని 'school_jobs(job_title, school_id)' కి మార్చాం
                 let query = _supabase
-                    .from('applications')
+                    .from('job_applications')
                     .select(`
-                        application_id,
+                        id,
                         status,
                         applied_at,
                         job_id,
                         teacher_id,
-                        jobs ( job_title, employer_id ),
+                        school_jobs ( job_title, school_id ),
                         common_users ( full_name ),
                         teacher_profiles ( qualifications, experience_years, district )
                     `);
 
-                // ఒకవేళ నిర్దిష్ట job_id ఉంటే దాని ప్రకారం ఫిల్టర్ చేయడం, లేకపోతే ఎంప్లాయర్ కి చెందిన అన్ని జాబ్స్ అప్లికేషన్లు చూపడం
                 if (targetJobId) {
                     query = query.eq('job_id', targetJobId);
-                } else {
-                    // సెక్యూరిటీ కోసం ఎంప్లాయర్ ఓన్ జాబ్స్ మాత్రమే లింక్ అయ్యేలా రూట్ క్వెరీ ఆప్టిమైజేషన్ చేయవచ్చు
-                    console.log("Loading all broad context applications.");
                 }
 
                 const { data: apps, error } = await query.order('applied_at', { ascending: false });
@@ -105,45 +103,43 @@
                 const container = document.getElementById('applicants-container');
                 container.innerHTML = "";
 
-                // కరెంట్ ఎంప్లాయర్ జాబ్స్ మాత్రమే ఫిల్టర్ అవ్వడానికి క్లయింట్-సైడ్ చెక్
-                const myApps = apps.filter(app => app.jobs && app.jobs.employer_id === currentEmployerId);
+                // 🎯 3. 'employer_id' బదులు మీ స్కీమా కాలమ్ 'school_id' కి మ్యాచ్ చేశాం
+                const myApps = apps ? apps.filter(app => app.school_jobs && app.school_jobs.school_id === currentEmployerId) : [];
 
                 if (!myApps || myApps.length === 0) {
                     container.innerHTML = `<div class="no-records">ఈ ఉద్యోగానికి ఇంకా ఎలాంటి అప్లికేషన్లు రాలేదు.</div>`;
                     return;
                 }
 
-                // ఒకవేళ సింగిల్ జాబ్ ఫిల్టర్ అయితే హెడర్ మార్చడం
                 if (targetJobId && myApps.length > 0) {
-                    document.getElementById('page-title').innerText = `Applicants for: ${myApps[0].jobs.job_title}`;
+                    document.getElementById('page-title').innerText = `Applicants for: ${myApps[0].school_jobs.job_title}`;
                 }
 
-                // రెండరింగ్ లూప్
                 myApps.forEach(app => {
                     const teacher = app.common_users || { full_name: 'Registered Teacher' };
                     const profile = app.teacher_profiles || { qualifications: 'N/A', experience_years: 0, district: 'N/A' };
-                    const formattedDate = new Date(app.applied_at).toLocaleDateString('en-IN');
+                    const formattedDate = app.applied_at ? new Date(app.applied_at).toLocaleDateString('en-IN') : 'N/A';
                     
-                    // స్టేటస్ బట్టి క్లాస్ డిసైడ్ చేయడం
                     let statusClass = 'status-pending';
                     if (app.status === 'shortlisted') statusClass = 'status-shortlisted';
                     if (app.status === 'selected') statusClass = 'status-selected';
                     if (app.status === 'rejected') statusClass = 'status-rejected';
 
+                    // 🎯 4. వ్యూ బటన్ లింక్ లో 'app_id' బదులు కరెక్ట్ 'id' పాస్ చేశాం
                     const cardHtml = `
                         <div class="applicant-card">
-                            <span class="badge-status ${statusClass}">${app.status}</span>
+                            <span class="badge-status ${statusClass}">${app.status || 'applied'}</span>
                             <div class="applicant-info">
                                 <h4>${teacher.full_name}</h4>
                                 <p style="color: #94a3b8; font-size:11px; margin-bottom:10px;">Applied: ${formattedDate}</p>
-                                <p><strong>Qualification:</strong> ${profile.qualifications}</p>
-                                <p><strong>Experience:</strong> ${profile.experience_years} Years</p>
-                                <p><strong>District:</strong> ${profile.district}</p>
+                                <p><strong>Qualification:</strong> ${profile.qualifications || 'N/A'}</p>
+                                <p><strong>Experience:</strong> ${profile.experience_years || 0} Years</p>
+                                <p><strong>District:</strong> ${profile.district || 'N/A'}</p>
                             </div>
                             <div class="card-actions">
-                                <a href="applicant-details.html?app_id=${app.application_id}" class="btn-action btn-view">View Full Profile</a>
-                                <button class="btn-action btn-shortlist" onclick="updateStatus('${app.application_id}', 'shortlisted')">Shortlist</button>
-                                <button class="btn-action btn-reject" onclick="updateStatus('${app.application_id}', 'rejected')">Reject</button>
+                                <a href="applicant-details.html?app_id=${app.id}" class="btn-action btn-view">View Full Profile</a>
+                                <button class="btn-action btn-shortlist" onclick="updateStatus('${app.id}', 'shortlisted')">Shortlist</button>
+                                <button class="btn-action btn-reject" onclick="updateStatus('${app.id}', 'rejected')">Reject</button>
                             </div>
                         </div>
                     `;
@@ -152,20 +148,22 @@
 
             } catch (err) {
                 console.error("Applicants Fetch Error:", err.message);
+                document.getElementById('applicants-container').innerHTML = `<div class="no-records" style="color:#ef4444;">డేటా లోడ్ అవ్వలేదు: ${err.message}</div>`;
             }
         }
 
         // 📝 Quick Status Update Logics (Shortlist / Reject Action)
         async function updateStatus(appId, nextStatus) {
             try {
+                // 🎯 5. ఇక్కడ కూడా టేబుల్ పేరు 'job_applications' మరియు కీ 'id' కి మార్చాం
                 const { error } = await _supabase
-                    .from('applications')
+                    .from('job_applications')
                     .update({ status: nextStatus })
-                    .eq('application_id', appId);
+                    .eq('id', appId);
 
                 if (error) throw error;
                 alert(`✓ Applicant successfully ${nextStatus}!`);
-                await fetchApplicantsList(); // రిఫ్రెష్
+                await fetchApplicantsList(); 
             } catch (err) {
                 alert("Status update failed: " + err.message);
             }
@@ -177,6 +175,7 @@
         });
 
         window.onload = initApplicantsPage;
+
     </script>
 </body>
 </html>
