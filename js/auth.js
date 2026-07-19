@@ -59,7 +59,7 @@ function routeUserToDashboard(role) {
     const lowerRole = role.toLowerCase();
     
     if (lowerRole === 'teacher') {
-        window.location.href = '../teacher/teacher_dashboard.html';
+        window.location.href = '../teacher/dashboard.html';
     } else if (lowerRole === 'employer' || lowerRole === 'school') {
         // ⚠️ టాబ్‌లో లోకల్ ఫైల్స్ రన్ అవుతున్నప్పుడు ఒక అడుగు వెనక్కి (../) వెళ్లి employer ఫోల్డర్ వెతకాలి
         window.location.href = './employer/employer_dashboard.html'; 
