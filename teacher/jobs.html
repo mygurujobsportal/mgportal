@@ -205,7 +205,7 @@
                 const { data: alreadyApplied } = await _supabase
                     .from('job_applications')
                     .select('id')
-                    .eq('job_id', jobId)
+                    .eq('school_job_id', jobId)
                     .eq('teacher_id', currentTeacherId);
 
                 if (alreadyApplied && alreadyApplied.length > 0) {
@@ -217,10 +217,10 @@
                 const { error } = await _supabase
                     .from('job_applications')
                     .insert({
-                        job_id: jobId,
+                        school_job_id: jobId,
                         teacher_id: currentTeacherId,
                         employer_status: 'applied', // డిఫాల్ట్ స్టేటస్ మీ ఫ్రెండ్ ప్లాన్ ప్రకారం
-                        created_at: new Date().toISOString()
+                        applied_at: new Date().toISOString()
                     });
 
                 if (error) throw error;
