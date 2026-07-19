@@ -76,9 +76,9 @@
             await fetchApplicantsList();
         }
 
-        async function fetchApplicantsList() {
+                async function fetchApplicantsList() {
             try {
-                // 🎯 1. మీ స్కీమా ప్రకారం కాలమ్స్ మరియు రిలేషన్స్ మార్చాం (school_job_id, employer_status)
+                // 🎯 1. మీ స్కీమా ప్రకారం 'experience_years' ని 'experience' గా.. మరియు 'full_name' ని ప్రొఫైల్ నుండి తెస్తున్నాం
                 let query = _supabase
                     .from('job_applications')
                     .select(`
@@ -88,10 +88,9 @@
                         school_job_id,
                         teacher_id,
                         school_jobs ( job_title, school_id ),
-                        teacher_profiles ( qualifications, experience_years, district )
+                        teacher_profiles ( full_name, qualifications, experience, district )
                     `);
 
-                // 🎯 2. 'job_id' బదులు 'school_job_id' తో ఫిల్టర్ చేస్తున్నాం
                 if (targetJobId) {
                     query = query.eq('school_job_id', targetJobId);
                 }
@@ -115,26 +114,27 @@
                 }
 
                 myApps.forEach(app => {
-                    const profile = app.teacher_profiles || { qualifications: 'N/A', experience_years: 0, district: 'N/A' };
+                    // 🎯 2. మీ స్కీమా కాలమ్స్ కి పక్కాగా మ్యాప్ చేశాం
+                    const profile = app.teacher_profiles || { full_name: 'Registered Teacher', qualifications: 'N/A', experience: 0, district: 'N/A' };
                     const formattedDate = app.applied_at ? new Date(app.applied_at).toLocaleDateString('en-IN') : 'N/A';
                     
-                    // 🎯 3. 'status' బదులు మీ స్కీమా కాలమ్ 'employer_status' వాడుతున్నాం
                     const empStatus = app.employer_status || 'pending';
                     let statusClass = 'status-pending';
                     if (empStatus === 'shortlisted') statusClass = 'status-shortlisted';
                     if (empStatus === 'selected') statusClass = 'status-selected';
                     if (empStatus === 'rejected') statusClass = 'status-rejected';
 
-                    // పేరు కోసం ప్రస్తుతానికి 'Teacher Applicant' అని ఉంచి ప్రొఫైల్ వివరాలు చూపిస్తున్నాం
+                    // 🎯 మీ ఫ్రెండ్ చెప్పిన వర్క్‌ఫ్లో ప్రకారం: బేసిక్ ప్రొఫైల్ (ఫోన్ నెంబర్, ఈమెయిల్, అడ్రస్ లేకుండా ప్రైవసీ ఫిల్టర్ తో) ఇక్కడ చూపిస్తున్నాం
                     const cardHtml = `
                         <div class="applicant-card">
                             <span class="badge-status ${statusClass}">${empStatus}</span>
                             <div class="applicant-info">
-                                <h4>Teacher Applicant</h4>
+                                <h4>${profile.full_name || 'Registered Teacher'}</h4>
                                 <p style="color: #94a3b8; font-size:11px; margin-bottom:10px;">Applied: ${formattedDate}</p>
                                 <p><strong>Qualification:</strong> ${profile.qualifications || 'N/A'}</p>
-                                <p><strong>Experience:</strong> ${profile.experience_years || 0} Years</p>
+                                <p><strong>Experience:</strong> ${profile.experience || 0} Years</p>
                                 <p><strong>District:</strong> ${profile.district || 'N/A'}</p>
+                                <p style="margin-top:5px; font-size:12px;"><strong>Job:</strong> ${app.school_jobs.job_title}</p>
                             </div>
                             <div class="card-actions">
                                 <a href="applicant-details.html?app_id=${app.id}" class="btn-action btn-view">View Full Profile</a>
@@ -151,6 +151,7 @@
                 document.getElementById('applicants-container').innerHTML = `<div class="no-records" style="color:#ef4444;">డేటా లోడ్ అవ్వలేదు: ${err.message}</div>`;
             }
         }
+
 
         // 📝 Quick Status Update Logics
         async function updateStatus(appId, nextStatus) {
