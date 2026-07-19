@@ -73,7 +73,7 @@
 
         async function fetchAndRenderPostedJobs() {
             try {
-                // 🎯 1. కాలమ్ పేరు 'school_id' కి మరియు 'created_at' కి మార్చాం
+                // 🎯 మీ స్కీమా ప్రకారం పక్కాగా 'school_jobs' నుండి డేటా తెస్తున్నాం
                 const { data: jobs, error: jobErr } = await _supabase
                     .from('school_jobs')
                     .select('*')
@@ -90,9 +90,10 @@
                     return;
                 }
 
-                const jobIds = jobs.map(j => j.job_id);
+                // 🎯 మీ స్కీమా ఐడీ 'id' కి మ్యాప్ చేశాం
+                const jobIds = jobs.map(j => j.id);
                 
-                // 🎯 2. కేవలం ఈ స్కూల్ జాబ్స్ ఐడీలకు సంబంధించిన అప్లికేషన్లను మాత్రమే ফিল্টার చేసి తెస్తున్నాం
+                // 🎯 అప్లికేషన్ల కౌంట్ ఫెచ్ చేయడం
                 const { data: appCounts, error: appErr } = await _supabase
                     .from('applications')
                     .select('job_id')
@@ -108,28 +109,35 @@
                 }
 
                 jobs.forEach(job => {
-                    const applicantsCount = countMap[job.job_id] || 0;
-                    // 🎯 'created_at' కి మార్చాం
+                    const applicantsCount = countMap[job.id] || 0;
                     const formattedDate = job.created_at ? new Date(job.created_at).toLocaleDateString('en-IN') : 'N/A';
                     
+                    // 🎯 అడ్మిన్ స్టేటస్ ని బట్టి బ్యాడ్జ్ కలర్ మార్చడం (Pending vs Approved)
+                    const statusText = job.admin_status || 'pending';
+                    const statusClass = statusText === 'approved' ? 'status-live' : ''; 
+                    const statusDisplay = statusText.charAt(0).toUpperCase() + statusText.slice(1);
+
                     const cardHtml = `
                         <div class="emp-job-card">
                             <div class="job-meta">
-                                <h4>${job.title || 'No Title'}</h4> 
+                                <!-- 🎯 మీ స్కీమా ప్రకారం job.job_title -->
+                                <h4>${job.job_title || 'No Title'}</h4> 
                                 <div class="badge-holder">
                                     <span class="job-badge">${job.subject || 'General'}</span>
-                                    <span class="job-badge">${job.experience_required || 'Fresher/Exp'}</span>
-                                    <span class="job-badge job-badge-live status-live">${job.status || 'Active'}</span>
+                                    <span class="job-badge">${job.experience_required} Yrs Exp</span>
+                                    <span class="job-badge job-badge-live ${statusClass}">${statusDisplay}</span>
                                 </div>
                                 <p style="margin-top:10px;"><strong>Posted on:</strong> ${formattedDate}</p>
-                                <p><strong>Location:</strong> ${job.location || 'N/A'}</p>
+                                <p><strong>Location:</strong> ${job.location || 'N/A'}, ${job.district || ''}</p>
+                                <p><strong>Vacancies:</strong> ${job.vacancies || 1}</p>
                                 <p><strong>Applicants:</strong> <span style="color:#38bdf8; font-weight:bold;">${applicantsCount} Teachers</span></p>
                             </div>
                             <div class="card-actions">
                                 <button class="btn-sm btn-view" onclick="alert('Viewing feature coming soon!')">View</button>
                                 <button class="btn-sm btn-edit" onclick="alert('Edit feature coming soon!')">Edit</button>
-                                <button class="btn-sm btn-delete" onclick="deleteJobGate('${job.job_id}')">Delete</button>
-                                <button class="btn-sm btn-apps" onclick="goToApplicantsPage('${job.job_id}')">Applicants (${applicantsCount})</button>
+                                <!-- 🎯 డిలీట్ కోసం కరెక్ట్ 'id' పాస్ చేస్తున్నాం -->
+                                <button class="btn-sm btn-delete" onclick="deleteJobGate('${job.id}')">Delete</button>
+                                <button class="btn-sm btn-apps" onclick="goToApplicantsPage('${job.id}')">Applicants (${applicantsCount})</button>
                             </div>
                         </div>
                     `;
@@ -138,6 +146,7 @@
 
             } catch (err) {
                 console.error("Jobs Portal Error:", err.message);
+                document.getElementById('employer-jobs-container').innerHTML = `<div class="no-records" style="color:#ef4444;">డేటా లోడ్ చేయడంలో లోపం జరిగింది: ${err.message}</div>`;
             }
         }
 
@@ -145,6 +154,7 @@
             window.location.href = `applicants.html?job_id=${jobId}`;
         }
 
+        // 🎯 డిలీట్ ఫంక్షన్ కూడా మీ టేబుల్ స్కీమా ప్రకారం 'id' కి అప్‌డేట్ చేసాం
         async function deleteJobGate(jobId) {
             if (!confirm("Are you sure you want to delete this job requirement permanently?")) return;
 
@@ -152,7 +162,7 @@
                 const { error } = await _supabase
                     .from('school_jobs')
                     .delete()
-                    .eq('job_id', jobId);
+                    .eq('id', jobId); // <-- ప్రైమరీ కీ 'id' కి మ్యాచ్ చేసాం
 
                 if (error) throw error;
 
@@ -162,7 +172,6 @@
                 alert("Delete failed: " + err.message);
             }
         }
-
         document.getElementById('logout-btn').addEventListener('click', async (e) => {
             e.preventDefault();
             await logoutSessionRouter();
