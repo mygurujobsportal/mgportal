@@ -43,7 +43,7 @@
             <h2>MyGuru Jobs</h2>
         </div>
         <a href="dashboard.html">Dashboard</a>
-        <a href="profile.html" class="active">My Profile</a>
+        <a href="teacher_profile.html" class="active">My Profile</a>
         <a href="jobs.html">Search Jobs</a>
         <a href="applied-jobs.html">Applied Jobs</a>
         <a href="interview-letters.html">Interview Letters</a>
@@ -134,33 +134,47 @@
             </div>
 
             <!-- 4️⃣ EXPERIENCE DETAILS (➕ Append-Only Gate) -->
-            <div class="section-box">
-                <div class="section-title">4. Teaching Experience</div>
-                <div id="lock_exp" class="lock-badge">💼 Ledger Active</div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Total Experience (Years)</label>
-                        <input type="number" id="e_exp" min="0" value="0" oninput="calculateRealtimeProgress()">
-                    </div>
-                    <div class="form-group">
-                        <label>Institutions Record</label>
-                        <input type="text" id="e_school" placeholder="School Names" oninput="calculateRealtimeProgress()">
-                    </div>
-                </div>
-                <!-- పాత డేటా ఉంటే మాత్రమే ఈ కింద జోన్ ఓపెన్ అవుతుంది -->
-                <div class="append-zone" id="expAppendBox">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label style="color: #38bdf8;">+ Add More Experience (Years)</label>
-                            <input type="number" id="e_exp_new" min="0" placeholder="Years">
-                        </div>
-                        <div class="form-group">
-                            <label style="color: #38bdf8;">+ New Logged Institution / School</label>
-                            <input type="text" id="e_school_new" placeholder="New School Name">
-                        </div>
-                    </div>
-                </div>
+            <!-- 4️⃣ EXPERIENCE DETAILS (Structured Text Append-Only Gate) -->
+<div class="section-box">
+    <div class="section-title">4. Teaching Experience History</div>
+    <div id="lock_exp" class="lock-badge">💼 Ledger Active</div>
+    
+    <!-- లాక్ అయిన పాత ఎక్స్ పీరియన్స్ హిస్టరీ ఇక్కడ టెక్స్ట్ ఏరియాలో కనిపిస్తుంది -->
+    <div class="form-group">
+        <label>Locked Experience Ledger</label>
+        <textarea id="e_school" disabled rows="4" placeholder="No previous experience locked yet..."></textarea>
+    </div>
+    
+    <!-- 🎯 కొత్త ఎక్స్ పీరియన్స్ వివరాలను సేకరించే స్ట్రక్చర్డ్ బాక్స్ -->
+    <div class="append-zone" id="expAppendBox" style="display: block;">
+        <label style="color: #38bdf8; font-size: 12px; font-weight: bold; margin-bottom: 10px; display: block;">
+            + Add New Experience Block (కొత్త అనుభవాన్ని చేర్చండి)
+        </label>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Job Title / Role</label>
+                <input type="text" id="exp_title" placeholder="e.g., Subject Associate in Zoology">
             </div>
+            <div class="form-group">
+                <label>Institution / Organisation</label>
+                <input type="text" id="exp_org" placeholder="e.g., TSWRS/JC (GIRLS) COE">
+            </div>
+            <div class="form-group">
+                <label>Start Date</label>
+                <input type="date" id="exp_start">
+            </div>
+            <div class="form-group">
+                <label>End Date / Status</label>
+                <input type="text" id="exp_end" placeholder="e.g., June 2025 or Currently Working">
+            </div>
+        </div>
+        <div class="form-group" style="margin-top: 10px;">
+            <label>Job Description / Responsibilities</label>
+            <textarea id="exp_desc" rows="2" placeholder="e.g., Taught Biology up to 12th standard, managed academic schedules..."></textarea>
+        </div>
+    </div>
+</div>
+
 
             <!-- 5️⃣ TEACHING PREFERENCES (ఇవి ఎప్పుడైనా ఎడిట్ చేసుకోవచ్చు) -->
             <div class="section-box">
