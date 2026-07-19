@@ -3,159 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyGuru - నా ప్రొఫైల్</title>
-    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
+    <title>MyGuru Teacher - Profile Setup</title>
     <link rel="stylesheet" href="../css/style.css">
-    <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .profile-container { background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 12px; max-width: 600px; margin-top: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .profile-card { background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 16px; max-width: 700px; margin: 20px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; font-size: 13px; font-weight: bold; color: #cbd5e1; text-transform: uppercase; margin-bottom: 8px; }
-        .input-ctrl { width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: white; border-radius: 8px; font-size: 15px; outline: none; }
-        .input-ctrl:focus { border-color: #3b82f6; }
-        .btn-save { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4); }
-        .subject-tags { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+        .form-group label { display: block; font-size: 12px; font-weight: bold; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #2e3c51; border-radius: 8px; color: white; font-size: 14px; box-sizing: border-box; }
+        .form-group input:focus, .form-group textarea:focus { border-color: #38bdf8; outline: none; }
+        .btn-submit { background: #10b981; color: white; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; transition: 0.2s; }
+        .btn-submit:hover { background: #059669; transform: translateY(-1px); }
     </style>
 </head>
 <body>
 
-    <!-- సైడ్‌బార్ సెక్షన్ -->
     <div class="sidebar">
         <div style="text-align: center; padding: 10px;">
             <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 80px; height: auto; border-radius: 50%;">
             <h2>MyGuru</h2>
         </div>
         <a href="dashboard.html">డాష్‌బోర్డ్</a>
-        <a href="teacher_profile.html" class="active">నా ప్రొఫైల్</a>
-        <a href="jobs.html">తరగతులు / జాబ్స్</a>
-        <a href="applications.html">అప్లికేషన్లు</a>
-        <a href="settings.html">సెట్టింగ్స్</a>
+        <a href="profile.html" class="active">నా ప్రొఫైల్</a>
+        <a href="classes.html">తరగతులు</a>
+        <a href="jobs.html">జాబ్ సెర్చ్</a>
         <a href="#" id="logout-btn" style="margin-top: auto; color: #e74c3c;">లాగ్ అవుట్</a>
     </div>
 
-    <!-- మెయిన్ కంటెంట్ సెక్షన్ -->
     <div class="content">
         <div class="header">
             <h3>ప్రొఫైల్ వివరాల నిర్వహణ</h3>
-            <span class="tag" style="background: #3b82f6;">Profile Setup</span>
+            <span class="tag" style="background: #38bdf8;">Profile Setup</span>
         </div>
 
-        <div class="profile-container">
-            <form id="profile-form" onsubmit="saveTeacherProfile(event)">
+        <div class="profile-card">
+            <form id="profile-form">
                 <div class="form-group">
                     <label>పూర్తి పేరు (Full Name)</label>
-                    <input type="text" id="txtName" class="input-ctrl" required readonly style="background: #0f172a; color: #94a3b8;">
+                    <input type="text" id="txtFullName" required placeholder="మీ పూర్తి పేరు రాయండి">
                 </div>
 
                 <div class="form-group">
                     <label>విద్యార్హతలు (Qualifications - కామాలతో విడదీసి రాయండి)</label>
-                    <input type="text" id="txtQualifications" class="input-ctrl" placeholder="e.g., MSc Zoology, BEd">
+                    <input type="text" id="txtQual" placeholder="e.g., B.Sc, M.Sc Zoology, B.Ed">
                 </div>
 
                 <div class="form-group">
-                    <label>బోధనా సబ్జెక్టులు (Subjects - కామాలతో విడదీసి రాయండి)</label>
-                    <input type="text" id="txtSubjects" class="input-ctrl" placeholder="e.g., Zoology, Biology">
-                    <small style="color: #94a3b8; font-size: 12px;">* ఈ సబ్జెక్టుల ఆధారంగానే జాబ్స్ మ్యాచ్ అవుతాయి.</small>
+                    <label>బోధనా సబ్జెక్టులు (Subjects Expert Grid - కామాలతో విడదీయండి)</label>
+                    <input type="text" id="txtSubjects" placeholder="e.g., Zoology, Botany, Biology">
                 </div>
 
                 <div class="form-group">
                     <label>అనుభవం (Experience in Years)</label>
-                    <input type="number" id="txtExperience" class="input-ctrl" min="0" placeholder="0">
+                    <input type="number" id="numExp" value="0" min="0">
                 </div>
 
-                <button type="submit" class="btn-save">ప్రొఫైల్ సేవ్ చేయి</button>
+                <div class="form-group">
+                    <label>లింగము (Gender)</label>
+                    <select id="selGender">
+                        <option value="">సెలెక్ట్ చేయండి</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>రాష్ట్రం (State)</label>
+                    <input type="text" id="txtState" placeholder="e.g., Telangana">
+                </div>
+
+                <div class="form-group">
+                    <label>జిల్లా (District)</label>
+                    <input type="text" id="txtDistrict" placeholder="e.g., Hanamkonda">
+                </div>
+
+                <div class="form-group">
+                    <label>చిరునామా (Full Address)</label>
+                    <textarea id="txtAddress" rows="3" placeholder="మీ పూర్తి చిరునామా"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>నా గురించి / బయో (About Me)</label>
+                    <textarea id="txtAbout" rows="4" placeholder="మీ బోధనా పద్ధతులు మరియు అనుభవం గురించి క్లుప్తంగా రాయండి..."></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit">ప్రొఫైల్ సేవ్ చేయి</button>
             </form>
         </div>
     </div>
 
-    <!-- స్క్రిప్ట్స్ లింకింగ్ ఆర్డర్ -->
     <script src="../js/supabase.js"></script>
     <script src="../js/auth.js"></script>
     <script>
         let currentUserId = null;
 
         async function initProfilePage() {
-            // 1. auth.js ద్వారా సెషన్ వెరిఫికేషన్
+            // 🎯 సెషన్ చెక్
             const session = await checkLiveUserSession('Teacher');
             if (!session) return;
-
             currentUserId = session.id;
-            document.getElementById('txtName').value = session.full_name || '';
 
-            // 2. teacher_profiles టేబుల్ నుండి ప్రస్తుత ప్రొఫైల్ డేటాను లోడ్ చేయడం
-            await loadProfileData();
+            await loadExistingProfileData();
         }
 
-        async function loadProfileData() {
+        // 📥 సుపాబేస్ నుండి టీచర్ ప్రస్తుత డేటాను లోడ్ చేయడం
+        async function loadExistingProfileData() {
             try {
-                const { data, error } = await _supabase
+                const { data: profile, error } = await _supabase
                     .from('teacher_profiles')
                     .select('*')
                     .eq('id', currentUserId)
-                    .maybeSingle();
+                    .single();
 
-                if (error) throw error;
+                if (error && error.code !== 'PGRST116') throw error;
 
-                if (data) {
-                    // టెక్స్ట్ ఫీల్డ్స్ లోకి డేటా ఎక్కించడం
-                    document.getElementById('txtQualifications').value = data.qualifications || '';
-                    document.getElementById('txtExperience').value = data.experience || 0;
-                    
-                    // Array గా ఉన్న సబ్జెక్టులను కామాలతో కూడిన స్ట్రింగ్ గా మార్చడం (e.g., ['Zoology', 'Biology'] -> "Zoology, Biology")
-                    if (data.subjects && Array.isArray(data.subjects)) {
-                        document.getElementById('txtSubjects').value = data.subjects.join(', ');
-                    }
+                // డేటా ఉంటే ఫీల్డ్స్‌లో నింపడం
+                if (profile) {
+                    document.getElementById('txtFullName').value = profile.full_name || '';
+                    document.getElementById('txtQual').value = profile.qualifications || '';
+                    document.getElementById('txtSubjects').value = profile.subjects || '';
+                    document.getElementById('numExp').value = profile.experience || 0; // 🎯 పక్కా కాలమ్
+                    document.getElementById('selGender').value = profile.gender || '';
+                    document.getElementById('txtState').value = profile.state || '';
+                    document.getElementById('txtDistrict').value = profile.district || '';
+                    document.getElementById('txtAddress').value = profile.address || '';
+                    document.getElementById('txtAbout').value = profile.about || '';
                 }
             } catch (err) {
-                console.error("Profile Load Failure:", err.message);
+                console.error("Profile Fetch Error:", err.message);
             }
         }
 
-        // 📝 ప్రొఫైల్ డేటాను సుపాబేస్ లో Upsert (Insert/Update) చేసే ఫంక్షన్
-        async function saveTeacherProfile(event) {
-            event.preventDefault();
-
-            const qualifications = document.getElementById('txtQualifications').value.trim();
-            const experience = parseInt(document.getElementById('txtExperience').value) || 0;
+        // 📤 ఫారమ్ సబ్మిట్ చేసి డేటాను సుపాబేస్ లోకి సేవ్/అప్‌డేట్ చేయడం
+        document.getElementById('profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
             
-            // స్ట్రింగ్ గా ఉన్న సబ్జెక్టులను క్లీన్ చేసి Array లాగా మార్చడం
-            const subjectsInput = document.getElementById('txtSubjects').value;
-            const subjectsArray = subjectsInput.split(',')
-                .map(s => s.trim())
-                .filter(s => s.length > 0);
+            const payload = {
+                id: currentUserId,
+                full_name: document.getElementById('txtFullName').value,
+                qualifications: document.getElementById('txtQual').value,
+                subjects: document.getElementById('txtSubjects').value,
+                experience: parseInt(document.getElementById('numExp').value) || 0, // 🎯 'experience_years' బదులు 'experience' కి మార్చాం
+                gender: document.getElementById('selGender').value,
+                state: document.getElementById('txtState').value,
+                district: document.getElementById('txtDistrict').value,
+                address: document.getElementById('txtAddress').value,
+                about: document.getElementById('txtAbout').value,
+                updated_at: new Date().toISOString()
+            };
 
             try {
-                // public.teacher_profiles లో డేటాను అప్‌డేట్ చేయడం (లేకపోతే ఇన్సర్ట్ చేయడం)
+                // Upsert ద్వారా రికార్డ్ ఉంటే అప్‌డేట్ అవుతుంది, లేదంటే ఇన్సర్ట్ అవుతుంది
                 const { error } = await _supabase
                     .from('teacher_profiles')
-                    .upsert({
-                        id: currentUserId,
-                        qualifications: qualifications,
-                        experience_years: experience,
-                        subjects: subjectsArray
-                    });
+                    .upsert(payload);
 
                 if (error) throw error;
 
-                alert("✓ మీ ప్రొఫైల్ విజయవంతంగా అప్‌డేట్ చేయబడింది!");
+                alert("✓ మీ ప్రొఫైల్ వివరాలు విజయవంతంగా సేవ్ చేయబడ్డాయి!");
                 
-                // లోకల్ స్టోరేజ్ లో ఉన్న సెషన్ డేటాను కూడా అప్‌డేట్ చేయడం వల్ల రూటింగ్ పక్కాగా ఉంటుంది
-                const cachedUser = JSON.parse(localStorage.getItem('myguru_user'));
-                cachedUser.profileData = {
-                    qualifications: qualifications,
-                    experience_years: experience,
-                    subjects: subjectsArray
-                };
-                localStorage.setItem('myguru_user', JSON.stringify(cachedUser));
+                // లోకల్ స్టోరేజ్ అప్‌డేట్ చేసి డ్యాష్‌బోర్డ్‌కి పంపడం
+                const cached = JSON.parse(localStorage.getItem('myguru_user') || '{}');
+                cached.profileData = payload;
+                localStorage.setItem('myguru_user', JSON.stringify(cached));
+                
+                window.location.href = "dashboard.html";
 
             } catch (err) {
                 alert("ప్రొఫైల్ సేవ్ చేయడంలో లోపం: " + err.message);
             }
-        }
+        });
 
-        // లాగ్ అవుట్ యాక్షన్
         document.getElementById('logout-btn').addEventListener('click', async (e) => {
             e.preventDefault();
             await logoutSessionRouter();
