@@ -154,20 +154,24 @@
     <script>
         let currentTeacherId = null;
 
-                async function initProfileManagement() {
+                        async function initProfileManagement() {
             // 1. auth.js ద్వారా లైవ్ సెషన్ చెక్
             const session = await checkLiveUserSession('Teacher');
             if (!session) return;
             
             currentTeacherId = session.id;
             
-            // 🎯 [DIRECT FIX]: సెషన్ ఆబ్జెక్ట్ లోపల ఏ కీ లో మొబైల్ నంబర్ ఉన్నా పట్టుకుంటుంది
-            const liveMobile = session.mobile || session.phone || (session.profileData ? session.profileData.mobile : '');
+            // 🎯 సుపాబేస్ ఆథ్ సిస్టమ్ ఫోన్ నంబర్ ని session.phone లేదా session.user.phone లో ఉంచుతుంది
+            let liveMobile = session.phone || session.mobile || '';
+            
+            if (liveMobile === 'undefined' || !liveMobile) {
+                liveMobile = '';
+            }
             
             document.getElementById('c_mobile').value = liveMobile;
             document.getElementById('c_email').value = session.email || '';
 
-            // 2. డేటాబేస్ నుండి మిగిలిన ప్రొఫైల్ డేటా తేవడం
+            // 2. టేబుల్ డేటా లోడ్ చేయడం
             await fetchAndRenderProfile();
         }
 
@@ -192,21 +196,9 @@
                     document.getElementById('t_classes').value = prof.address || ''; 
                     document.getElementById('t_about').value = prof.about || '';
                     
-                    // 🎯 [BACKUP GATE]: ఒకవేళ పైన సెషన్ లో మొబైల్ నంబర్ రాకపోతే, టేబుల్ లో ఆల్రెడీ ఉన్న నంబర్ ని ఇక్కడ నింపుతుంది
-                    if(!document.getElementById('c_mobile').value && prof.mobile) {
+                    // 🎯 [DIRECT TABLE CHECK]: ఒకవేళ ఆథ్ సెషన్ లో లేకపోతే, ఈ టేబుల్ లో ఉన్న నంబర్ ని డిస్ప్లే చేస్తుంది
+                    if((!document.getElementById('c_mobile').value || document.getElementById('c_mobile').value === '') && prof.mobile) {
                         document.getElementById('c_mobile').value = prof.mobile;
-                    }
-                }
-                
-                // 🎯 [ULTIMATE BACKUP]: ఒకవేళ పైన రెండింటిలోనూ రాకపోతే, నేరుగా మీ మెయిన్ 'common_users' టేబుల్ నుండి లాగుతుంది
-                if(!document.getElementById('c_mobile').value) {
-                    const { data: commonUser } = await _supabase
-                        .from('common_users')
-                        .select('mobile')
-                        .eq('id', currentTeacherId)
-                        .single();
-                    if(commonUser && commonUser.mobile) {
-                        document.getElementById('c_mobile').value = commonUser.mobile;
                     }
                 }
 
@@ -215,6 +207,7 @@
                 console.error("Profile Fetch Outage:", err.message);
             }
         }
+
 
 
         document.getElementById('master-profile-form').addEventListener('submit', async (e) => {
