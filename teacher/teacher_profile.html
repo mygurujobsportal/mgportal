@@ -154,52 +154,21 @@
     <script>
         let currentTeacherId = null;
 
-        async function initProfileManagement() {
+                async function initProfileManagement() {
+            // 1. auth.js ద్వారా లైవ్ సెషన్ చెక్
             const session = await checkLiveUserSession('Teacher');
             if (!session) return;
             
             currentTeacherId = session.id;
             
-            // కాంటాక్ట్ వివరాలు ఆటో-ఫిల్ (🔒 సెక్యూర్)
-            document.getElementById('c_mobile').value = session.mobile || '';
+            // 🎯 [DIRECT FIX]: సెషన్ ఆబ్జెక్ట్ లోపల ఏ కీ లో మొబైల్ నంబర్ ఉన్నా పట్టుకుంటుంది
+            const liveMobile = session.mobile || session.phone || (session.profileData ? session.profileData.mobile : '');
+            
+            document.getElementById('c_mobile').value = liveMobile;
             document.getElementById('c_email').value = session.email || '';
 
+            // 2. డేటాబేస్ నుండి మిగిలిన ప్రొఫైల్ డేటా తేవడం
             await fetchAndRenderProfile();
-        }
-
-        function calculateRealtimeProgress() {
-            let score = 0;
-
-            // 1. Personal (20%)
-            if(document.getElementById('p_name').value.trim() && 
-               document.getElementById('p_gender').value && 
-               document.getElementById('p_state').value.trim() && 
-               document.getElementById('p_district').value.trim()) {
-                score += 20;
-            }
-
-            // 2. Qualifications (25%)
-            if(document.getElementById('q_qual').value.trim()) {
-                score += 25;
-            }
-
-            // 3. Experience (20%)
-            if(document.getElementById('e_exp').value.trim() !== "") {
-                score += 20;
-            }
-
-            // 4. Preferences (10%)
-            if(document.getElementById('t_subjects').value.trim() && 
-               document.getElementById('t_classes').value.trim()) {
-                score += 10;
-            }
-
-            // 5. Documents (25%) -> ప్రస్తుతానికి స్టాటిక్ గేట్ వేసాం మీ ఫ్రెండ్ ప్లాన్ ప్రకారం
-            score += 25; 
-
-            document.getElementById('txtPercent').innerText = `${score}%`;
-            document.getElementById('meterFill').style.width = `${score}%`;
-            return score;
         }
 
         async function fetchAndRenderProfile() {
@@ -220,14 +189,33 @@
                     document.getElementById('q_qual').value = prof.qualifications || '';
                     document.getElementById('e_exp').value = prof.experience || 0;
                     document.getElementById('t_subjects').value = prof.subjects || '';
-                    document.getElementById('t_classes').value = prof.address || ''; // టేబుల్ లో అడ్రస్ ని క్లాసెస్ కి వాడుతున్నాం
+                    document.getElementById('t_classes').value = prof.address || ''; 
                     document.getElementById('t_about').value = prof.about || '';
+                    
+                    // 🎯 [BACKUP GATE]: ఒకవేళ పైన సెషన్ లో మొబైల్ నంబర్ రాకపోతే, టేబుల్ లో ఆల్రెడీ ఉన్న నంబర్ ని ఇక్కడ నింపుతుంది
+                    if(!document.getElementById('c_mobile').value && prof.mobile) {
+                        document.getElementById('c_mobile').value = prof.mobile;
+                    }
                 }
+                
+                // 🎯 [ULTIMATE BACKUP]: ఒకవేళ పైన రెండింటిలోనూ రాకపోతే, నేరుగా మీ మెయిన్ 'common_users' టేబుల్ నుండి లాగుతుంది
+                if(!document.getElementById('c_mobile').value) {
+                    const { data: commonUser } = await _supabase
+                        .from('common_users')
+                        .select('mobile')
+                        .eq('id', currentTeacherId)
+                        .single();
+                    if(commonUser && commonUser.mobile) {
+                        document.getElementById('c_mobile').value = commonUser.mobile;
+                    }
+                }
+
                 calculateRealtimeProgress();
             } catch(err) {
                 console.error("Profile Fetch Outage:", err.message);
             }
         }
+
 
         document.getElementById('master-profile-form').addEventListener('submit', async (e) => {
             e.preventDefault();
