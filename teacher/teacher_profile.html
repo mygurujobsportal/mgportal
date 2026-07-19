@@ -3,179 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyGuru Teacher - My Profile</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <title>MyGuru - My Profile Terminal</title>
+    <!-- సుపాబేస్ JS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .profile-container { max-width: 800px; margin: 20px auto; display: grid; grid-template-columns: 1fr; gap: 20px; }
-        .section-box { background: #1e293b; border: 1px solid #334155; padding: 25px; border-radius: 12px; }
-        .section-title { font-size: 16px; color: #38bdf8; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 5px; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        @media(max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group label { font-size: 12px; color: #94a3b8; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
-        .form-group input, .form-group select, .form-group textarea { padding: 10px; background: #0f172a; border: 1px solid #2e3c51; border-radius: 6px; color: white; font-size: 14px; }
-        .form-group input:disabled { background: #1e293b; color: #64748b; border-color: #334155; }
-        .sticky-counter { position: sticky; top: 10px; background: #0f172a; padding: 15px; border-radius: 10px; border: 1px solid #4f46e5; display: flex; justify-content: space-between; align-items: center; z-index: 100; margin-bottom: 15px; }
-        .progress-bg { background: #1e293b; border-radius: 10px; height: 15px; width: 60%; overflow: hidden; border: 1px solid #334155; }
-        .progress-fill { background: linear-gradient(90deg, #10b981, #34d399); height: 100%; width: 0%; transition: width 0.3s; }
-        .btn-zone { margin-top: 20px; display: flex; gap: 15px; }
-        .btn-p { padding: 12px 25px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; flex: 1; text-align: center; }
-        .btn-save { background: #10b981; color: white; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body {
+            background: linear-gradient(-45deg, #0f172a, #1e1b4b, #311042, #0f172a);
+            background-size: 400% 400%; animation: gradientBg 15s ease infinite;
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center; color: white;
+        }
+        @keyframes gradientBg { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        /* TOP BAND & NAV */
+        .top-header-band {
+            width: 100%; background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 15px 30px; display: flex; align-items: center; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .logo-box img { height: 50px; width: auto; border-radius: 8px; background: rgba(255,255,255,0.05); padding: 5px; }
+        .header-title-bar {
+            font-size: 24px; font-weight: 800; background: linear-gradient(135deg, #ffffff, #3b82f6, #a855f7, #ffffff);
+            background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: textShine 4s linear infinite;
+        }
+        @keyframes textShine { to { background-position: 200% center; } }
+        
+        .top-nav-bar { width: 100%; background: rgba(15, 23, 42, 0.4); padding: 10px 30px; display: flex; gap: 25px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .nav-link { color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .nav-link:hover { color: #3b82f6; }
+
+        /* MAIN GLASS CARD */
+        .main-wrapper { flex: 1; display: flex; justify-content: center; align-items: center; width: 100%; padding: 40px 20px; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.04); border-radius: 24px; padding: 35px;
+            backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.12);
+            width: 100%; max-width: 650px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+        }
+        
+        .photo-container { position: relative; width: 125px; height: 150px; margin: 0 auto 20px auto; }
+        .profile-pic { width: 100%; height: 100%; border-radius: 12px; object-fit: cover; border: 2px solid rgba(255,255,255,0.2); background: #1e293b; }
+        
+        .user-name-title { font-size: 22px; font-weight: 700; color: white; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .user-role-tag { font-size: 13px; color: #38bdf8; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; }
+
+        .profile-info-box { text-align: left; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); padding: 20px; border-radius: 16px; margin-bottom: 20px; }
+        .info-row { margin-bottom: 14px; font-size: 14px; color: #94a3b8; line-height: 1.5; display: flex; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 8px; }
+        .info-row:last-child { margin-bottom: 0; border: none; padding-bottom: 0; }
+        .info-row span.label { width: 180px; font-weight: 600; color: #cbd5e1; display: inline-block; }
+        .info-row span.value { color: #ffffff; font-weight: 500; flex: 1; }
+
+        .badge-sub { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .badge-sub.free { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; }
+        .badge-sub.approved { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+
+        .lock-alert-flyer {
+            display: none; background: linear-gradient(135deg, #450a0a, #7f1d1d); border: 2px solid #ef4444;
+            padding: 14px; border-radius: 12px; margin-top: 15px; text-align: center; color: #fecaca;
+            font-weight: 600; font-size: 13px; box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+            animation: shake 0.4s ease-in-out;
+        }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+        .btn-footer-group { display: flex; gap: 12px; margin-top: 15px; }
+        .btn-base { flex: 1; padding: 12px; border: none; font-weight: bold; border-radius: 10px; cursor: pointer; font-size: 14px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn-update { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; text-decoration: none; }
+        .btn-update:hover { transform: translateY(-2px); }
+        .btn-back { background: #334155; color: #cbd5e1; text-decoration: none; }
+        
+        .btn-print-premium {
+            width: 100%; padding: 14px; margin-top: 15px; border: none; font-weight: bold; border-radius: 12px; cursor: pointer; font-size: 14px;
+            background: linear-gradient(135deg, #a855f7, #ec4899); color: white; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s;
+        }
+
+        /* 🖨️ PRINT RESUME STYLES */
+        @media print {
+            body { background: white !important; color: black !important; }
+            .top-header-band, .top-nav-bar, .btn-footer-group, .btn-print-premium, .lock-alert-flyer { display: none !important; }
+            .main-wrapper { padding: 0; width: 100%; display: block; }
+            .glass-card { background: white !important; border: none !important; box-shadow: none !important; max-width: 100% !important; color: black !important; }
+            .profile-info-box { background: #f8fafc !important; border: 1px solid #e2e8f0 !important; }
+            .info-row { border-bottom: 1px solid #e2e8f0 !important; }
+            .info-row span.label { color: #334155 !important; }
+            .info-row span.value { color: black !important; }
+            .user-name-title { color: #1e1b4b !important; }
+            .profile-pic { border: 2px solid #1e1b4b !important; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="sidebar">
-        <div style="text-align: center; padding: 10px;">
-            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 80px; height: auto; border-radius: 50%;">
-            <h2>MyGuru Jobs</h2>
-        </div>
-        <a href="dashboard.html">Dashboard</a>
-        <a href="teacher_profile.html" class="active">My Profile</a>
-        <a href="jobs.html">Search Jobs</a>
-        <a href="applied-jobs.html">Applied Jobs</a>
-        <a href="interview-letters.html">Interview Letters</a>
-        <a href="notifications.html">Notifications</a>
-        <a href="support.html">Support</a>
-        <a href="settings.html">Settings</a>
-        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
+    <div class="top-header-band">
+        <div class="logo-box"><img src="../assets/logo.png" alt="MyGuru Logo"></div>
+        <div class="header-title-bar">My Guru Jobs - Profile Terminal</div>
     </div>
 
-    <div class="content">
-        <!-- Sticky Progress Meter -->
-        <div class="sticky-counter">
-            <div>
-                <span style="color: white; font-weight: bold;">Profile Completion:</span>
-                <span id="txtPercent" style="color: #10b981; font-weight: bold; margin-left: 5px;">0%</span>
-            </div>
-            <div class="progress-bg">
-                <div id="meterFill" class="progress-fill"></div>
-            </div>
-        </div>
+    <div class="top-nav-bar">
+        <a class="nav-link" href="dashboard.html">Dashboard</a>
+        <a class="nav-link" href="profile.html" style="color: #3b82f6;">My Profile</a>
+        <a class="nav-link" href="support.html">Contact Support</a>
+        <a class="nav-link" style="color: #f87171;" id="logout-btn">Logout</a>
+    </div>
 
-        <form id="master-profile-form" class="profile-container">
+    <div class="main-wrapper">
+        <div class="glass-card">
             
-            <!-- 1️⃣ PERSONAL DETAILS (20%) -->
-            <div class="section-box">
-                <div class="section-title">1. Personal Details (వ్యక్తిగత వివరాలు)</div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Full Name *</label>
-                        <input type="text" id="p_name" required oninput="calculateRealtimeProgress()">
-                    </div>
-                    <div class="form-group">
-                        <label>Gender *</label>
-                        <select id="p_gender" required onchange="calculateRealtimeProgress()">
-                            <option value="">Select</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                        </select>
-                    </div>
-                    <div class="form-grid" style="grid-column: span 2; gap: 15px; padding: 0;">
-                        <div class="form-group">
-                            <label>State *</label>
-                            <input type="text" id="p_state" required placeholder="e.g., Telangana" oninput="calculateRealtimeProgress()">
-                        </div>
-                        <div class="form-group">
-                            <label>District *</label>
-                            <input type="text" id="p_district" required placeholder="e.g., Hanamkonda" oninput="calculateRealtimeProgress()">
-                        </div>
-                    </div>
+            <div class="photo-container">
+                <img id="userAvatar" src="https://via.placeholder.com/150/1e293b/ffffff?text=Teacher" alt="Profile Pic" class="profile-pic">
+            </div>
+
+            <h2 class="user-name-title">
+                <span id="txtProfileName">Loading Profile Grid...</span>
+            </h2>
+            <div id="txtProfileRole" class="user-role-tag">Teacher Account</div>
+
+            <div class="profile-info-box">
+                <div class="info-row">
+                    <span class="label">📱 Mobile Number:</span>
+                    <span class="value" id="infoMobile" style="color: #64748b;">🔒 Hidden from Employers</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">📧 Email Address:</span>
+                    <span class="value" id="infoEmail" style="color: #64748b;">🔒 Hidden from Employers</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">⚥ Gender & Location:</span>
+                    <span class="value" id="infoLocation">...</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">🎓 Core Qualifications:</span>
+                    <span class="value" id="infoQual">Loading sync fields...</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">💼 Teaching Experience:</span>
+                    <span class="value" id="infoExp">Loading ledger...</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">📚 Subjects & Classes:</span>
+                    <span class="value" id="infoPreferences">...</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">📝 Professional Bio:</span>
+                    <span class="value" id="infoAbout">...</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">🛡️ Profile Status:</span>
+                    <span class="value">
+                        <span id="infoStatusBadge" class="badge-sub free">Checking...</span>
+                    </span>
                 </div>
             </div>
 
-            <!-- 2️⃣ CONTACT DETAILS (🔒 Employers కి కనిపించవు) -->
-            <div class="section-box">
-                <div class="section-title">2. Contact Details (🔒 Hidden from Employers)</div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Mobile Number (Read-only)</label>
-                        <input type="text" id="c_mobile" disabled>
-                    </div>
-                    <div class="form-group">
-                        <label>Email Address (Read-only)</label>
-                        <input type="email" id="c_email" disabled>
-                    </div>
-                </div>
+            <div id="printLockAlertFlyer" class="lock-alert-flyer">
+                ⚠️ దయచేసి ప్రింట్ ఆప్షన్ కోసం మీ ప్రొఫైల్‌ను 100% పూర్తిగా నింపండి! 👑
             </div>
 
-            <!-- 3️⃣ QUALIFICATIONS (25%) -->
-            <div class="section-box">
-                <div class="section-title">3. Qualifications (విద్యార్హతలు)</div>
-                <div class="form-group">
-                    <label>Highest Degrees * (e.g., B.Sc, M.Sc Zoology, B.Ed)</label>
-                    <input type="text" id="q_qual" required placeholder="కామాలతో విడదీసి రాయండి" oninput="calculateRealtimeProgress()">
-                </div>
+            <button class="btn-print-premium" onclick="triggerResumePrinter()">
+                🖨️ View Preview & Print Official Resume
+            </button>
+
+            <div class="btn-footer-group">
+                <a href="dashboard.html" class="btn-base btn-back">← Dashboard</a>
+                <a href="edit-profile.html" class="btn-base btn-update">📝 Edit / Update Profile</a>
             </div>
 
-            <!-- 4️⃣ EXPERIENCE DETAILS (20%) -->
-            <div class="section-box">
-                <div class="section-title">4. Teaching Experience (అనుభవం)</div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Years of Experience *</label>
-                        <input type="number" id="e_exp" min="0" required oninput="calculateRealtimeProgress()">
-                    </div>
-                    <div class="form-group">
-                        <label>Current/Last School Work</label>
-                        <input type="text" id="e_school" placeholder="స్కూల్ పేరు" oninput="calculateRealtimeProgress()">
-                    </div>
-                </div>
-            </div>
-
-            <!-- 5️⃣ TEACHING DETAILS & PREFERENCES (10%) -->
-            <div class="section-box">
-                <div class="section-title">5. Teaching Preferences (బోధనా వివరాలు)</div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Expert Subjects * (e.g., Zoology, Biology)</label>
-                        <input type="text" id="t_subjects" required placeholder="e.g., Zoology, Biology" oninput="calculateRealtimeProgress()">
-                    </div>
-                    <div class="form-group">
-                        <label>Target Classes * (e.g., High School, Intermediate)</label>
-                        <input type="text" id="t_classes" required placeholder="e.g., 11th, 12th, Degree" oninput="calculateRealtimeProgress()">
-                    </div>
-                </div>
-                <div class="form-group" style="margin-top: 15px;">
-                    <label>About My Teaching Style (Bio)</label>
-                    <textarea id="t_about" rows="3" placeholder="మీ గురించి క్లుప్తంగా రాయండి..."></textarea>
-                </div>
-            </div>
-
-            <div class="btn-zone">
-                <button type="submit" class="btn-p btn-save">Save Profile & Go to Dashboard</button>
-            </div>
-        </form>
+        </div>
     </div>
 
     <script src="../js/supabase.js"></script>
     <script src="../js/auth.js"></script>
     <script>
         let currentTeacherId = null;
+        let profileStatus = 'pending';
 
-                        async function initProfileManagement() {
-            // 1. auth.js ద్వారా లైవ్ సెషన్ చెక్
+        window.onload = async function() {
             const session = await checkLiveUserSession('Teacher');
-            if (!session) return;
-            
+            if(!session) return;
             currentTeacherId = session.id;
-            
-            // 🎯 సుపాబేస్ ఆథ్ సిస్టమ్ ఫోన్ నంబర్ ని session.phone లేదా session.user.phone లో ఉంచుతుంది
-            let liveMobile = session.phone || session.mobile || '';
-            
-            if (liveMobile === 'undefined' || !liveMobile) {
-                liveMobile = '';
-            }
-            
-            document.getElementById('c_mobile').value = liveMobile;
-            document.getElementById('c_email').value = session.email || '';
 
-            // 2. టేబుల్ డేటా లోడ్ చేయడం
-            await fetchAndRenderProfile();
+            await fetchProfileTerminalData();
         }
 
-        async function fetchAndRenderProfile() {
+        async function fetchProfileTerminalData() {
             try {
                 const { data: prof, error } = await _supabase
                     .from('teacher_profiles')
@@ -185,77 +192,52 @@
 
                 if (error && error.code !== 'PGRST116') throw error;
 
+                // 🎯 🔒 సెక్యూర్ మొబైల్ & ఈమెయిల్ లోడ్ లాజిక్
+                const cachedUser = JSON.parse(localStorage.getItem('myguru_user') || '{}');
+                const userMobile = cachedUser.phone || cachedUser.mobile || (prof ? prof.mobile : '');
+                const userEmail = cachedUser.email || '';
+                
+                if(userMobile) document.getElementById('infoMobile').innerText = `${userMobile} (Admin View Only)`;
+                if(userEmail) document.getElementById('infoEmail').innerText = `${userEmail} (Admin View Only)`;
+
                 if(prof) {
-                    document.getElementById('p_name').value = prof.full_name || '';
-                    document.getElementById('p_gender').value = prof.gender || '';
-                    document.getElementById('p_state').value = prof.state || '';
-                    document.getElementById('p_district').value = prof.district || '';
-                    document.getElementById('q_qual').value = prof.qualifications || '';
-                    document.getElementById('e_exp').value = prof.experience || 0;
-                    document.getElementById('t_subjects').value = prof.subjects || '';
-                    document.getElementById('t_classes').value = prof.address || ''; 
-                    document.getElementById('t_about').value = prof.about || '';
+                    profileStatus = prof.profile_status || 'pending';
                     
-                    // 🎯 [DIRECT TABLE CHECK]: ఒకవేళ ఆథ్ సెషన్ లో లేకపోతే, ఈ టేబుల్ లో ఉన్న నంబర్ ని డిస్ప్లే చేస్తుంది
-                    if((!document.getElementById('c_mobile').value || document.getElementById('c_mobile').value === '') && prof.mobile) {
-                        document.getElementById('c_mobile').value = prof.mobile;
+                    document.getElementById('txtProfileName').innerText = prof.full_name || 'Name Pending';
+                    document.getElementById('infoLocation').innerText = `${prof.gender || ''} | 📍 ${prof.district || ''}, ${prof.state || ''}`;
+                    document.getElementById('infoQual').innerText = prof.qualifications || 'Not provided';
+                    document.getElementById('infoExp').innerText = `${prof.experience || 0} Years at ${prof.current_school || prof.school_name || 'Not Configured'}`;
+                    document.getElementById('infoPreferences').innerText = `Subjects: ${prof.subjects || ''} | Target: ${prof.address || 'Classes Pending'}`;
+                    document.getElementById('infoAbout').innerText = prof.about || 'No bio added yet.';
+                    
+                    const badge = document.getElementById('infoStatusBadge');
+                    if(profileStatus === 'approved') {
+                        badge.innerText = "100% Complete (Approved)";
+                        badge.className = "badge-sub approved";
+                    } else {
+                        badge.innerText = "Incomplete Profile";
+                        badge.className = "badge-sub free";
                     }
                 }
-
-                calculateRealtimeProgress();
             } catch(err) {
-                console.error("Profile Fetch Outage:", err.message);
+                console.error("Terminal Sync Error:", err.message);
             }
         }
 
-
-
-        document.getElementById('master-profile-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const currentPercentage = calculateRealtimeProgress();
-
-            const payload = {
-                id: currentTeacherId,
-                full_name: document.getElementById('p_name').value,
-                gender: document.getElementById('p_gender').value,
-                state: document.getElementById('p_state').value,
-                district: document.getElementById('p_district').value,
-                qualifications: document.getElementById('q_qual').value,
-                experience: parseInt(document.getElementById('e_exp').value) || 0,
-                subjects: document.getElementById('t_subjects').value,
-                address: document.getElementById('t_classes').value, 
-                about: document.getElementById('t_about').value,
-                // మీ ఫ్రెండ్ ప్లాన్ ప్రకారం రియల్ టైం పర్సంటేజ్ బేస్ చేసి ప్రొఫైల్ స్టేటస్ అప్డేట్
-                profile_status: currentPercentage === 100 ? 'approved' : 'pending',
-                updated_at: new Date().toISOString()
-            };
-
-            try {
-                const { error } = await _supabase
-                    .from('teacher_profiles')
-                    .upsert(payload);
-
-                if (error) throw error;
-
-                // లోకల్ క్యాష్ అప్‌డేట్
-                const cached = JSON.parse(localStorage.getItem('myguru_user') || '{}');
-                cached.profileData = payload;
-                localStorage.setItem('myguru_user', JSON.stringify(cached));
-
-                alert("✓ ప్రొఫైల్ విజయవంతంగా సేవ్ చేయబడింది!");
-                window.location.href = "dashboard.html";
-            } catch(err) {
-                alert("Error saving profile: " + err.message);
+        function triggerResumePrinter() {
+            if(profileStatus !== 'approved') {
+                const flyer = document.getElementById('printLockAlertFlyer');
+                flyer.style.display = 'block';
+                setTimeout(() => { flyer.style.display = 'none'; }, 4000);
+                return;
             }
-        });
+            window.print();
+        }
 
         document.getElementById('logout-btn').addEventListener('click', async (e) => {
             e.preventDefault();
             await logoutSessionRouter();
         });
-
-        window.onload = initProfileManagement;
     </script>
 </body>
 </html>
