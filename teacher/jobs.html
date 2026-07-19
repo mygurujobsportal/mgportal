@@ -3,155 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyGuru - మ్యాచ్ అయిన జాబ్స్</title>
-    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
+    <title>MyGuru Teacher - Search Jobs</title>
     <link rel="stylesheet" href="../css/style.css">
-    <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .job-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
-        .job-card { background: #1e293b; border: 1px solid #334155; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .job-card h4 { color: #38bdf8; font-size: 18px; margin-bottom: 10px; }
-        .job-card p { font-size: 14px; margin-bottom: 8px; color: #cbd5e1; }
-        .job-card .tag { display: inline-block; background: #334155; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; color: #e2e8f0; }
-        .btn-apply { display: block; width: 100%; text-align: center; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.3s; }
-        .btn-apply:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4); }
-        .btn-applied { display: block; width: 100%; text-align: center; background: #475569; color: #94a3b8; border: none; padding: 10px; border-radius: 8px; font-weight: bold; margin-top: 15px; cursor: not-allowed; }
+        .search-filter-zone { background: #1e293b; border: 1px solid #334155; padding: 20px; border-radius: 12px; margin-bottom: 25px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+        .filter-group { display: flex; flex-direction: column; }
+        .filter-group label { font-size: 11px; font-weight: bold; color: #94a3b8; margin-bottom: 5px; text-transform: uppercase; }
+        .filter-group input, .filter-group select { padding: 10px; background: #0f172a; border: 1px solid #2e3c51; border-radius: 6px; color: white; }
+        
+        .jobs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+        .job-card { background: #1e293b; border: 1px solid #334155; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; }
+        .job-card:hover { transform: translateY(-3px); border-color: #38bdf8; }
+        .job-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; }
+        .school-info h4 { font-size: 16px; color: white; margin: 0 0 4px 0; }
+        .school-info span { font-size: 13px; color: #94a3b8; }
+        .job-badge { background: #0f172a; color: #38bdf8; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; border: 1px solid #2e3c51; }
+        
+        .job-details-meta { font-size: 13px; color: #cbd5e1; margin: 10px 0; line-height: 1.6; }
+        .job-details-meta strong { color: #94a3b8; }
+        
+        .lock-warning { background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #fca5a5; padding: 10px; border-radius: 6px; font-size: 12px; text-align: center; margin-top: 10px; }
+        .btn-job-apply { width: 100%; background: #10b981; color: white; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; font-size: 14px; margin-top: 10px; display: block; transition: 0.2s; }
+        .btn-job-apply:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
-    <!-- సైడ్‌బార్ సెక్షన్ -->
+    <!-- 🧭 Left Navigation Menu -->
     <div class="sidebar">
         <div style="text-align: center; padding: 10px;">
             <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 80px; height: auto; border-radius: 50%;">
-            <h2>MyGuru</h2>
+            <h2>MyGuru Jobs</h2>
         </div>
-        <a href="teacher_dashboard.html">డాష్‌బోర్డ్</a>
-        <a href="teacher_profile.html">నా ప్రొఫైల్</a>
-        <a href="jobs.html" class="active">तरगटुलु / జాబ్స్</a>
-        <a href="applications.html">అప్లికేషన్లు</a>
-        <a href="settings.html">సెట్టింగ్స్</a>
-        <a href="#" id="logout-btn" style="margin-top: auto; color: #e74c3c;">లాగ్ అవుట్</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="profile.html">My Profile</a>
+        <a href="jobs.html" class="active">Search Jobs</a>
+        <a href="applied-jobs.html">Applied Jobs</a>
+        <a href="interview-letters.html">Interview Letters</a>
+        <a href="notifications.html">Notifications</a>
+        <a href="support.html">Support</a>
+        <a href="settings.html">Settings</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
     </div>
 
-    <!-- మెయిన్ కంటెంట్ సెక్షన్ -->
+    <!-- 💻 Main Content -->
     <div class="content">
         <div class="header">
-            <h3>మీ సబ్జెక్టుకు సరిపోయే జాబ్స్</h3>
-            <span id="user-badge" class="tag" style="background: #8b5cf6;">Teacher Desk</span>
+            <h3>ఉపాధ్యాయ ఉద్యోగాల అన్వేషణ (Search School Jobs)</h3>
+            <span class="tag" style="background: #3b82f6;">Live Jobs</span>
         </div>
 
-        <!-- జాబ్స్ డిస్ప్లే గ్రిడ్ -->
-        <div id="jobs-container" class="job-grid">
-            <p style="color: #94a3b8;">జాబ్స్ లోడ్ అవుతున్నాయి...</p>
+        <!-- 🔍 Filters Zone (మీ ఫ్రెండ్ అడిగిన ఫిల్టర్స్) -->
+        <div class="search-filter-zone">
+            <div class="filter-group">
+                <label>Subject (సబ్జెక్ట్)</label>
+                <input type="text" id="filterSubject" placeholder="e.g., Zoology, Biology" oninput="fetchFilteredJobs()">
+            </div>
+            <div class="filter-group">
+                <label>District (జిల్లా)</label>
+                <input type="text" id="filterDistrict" placeholder="e.g., Hanamkonda" oninput="fetchFilteredJobs()">
+            </div>
+            <div class="filter-group">
+                <label>School Type</label>
+                <select id="filterSchoolType" onchange="fetchFilteredJobs()">
+                    <option value="">All Types</option>
+                    <option value="Private">Private</option>
+                    <option value="International">International</option>
+                    <option value="Residential">Residential</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 🏢 Jobs Cards Grid Display -->
+        <div class="jobs-grid" id="jobs-container">
+            <p style="color: #94a3b8;">ఉద్యోగాలు లోడ్ అవుతున్నాయి...</p>
         </div>
     </div>
 
-    <!-- స్క్రిప్ట్స్ లింకింగ్ ఆర్డర్ -->
     <script src="../js/supabase.js"></script>
     <script src="../js/auth.js"></script>
     <script>
         let currentTeacherId = null;
+        let isProfileComplete = false;
 
-        async function initJobsPage() {
-            // 1. auth.js ద్వారా సెషన్ వెరిఫికేషన్
-            const teacherSession = await checkLiveUserSession('Teacher');
-            if (!teacherSession) return;
+        async function initJobSearchEngine() {
+            const session = await checkLiveUserSession('Teacher');
+            if (!session) return;
+            currentTeacherId = session.id;
 
-            currentTeacherId = teacherSession.id;
-            const profile = teacherSession.profileData || {};
-            const subjects = profile.subjects || [];
-
-            if (subjects.length === 0) {
-                document.getElementById('jobs-container').innerHTML = `<p style="color: #ef4444;">⚠️ దయచేసి మీ ప్రొఫైల్‌లో సబ్జెక్టులను అప్‌డేట్ చేయండి.</p>`;
-                return;
-            }
-
-            // 2. మ్యాచ్ అయిన జాబ్స్ మరియు ఆల్రెడీ అప్లై చేసిన అప్లికేషన్లను లోడ్ చేయడం
-            await loadMatchedJobs(subjects);
+            // 1. టీచర్ ప్రొఫైల్ పర్సంటేజ్ చెక్ చేసి 100% ఉందో లేదో డిసైడ్ చేయడం
+            await checkTeacherProfileBarrier();
+            
+            // 2. జాబ్స్ లోడ్ చేయడం
+            await fetchFilteredJobs();
         }
 
-        async function loadMatchedJobs(subjectsArray) {
+        // 🔒 ప్రొఫైల్ లాక్ బారియర్ వెరిఫికేషన్ లాజిక్
+        async function checkTeacherProfileBarrier() {
             try {
-                // jobs టేబుల్ నుండి సబ్జెక్ట్ మ్యాచ్ అయిన డేటా లాగడం (Step 5: Job Matching)
-                const { data: jobs, error: jobsErr } = await _supabase
-                    .from('jobs')
+                const { data: prof } = await _supabase
+                    .from('teacher_profiles')
                     .select('*')
-                    .in('subject', subjectsArray)
-                    .order('posted_at', { ascending: false });
+                    .eq('id', currentTeacherId)
+                    .single();
 
-                if (jobsErr) throw jobsErr;
-
-                // ఆల్రెడీ అప్లై చేసిన జాబ్స్ ని ట్రాక్ చేయడానికి ఈ టీచర్ యొక్క అప్లికేషన్లు తెచ్చుకోవడం
-                const { data: myApps, error: appsErr } = await _supabase
-                    .from('applications')
-                    .select('job_id')
-                    .eq('teacher_id', currentTeacherId);
-
-                if (appsErr) throw appsErr;
-
-                // అప్లై చేసిన job_ids ని ఒక Set లో పెట్టుకోవడం
-                const appliedJobIds = new Set(myApps.map(app => app.job_id));
-                const container = document.getElementById('jobs-container');
-                container.innerHTML = "";
-
-                if (!jobs || jobs.length === 0) {
-                    container.innerHTML = `<p style="color: #94a3b8;">ప్రస్తుతానికి మీ సబ్జెక్టుకు సరిపోయే జాబ్స్ ఏవీ లేవు.</p>`;
-                    return;
+                if (prof) {
+                    // మీ ఫ్రెండ్ పర్సంటేజ్ ఫార్ములా ప్రకారం అన్నీ నిండితేనే 'approved' అవుతుంది
+                    if(prof.profile_status === 'approved') {
+                        isProfileComplete = true;
+                    }
                 }
-
-                // జాబ్ కార్డ్స్ బిల్డ్ చేయడం
-                jobs.forEach(job => {
-                    const isApplied = appliedJobIds.has(job.job_id);
-                    const buttonHtml = isApplied 
-                        ? `<button class="btn-applied" disabled>✓ Applied</button>`
-                        : `<button class="btn-apply" onclick="applyJob('${job.job_id}')">Apply Now</button>`;
-
-                    const card = `
-                        <div class="job-card">
-                            <h4>${job.job_title}</h4>
-                            <p><strong>సబ్జెక్ట్:</strong> <span class="tag">${job.subject}</span></p>
-                            <p><strong>అర్హత:</strong> ${job.qualification_required || 'N/A'}</p>
-                            <p><strong>అనుభవం:</strong> ${job.experience_required} సం.లు</p>
-                            <p><strong>జీతం:</strong> ${job.salary_range || 'చర్చించబడును'}</p>
-                            ${buttonHtml}
-                        </div>
-                    `;
-                    container.innerHTML += card;
-                });
-
             } catch (err) {
-                console.error("Jobs Outage:", err.message);
+                console.error("Barrier verification issue:", err.message);
             }
         }
 
-        // 📝 Step 6: Application Workflow - జాబ్‌కు అప్లై చేసే ఫంక్షన్
-        async function applyJob(jobId) {
+        // 📥 డేటాబేస్ నుండి జాబ్స్ తేవడం + ఫిల్టర్ చేయడం
+        async function fetchFilteredJobs() {
             try {
-                const { error } = await _supabase
-                    .from('applications')
-                    .insert([
-                        { job_id: jobId, teacher_id: currentTeacherId, status: 'pending' }
-                    ]);
+                const subInput = document.getElementById('filterSubject').value.trim();
+                const distInput = document.getElementById('filterDistrict').value.trim();
+                const typeInput = document.getElementById('filterSchoolType').value;
+
+                // 🔒 ప్రైవసీ రూల్: కేవలం డిస్ప్లే చేయాల్సిన కాలమ్స్ మాత్రమే సెలెక్ట్ చేస్తున్నాం (No phone, No email)
+                let query = _supabase
+                    .from('school_jobs')
+                    .select('id, institution_name, district, state, subject, salary_package, required_qualification, experience_required, status')
+                    .eq('status', 'open'); // కేవలం యాక్టివ్ జాబ్స్ మాత్రమే
+
+                if (subInput) query = query.ilike('subject', `%${subInput}%`);
+                if (distInput) query = query.ilike('district', `%${distInput}%`);
+                if (typeInput) query = query.ilike('institution_name', `%${typeInput}%`); // లేదా మీ టేబుల్ లోని స్కూల్ టైప్ కాలమ్
+
+                const { data: jobs, error } = await query.order('id', { ascending: false });
 
                 if (error) throw error;
 
-                alert("✓ జాబ్‌కు విజయవంతంగా అప్లై చేసారు!");
-                initJobsPage(); // పేజీని రీలోడ్ చేసి బటన్ ని 'Applied' గా మారుస్తుంది
-
+                renderJobCards(jobs);
             } catch (err) {
-                alert("అప్లికేషన్ విఫలమైంది: " + err.message);
+                document.getElementById('jobs-container').innerHTML = `<p style="color: #ef4444;">Error: ${err.message}</p>`;
             }
         }
 
-        // లాగ్ అవుట్ యాక్షన్
+        // 🃏 UI లో జాబ్స్ కార్డ్స్ రెండర్ చేయడం
+        function renderJobCards(jobs) {
+            const container = document.getElementById('jobs-container');
+            if (!jobs || jobs.length === 0) {
+                container.innerHTML = `<p style="color: #94a3b8;">మీరు వెతికిన సబ్జెక్ట్ లేదా జిల్లాలో ప్రస్తుతానికి ఉద్యోగాలు లేవు.</p>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            jobs.forEach(job => {
+                const card = document.createElement('div');
+                card.className = 'job-card';
+
+                // 🔒 ఎంప్లాయర్ కాంటాక్ట్ డీటెయిల్స్ పూర్తిగా హెడెన్!
+                card.innerHTML = `
+                    <div>
+                        <div class="job-header">
+                            <div class="school-info">
+                                <h4>${job.institution_name}</h4>
+                                <span>📍 ${job.district}, ${job.state}</span>
+                            </div>
+                            <div class="job-badge">${job.subject}</div>
+                        </div>
+                        
+                        <div class="job-details-meta">
+                            <div><strong>Qualification:</strong> ${job.required_qualification || 'Any Degree'}</div>
+                            <div><strong>Experience:</strong> ${job.experience_required || 0} Years</div>
+                            <div><strong>Estimated Salary:</strong> ₹${job.salary_package || 'Negotiable'}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="action-zone">
+                        ${!isProfileComplete ? 
+                            `<div class="lock-warning">⚠️ జాబ్స్ కి అప్లై చేయడానికి మీ ప్రొఫైల్‌ను 100% కంప్లీట్ చేయండి!</div>
+                             <button class="btn-job-apply" disabled>Apply Locked</button>` : 
+                            `<button class="btn-job-apply" onclick="applyForThisJob('${job.id}')">Apply Now</button>`
+                        }
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 🚀 సింగిల్ క్లిక్ జాబ్ అప్లికేషన్ ఇంజన్ (`job_applications` టేబుల్ లోకి)
+        async function applyForThisJob(jobId) {
+            if(!confirm("మీరు ఈ ఉద్యోగానికి దరఖాస్తు చేయాలనుకుంటున్నారా?")) return;
+
+            try {
+                // ముందే ఆల్రెడీ అప్లై చేసారేమో చెక్ చేయడం
+                const { data: alreadyApplied } = await _supabase
+                    .from('job_applications')
+                    .select('id')
+                    .eq('job_id', jobId)
+                    .eq('teacher_id', currentTeacherId);
+
+                if (alreadyApplied && alreadyApplied.length > 0) {
+                    alert("⚠️ మీరు ఆల్రెడీ ఈ ఉద్యోగానికి అప్లై చేశారు!");
+                    return;
+                }
+
+                // కొత్త అప్లికేషన్ రికార్డ్ క్రియేషన్
+                const { error } = await _supabase
+                    .from('job_applications')
+                    .insert({
+                        job_id: jobId,
+                        teacher_id: currentTeacherId,
+                        employer_status: 'applied', // డిఫాల్ట్ స్టేటస్ మీ ఫ్రెండ్ ప్లాన్ ప్రకారం
+                        created_at: new Date().toISOString()
+                    });
+
+                if (error) throw error;
+
+                alert("✓ Success! మీ అప్లికేషన్ విజయవంతంగా స్కూల్‌కు పంపబడింది.");
+                window.location.href = "applied-jobs.html"; // అప్లై చేసిన జాబ్స్ లిస్ట్ కి రీడైరెక్ట్
+
+            } catch (err) {
+                alert("Application Error: " + err.message);
+            }
+        }
+
         document.getElementById('logout-btn').addEventListener('click', async (e) => {
             e.preventDefault();
             await logoutSessionRouter();
         });
 
-        window.onload = initJobsPage;
+        window.onload = initJobSearchEngine;
     </script>
 </body>
 </html>
