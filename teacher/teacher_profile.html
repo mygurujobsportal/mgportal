@@ -127,85 +127,67 @@
     <script src="../js/supabase.js"></script>
     <script src="../js/auth.js"></script>
     <script>
-        <script>
-    let currentTeacherId = null;
+        let currentTeacherId = null;
 
-    async function loadProfileTerminal() {
-        const session = await checkLiveUserSession('Teacher');
-        if (!session) return;
-        currentTeacherId = session.id;
+        async function loadProfileTerminal() {
+            const session = await checkLiveUserSession('Teacher');
+            if (!session) return;
+            currentTeacherId = session.id;
 
-        // 🔒 సెక్యూర్ ఆథ్ సెషన్ సింక్
-        document.getElementById('lblEmail').innerText = session.email || '-';
+            // 🔒 సెక్యూర్ ఆథ్ సెషన్ సింక్
+            document.getElementById('lblMobile').innerText = session.Mobile || '-';
+            document.getElementById('lblEmail').innerText = session.email || '-';
 
-        try {
-            const { data: prof, error } = await _supabase
-                .from('teacher_profiles')
-                .select('*')
-                .eq('id', currentTeacherId)
-                .single();
+            try {
+                const { data: prof, error } = await _supabase
+                    .from('teacher_profiles')
+                    .select('*')
+                    .eq('id', currentTeacherId)
+                    .single();
 
-            if (error && error.code !== 'PGRST116') throw error;
+                if (error && error.code !== 'PGRST116') throw error;
 
-            if (prof) {
-                document.getElementById('txtFullName').innerText = prof.full_name || 'Name Pending';
-                document.getElementById('lblMobile').innerText = prof.mobile || session.phone || '🔒 Protected';
-                document.getElementById('lblGenderNode').innerText = prof.gender || '-';
-                document.getElementById('lblLocationNode').innerText = `📍 ${prof.district || '-'}, ${prof.state || '-'}`;
-                document.getElementById('lblQualifications').innerText = prof.qualifications || 'No qualifications listed';
-                
-                // 🎯 structured experience ని క్లీన్ గా లూప్ చేసి చూపించే పార్సర్ ఇంజన్
-                const rawExp = prof.school_name || "";
-                if(rawExp) {
-                    const blocks = rawExp.split('\n');
-                    let htmlContent = "";
-                    blocks.forEach(block => {
-                        if(block.trim()) {
-                            const cleanText = block.replace('[', '').replace(']', '');
-                            htmlContent += `<div style="margin-bottom: 8px; border-left: 2px solid #38bdf8; padding-left: 10px; font-size: 13px; text-align: left;">${cleanText}</div>`;
-                        }
-                    });
-                    document.getElementById('lblExperience').innerHTML = htmlContent;
+                if (prof) {
+                    document.getElementById('txtFullName').innerText = prof.full_name || 'Name Pending';
+                    document.getElementById('lblMobile').innerText = prof.mobile || session.phone || '🔒 Protected';
+                    document.getElementById('lblGenderNode').innerText = prof.gender || '-';
+                    document.getElementById('lblLocationNode').innerText = `📍 ${prof.district || '-'}, ${prof.state || '-'}`;
+                    document.getElementById('lblQualifications').innerText = prof.qualifications || 'No qualifications listed';
+                    document.getElementById('lblExperience').innerText = `${prof.experience || 0} Years Active inside ${prof.school_name || 'Not logged'}`;
+                    document.getElementById('lblSubjects').innerText = prof.subjects || '-';
+                    document.getElementById('lblClasses').innerText = prof.address || '-'; // address mapped to target classes
+                    document.getElementById('lblAbout').innerText = prof.about || 'No bio overview provided yet.';
+                    
+                    // 📸 Avatar base64 parser
+                    if(prof.avatar_url) { document.getElementById('facultyAvatar').src = prof.avatar_url; }
+
+                    // 💎 Generate / Fetch Alphanumeric MGID (e.g., MG + Row Serial / Slice ID)
+                    const slicedId = currentTeacherId.substring(0, 5).toUpperCase();
+                    document.getElementById('txtMgId').innerText = `MG-${slicedId}`;
+
+                    // 👑 Premium Status Node Check
+                    const badge = document.getElementById('premiumBadgeNode');
+                    if (prof.profile_status === 'approved') {
+                        badge.innerText = "👑 Premium Verified Member";
+                        badge.className = "badge-premium";
+                    } else {
+                        badge.innerText = "Standard Member (Pending)";
+                        badge.className = "badge-free";
+                    }
                 } else {
-                    document.getElementById('lblExperience').innerText = "No experience track logged yet.";
+                    document.getElementById('txtFullName').innerText = "Please complete your profile details!";
                 }
-
-                document.getElementById('lblSubjects').innerText = prof.subjects || '-';
-                document.getElementById('lblClasses').innerText = prof.address || '-'; // address mapped to target classes
-                document.getElementById('lblAbout').innerText = prof.about || 'No bio overview provided yet.';
-                
-                // 📸 Avatar base64 parser
-                if(prof.avatar_url) { document.getElementById('facultyAvatar').src = prof.avatar_url; }
-
-                // 💎 Generate Alphanumeric MGID
-                const slicedId = currentTeacherId.substring(0, 5).toUpperCase();
-                document.getElementById('txtMgId').innerText = `MG-${slicedId}`;
-
-                // 👑 Premium Status Node Check
-                const badge = document.getElementById('premiumBadgeNode');
-                if (prof.profile_status === 'approved') {
-                    badge.innerText = "👑 Premium Verified Member";
-                    badge.className = "badge-premium";
-                } else {
-                    badge.innerText = "Standard Member (Pending)";
-                    badge.className = "badge-free";
-                }
-            } else {
-                document.getElementById('txtFullName').innerText = "Please complete your profile details!";
+            } catch (err) {
+                console.error("Terminal Outage:", err.message);
             }
-        } catch (err) {
-            console.error("Terminal Outage:", err.message);
         }
-    }
 
-    document.getElementById('logout-btn').addEventListener('click', async (e) => {
-        e.preventDefault();
-        await logoutSessionRouter();
-    });
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
 
-    window.onload = loadProfileTerminal;
-</script>
-
+        window.onload = loadProfileTerminal;
     </script>
 </body>
 </html>
