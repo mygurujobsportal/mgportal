@@ -291,24 +291,35 @@
         }
 
         // 💾 Save & Append-Only Logic Execution
+                // 💾 Save & Append-Only Logic Execution (Structured Experience Enabled)
         document.getElementById('master-profile-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const currentPercentage = calculateRealtimeProgress();
 
             let finalQualifications = document.getElementById('q_qual').value.trim();
-            let finalExperienceYears = parseInt(document.getElementById('e_exp').value) || 0;
-            let finalSchool = document.getElementById('e_school').value.trim();
+            
+            // 🎯 [EXPERIENCE LOGIC START]
+            let finalSchoolText = document.getElementById('e_school').value.trim();
+
+            const newTitle = document.getElementById('exp_title').value.trim();
+            const newOrg = document.getElementById('exp_org').value.trim();
+            const newStart = document.getElementById('exp_start').value;
+            const newEnd = document.getElementById('exp_end').value.trim();
+            const newDesc = document.getElementById('exp_desc').value.trim();
+
+            // ఒకవేళ యూజర్ కొత్త బ్లాక్ ని ఫిల్ చేస్తే దాన్ని ఒక బ్యూటిఫుల్ టెక్స్ట్ ఫార్మాట్ లోకి మారుస్తాం
+            if (newTitle && newOrg) {
+                const formattedBlock = `[ROLE: ${newTitle} | ORG: ${newOrg} | DURATION: ${newStart || 'N/A'} to ${newEnd || 'Present'} | DESC: ${newDesc || 'N/A'}]`;
+                
+                // పాత హిస్టరీ ఉంటే దానికి చివరన కొత్త లైన్ (\n) తో అపెండ్ చేస్తాం
+                finalSchoolText = finalSchoolText ? `${finalSchoolText}\n${formattedBlock}` : formattedBlock;
+            }
+            // 🎯 [EXPERIENCE LOGIC END]
 
             if (isExistingUser) {
-                // పాత యూజర్ అయితే కొత్త టెక్స్ట్ ని పాత హిస్టరీ కి కామా తో అపెండ్ చేయడం
+                // పాత యూజర్ అయితే కొత్త క్వాలిఫికేషన్ ని పాత హిస్టరీ కి కామా తో అపెండ్ చేయడం
                 const addedQual = document.getElementById('q_qual_new').value.trim();
                 if(addedQual) finalQualifications = baseQual ? `${baseQual}, ${addedQual}` : addedQual;
-
-                const addedExp = parseInt(document.getElementById('e_exp_new').value) || 0;
-                finalExperienceYears = baseExp + addedExp;
-
-                const addedSchool = document.getElementById('e_school_new').value.trim();
-                if(addedSchool) finalSchool = baseSchools ? `${baseSchools}, ${addedSchool}` : addedSchool;
             }
 
             const payload = {
@@ -319,8 +330,8 @@
                 district: document.getElementById('p_district').value,
                 mobile: document.getElementById('c_mobile').value,
                 qualifications: finalQualifications,
-                experience: finalExperienceYears,
-                school_name: finalSchool,
+                school_name: finalSchoolText,         // 🎯 అపెండ్ అయిన కొత్త టెక్స్ట్ లెడ్జర్ ఇక్కడికి వెళ్తుంది
+                experience: parseInt(document.getElementById('e_exp').value) || 0, // పాత కౌంట్ అలాగే ఉంటుంది
                 subjects: document.getElementById('t_subjects').value,
                 address: document.getElementById('t_classes').value, 
                 about: document.getElementById('t_about').value,
@@ -338,11 +349,12 @@
                 localStorage.setItem('myguru_user', JSON.stringify(cached));
 
                 alert("✓ మీ ప్రొఫైల్ మార్పులు జవాబుదారీతనంతో భద్రపరచబడ్డాయి!");
-                window.location.href = "profile.html"; // తిరిగి ప్రొఫైల్ వ్యూ కార్డు కి రీడైరెక్ట్
+                window.location.href = "profile.html"; 
             } catch(err) {
                 alert("Error updating profile: " + err.message);
             }
         });
+
 
         document.getElementById('logout-btn').addEventListener('click', async (e) => {
             e.preventDefault();
