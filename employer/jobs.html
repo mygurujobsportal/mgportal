@@ -96,7 +96,7 @@
                 // 🎯 2. అప్లికేషన్ల కౌంట్ క్వెరీ వల్ల కోడ్ బ్రేక్ అవ్వకుండా try-catch పెట్టాం
                 try {
                     const { data: appCounts, error: appErr } = await _supabase
-                        .from('applications')
+                        .from('job_applications')
                         .select('job_id')
                         .in('job_id', jobIds);
                     
