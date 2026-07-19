@@ -121,22 +121,41 @@
 
         // 📥 డేటాబేస్ నుండి జాబ్స్ తేవడం + ఫిల్టర్ చేయడం
                 // 📥 డేటాబేస్ నుండి జాబ్స్ తేవడం + ఫిల్టర్ చేయడం
+                // 📥 [SMART FILTER]: ఆల్రెడీ అప్లై చేసిన జాబ్స్ ని దాచి, మిగిలిన ఓపెన్ జాబ్స్ చూపిస్తుంది
         async function fetchFilteredJobs() {
             try {
                 const subInput = document.getElementById('filterSubject').value.trim();
                 const distInput = document.getElementById('filterDistrict').value.trim();
                 const typeInput = document.getElementById('filterSchoolType').value;
 
-                // 🎯 బగ్ రాకుండా ఉండటానికి '*' పెట్టి అన్ని కాలమ్స్ లాగుతున్నాం
+                // 1. ఈ టీచర్ ఆల్రెడీ అప్లై చేసిన జాబ్ ఐడీల లిస్ట్ తేవడం
+                const { data: appliedList, error: appliedError } = await _supabase
+                    .from('job_applications')
+                    .select('school_job_id')
+                    .eq('teacher_id', currentTeacherId);
+
+                if (appliedError) throw appliedError;
+
+                // అప్లై చేసిన ఐడీలను ఒక అరే లాగా మార్చడం
+                const appliedJobIds = appliedList ? appliedList.map(app => app.school_job_id) : [];
+
+                // 2. మెయిన్ జాబ్స్ క్వెరీ స్టార్ట్ చేయడం
                 let query = _supabase
                     .from('school_jobs')
-                    .select('*')
-                    .eq('status', 'open'); 
+                    .select('*');
 
+                // 🎯 [BACKUP FIX]: status కాలమ్ 'open' లేదా 'Open' లేదా null ఉన్నా సేఫ్ గా హ్యాండిల్ చేయడం
+                // మీ టేబుల్ లో స్టేటస్ కాలమ్ లేకపోతే ఈ కింద లైన్ ని కామెంట్ (//) చేయవచ్చు
+                query = query.or('status.eq.open,status.eq.Open,status.is.null');
+
+                // 🎯 [PRIVACY GATE]: ఆల్రెడీ అప్లై చేసిన జాబ్స్ ని లిస్ట్ నుండి మినహాయించడం (NOT IN ఫిల్టర్)
+                if (appliedJobIds.length > 0) {
+                    query = query.not('id', 'in', `(${appliedJobIds.join(',')})`);
+                }
+
+                // యూజర్ సెర్చ్ ఫిల్టర్స్ అప్లై చేయడం
                 if (subInput) query = query.ilike('subject', `%${subInput}%`);
                 if (distInput) query = query.ilike('district', `%${distInput}%`);
-                
-                // 🎯 కొత్తగా యాడ్ చేసిన కాలమ్ తో పక్కా ఫిల్టర్
                 if (typeInput) query = query.eq('management_type', typeInput); 
 
                 const { data: jobs, error } = await query.order('id', { ascending: false });
@@ -148,6 +167,7 @@
                 document.getElementById('jobs-container').innerHTML = `<p style="color: #ef4444;">Error: ${err.message}</p>`;
             }
         }
+
 
         // 🃏 UI లో జాబ్స్ కార్డ్స్ రెండర్ చేయడం
         function renderJobCards(jobs) {
