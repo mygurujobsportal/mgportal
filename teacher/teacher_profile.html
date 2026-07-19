@@ -64,7 +64,17 @@
         <div class="profile-view-card">
             <!-- Photograph -->
             <div class="avatar-zone">
-                <img id="facultyAvatar" src="https://via.placeholder.com/150/0f172a/ffffff?text=Faculty" alt="Faculty Photo">
+                            <!-- Photograph Upload/Replace Node -->
+            <div class="avatar-zone" style="position: relative; overflow: visible;">
+                <img id="facultyAvatar" src="https://via.placeholder.com/150/0f172a/ffffff?text=Faculty" alt="Faculty Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                
+                <!-- దాచిన ఫైల్ ఇన్పుట్ -->
+                <input type="file" id="photoFileInput" accept="image/*" style="display: none;" onchange="handleLivePhotoUpload(this)">
+                
+                <!-- కెమెరా బటన్ -->
+                <button type="button" onclick="document.getElementById('photoFileInput').click()" style="position: absolute; bottom: -10px; right: -10px; background: #3b82f6; color: white; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 10;">📷</button>
+            </div>
+
             </div>
 
             <!-- Alphanumeric MGID Node -->
@@ -180,6 +190,40 @@
             } catch (err) {
                 console.error("Terminal Outage:", err.message);
             }
+        }
+        // 📸 NO-BUCKET BASE64 PHOTO UPLOAD ENGINE
+        async function handleLivePhotoUpload(inputElement) {
+            if (!inputElement.files || inputElement.files.length === 0) return;
+            
+            const file = inputElement.files[0];
+            
+            // 1.5MB కంటే ఎక్కువ ఉంటే నిరోధించడం
+            if (file.size > 1500000) { 
+                alert("Image size is too large! Please select a photo under 1.5MB."); 
+                return; 
+            }
+
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = async function(e) { 
+                const base64String = e.target.result;
+                
+                // 1. UI లో ఫోటోను వెంటనే మార్చడం (Instant Preview)
+                document.getElementById('facultyAvatar').src = base64String; 
+                
+                try {
+                    // 2. సుపాబేస్ టేబుల్ లోకి నేరుగా అప్‌డేట్ చేయడం
+                    const { error } = await _supabase
+                        .from('teacher_profiles')
+                        .update({ avatar_url: base64String })
+                        .eq('id', currentTeacherId);
+
+                    if (error) throw error;
+                    alert("✓ ప్రొఫైల్ ఫోటో విజయవంతంగా లాక్ చేయబడింది! 📸");
+                } catch(err) { 
+                    alert("Transmission error: " + err.message); 
+                }
+            };
         }
 
         document.getElementById('logout-btn').addEventListener('click', async (e) => {
