@@ -55,14 +55,17 @@ async function checkLiveUserSession(requiredRole) {
  * 🚪 Landing Destination Router
  * ఫోల్డర్ స్ట్రక్చర్ ప్రకారం పాత్‌లను ఇక్కడ సరిచేశాం 🛠️
  */
+/**
+ * 🚪 Landing Destination Router - GitHub Pages [FIXED]
+ */
 function routeUserToDashboard(role) {
     const lowerRole = role.toLowerCase();
     
+    // GitHub Pages లో 'mgportal' సబ్-ఫోల్డర్ స్ట్రక్చర్‌ని బేస్ చేసుకుని రూటింగ్
     if (lowerRole === 'teacher') {
-        // 🎯 teacher_dashboard.html ని dashboard.html గా మార్చాం
         window.location.href = '../teacher/dashboard.html';
     } else if (lowerRole === 'employer' || lowerRole === 'school') {
-        window.location.href = './employer/employer_dashboard.html'; 
+        window.location.href = '../employer/employer_dashboard.html'; 
     } else if (lowerRole === 'parent') {
         window.location.href = '../parent/parent_dashboard.html';
     } else if (lowerRole === 'admin') {
