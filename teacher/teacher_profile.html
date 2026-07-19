@@ -135,6 +135,7 @@
             currentTeacherId = session.id;
 
             // 🔒 సెక్యూర్ ఆథ్ సెషన్ సింక్
+            document.getElementById('lblMobile').innerText = session.Mobile || '-';
             document.getElementById('lblEmail').innerText = session.email || '-';
 
             try {
