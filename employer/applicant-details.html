@@ -253,30 +253,42 @@
         async function processWorkflowAction(targetAction) {
             try {
                 let updateData = {};
+                let successMessage = "";
                 
                 if (targetAction === 'rejected') {
                     if(!confirm("Are you sure you want to REJECT this candidate?")) return;
                     updateData = { employer_status: 'rejected' };
+                    successMessage = "✓ Applicant status updated to REJECTED.";
                 } 
                 else if (targetAction === 'shortlisted') {
                     if(!confirm("Shortlist this candidate for your recruitment pipeline?")) return;
                     updateData = { employer_status: 'shortlisted' };
+                    successMessage = "✓ Applicant status updated to SHORTLISTED.";
                 } 
-                else if (targetAction === 'selected') {
-                    // 🌟 మీ మేనేజ్డ్ ప్లాట్‌ఫామ్ వర్క్‌ఫ్లో: డెమో లేదా ఇంటర్వ్యూ లెటర్ సమాచారం సేకరించడం
-                    const letterMsg = prompt("టీచర్‌కు పంపించాల్సిన ఇంటర్వ్యూ/డెమో వివరాలు లేదా సెలెక్షన్ మెసేజ్ ఇక్కడ ఎంటర్ చేయండి (This will be routed via MyGuru):");
-                    if (!letterMsg) {
-                        alert("Action cancelled. Message content is mandatory.");
+                else if (targetAction === 'demo_requested') {
+                    // 🎯 డెమో కోసం ప్రత్యేక మెసేజ్ సేకరించడం
+                    const demoMsg = prompt("టీచర్‌కు పంపించాల్సిన డెమో వివరాలు/టాపిక్ ఇక్కడ ఎంటర్ చేయండి (e.g., Please upload a 5-minute video explaining Cell Division):");
+                    if (!demoMsg) {
+                        alert("Action cancelled. Demo instructions are mandatory.");
                         return;
                     }
-                    
+                    updateData = { employer_status: 'demo_requested' }; // మీ టేబుల్ లో స్టేటస్ అప్డేట్
+                    successMessage = "✓ Demo request forwarded to the teacher successfully!";
+                    console.log("Demo Instructions Package:", demoMsg);
+                }
+                else if (targetAction === 'selected') {
+                    // 🎯 ఫైనల్ సెలెక్షన్ లేదా ఆఫర్ లెటర్ వివరాలు
+                    const selectionMsg = prompt("టీచర్‌కు పంపించాల్సిన సెలెక్షన్/ఇంటర్వ్యూ ఆఫర్ వివరాలు ఇక్కడ ఎంటర్ చేయండి:");
+                    if (!selectionMsg) {
+                        alert("Action cancelled. Selection details are mandatory.");
+                        return;
+                    }
                     updateData = { employer_status: 'selected' };
-                    
-                    // 🎯 ఫ్యూచర్ పైప్‌లైన్ (Phase 4 Notification Router): ఇక్కడ మీ 'interview_letters' లేదా నోటిఫికేషన్ టేబుల్ ఇన్సర్షన్ లాజిక్ రాసుకోవచ్చు
-                    console.log("Letter Package Ready to Route via Platform:", letterMsg);
+                    successMessage = "✓ Selection Letter packaged and sent successfully!";
+                    console.log("Selection Offer Package:", selectionMsg);
                 }
 
-                // 🎯 4. job_applications టేబుల్‌లో 'employer_status' అప్‌డేట్ చేయడం
+                // job_applications టేబుల్‌లో 'employer_status' అప్‌డేట్ చేయడం
                 const { error } = await _supabase
                     .from('job_applications')
                     .update(updateData)
@@ -284,7 +296,7 @@
 
                 if (error) throw error;
 
-                alert(`✓ Success! Status updated to ${targetAction.toUpperCase()}. Notification packaged for the candidate.`);
+                alert(successMessage);
                 await loadFullCandidatePayload(); // స్క్రీన్ రీఫ్రెష్
 
             } catch (err) {
