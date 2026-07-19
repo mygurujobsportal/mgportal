@@ -117,11 +117,17 @@
             </div>
 
             <!-- వర్క్‌ఫ్లో యాక్షన్ బార్ -->
-            <div class="workflow-action-bar">
-                <button class="btn-wf btn-wf-reject" onclick="processWorkflowAction('rejected')">Reject Application</button>
-                <button class="btn-wf btn-wf-shortlist" onclick="processWorkflowAction('shortlisted')">Shortlist Candidate</button>
-                <button class="btn-wf btn-wf-select" onclick="processWorkflowAction('selected')">Send Selection / Demo Letter</button>
-            </div>
+            <!-- వర్క్‌ఫ్లో యాక్షన్ బార్ -->
+<div class="workflow-action-bar">
+    <button class="btn-wf btn-wf-reject" onclick="processWorkflowAction('rejected')">Reject Application</button>
+    <button class="btn-wf btn-wf-shortlist" onclick="processWorkflowAction('shortlisted')">Shortlist Candidate</button>
+    
+    <!-- 🎯 డెమో రిక్వెస్ట్ కోసం ప్రత్యేక బటన్ -->
+    <button class="btn-wf" style="background: #ca8a04; color: white;" onclick="processWorkflowAction('demo_requested')">Request Demo Video/Lesson</button>
+    
+    <!-- 🎯 ఫైనల్ సెలెక్షన్ కోసం ప్రత్యేక బటన్ -->
+    <button class="btn-wf btn-wf-select" onclick="processWorkflowAction('selected')">Select / Offer Job</button>
+</div>
         </div>
     </div>
 
