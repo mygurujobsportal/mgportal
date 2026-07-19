@@ -1,27 +1,35 @@
 // MyGuru Teacher Dashboard Engine & Job Matching Controller
 
-/**
- * 🚀 initialization Engine
- * పేజీ లోడ్ అవ్వగానే టీచర్ సెషన్ ని వెరిఫై చేసి, ప్రొఫైల్ వివరాలు మరియు మ్యాచ్ అయిన జాబ్స్ ని లోడ్ చేస్తుంది.
- */
 async function initTeacherDashboard() {
-    // 1. auth.js లోని సెషన్ గేట్ క్రాస్ వెరిఫికేషన్ (Security Check)
+    // 1. auth.js లోని సెషన్ గేట్ క్రాస్ వెరిఫికేషన్
     const currentTeacher = await checkLiveUserSession('Teacher');
-    if (!currentTeacher) return; // సెషన్ లేకపోతే రూటర్ ఇండెక్స్ కి పంపేస్తుంది.
+    if (!currentTeacher) return; 
 
     // 2. స్క్రీన్ పై బేసిక్ ప్రొఫైల్ డేటా అప్‌డేట్ చేయడం
     const profile = currentTeacher.profileData || {};
-    document.getElementById('welcome-msg').innerText = `స్వాగతం, ${currentTeacher.full_name || 'ఉపాధ్యాయులు'} గారు`;
+    document.getElementById('welcome-msg').innerText = `స్వాగతం, ${profile.full_name || 'ఉపాధ్యాయులు'} గారు`;
     
-    // స్టేటస్ బ్యాడ్జ్ అప్‌డేట్
+    // స్టేటస్ బ్యాడ్జ్ అప్‌డేట్ (profile_status కాలమ్ కి లింక్ చేశాం)
     const statusBadge = document.getElementById('profile-status');
     if (statusBadge) {
-        statusBadge.innerText = (currentTeacher.account_status || 'PENDING').toUpperCase();
-        if (currentTeacher.account_status === 'approved') statusBadge.style.color = '#18bc9c';
+        const currentStatus = profile.profile_status || 'pending';
+        statusBadge.innerText = currentStatus.toUpperCase();
+        if (currentStatus === 'approved') statusBadge.style.color = '#18bc9c';
+        if (currentStatus === 'rejected') statusBadge.style.color = '#e74c3c';
     }
 
-    // 3. సబ్జెక్ట్ ఆధారంగా జాబ్ మ్యాచింగ్ ఇంజన్ ని రన్ చేయడం 🎯
-    const teacherSubjects = profile.subjects || []; // ఇది ఒక Array రూపంలో ఉంటుంది: ['Zoology', 'Biology']
+    // 3. టోటల్ అప్లికేషన్ల కౌంట్ లోడ్ చేయడం (`job_applications` నుండి)
+    await loadTotalApplicationsCount(currentTeacher.id);
+
+    // 4. సబ్జెక్ట్ ఆధారంగా జాబ్ మ్యాచింగ్ ఇంజన్ ని రన్ చేయడం 🎯
+    // సబ్జెక్ట్స్ కమా సెపరేటెడ్ స్ట్రింగ్ లేదా అరే అయినా హ్యాండిల్ చేస్తుంది
+    let teacherSubjects = [];
+    if (profile.subjects) {
+        teacherSubjects = Array.isArray(profile.subjects) 
+            ? profile.subjects 
+            : profile.subjects.split(',').map(s => s.trim());
+    }
+
     if (teacherSubjects.length > 0) {
         await matchAndLoadJobs(teacherSubjects);
     } else {
@@ -30,35 +38,54 @@ async function initTeacherDashboard() {
 }
 
 /**
- * 🎯 Dynamic Subject Matching Query Engine
- * టీచర్ సబ్జెక్టుల లిస్ట్ ఆధారంగా jobs టేబుల్ ని క్వెరీ చేస్తుంది.
+ * 🎯 మీ 'school_jobs' టేబుల్ నుండి సబ్జెక్ట్ మ్యాచ్ చేయడం
  */
 async function matchAndLoadJobs(subjectsArray) {
     try {
-        // Supabase Query: 'in' ఫిల్టర్ వాడి టీచర్ సబ్జెక్టులు మరియు జాబ్ సబ్జెక్ట్ ని మ్యాచ్ చేయడం
         const { data: matchedJobs, error } = await _supabase
-            .from('jobs')
+            .from('school_jobs') // 🎯 మీ టేబుల్ పేరుకి మార్చాం
             .select('*')
-            .in('subject', subjectsArray) // PostgreSQL: subject IN ('Zoology', 'Biology')
-            .order('posted_at', { ascending: false });
+            .in('subject', subjectsArray) 
+            .eq('status', 'open'); // కేవలం ఓపెన్ లో ఉన్న జాబ్స్
 
         if (error) throw error;
 
-        // డాష్‌బోర్డులో మ్యాచ్ అయిన జాబ్స్ కౌంట్ అప్‌డేట్ చేయడం
         const matchedJobsCount = matchedJobs ? matchedJobs.length : 0;
         const countDisplay = document.getElementById('matched-jobs');
         if (countDisplay) {
             countDisplay.innerText = matchedJobsCount;
         }
-
-        console.log("🎯 మ్యాచ్ అయిన జాబ్స్ డేటా ప్యాకెట్:", matchedJobs);
-        
-        // భవిష్యత్తులో ఈ 'matchedJobs' డేటాను UI లో టేబుల్ లేదా కార్డ్స్ రూపంలో చూపించడానికి ఇక్కడ ఫంక్షన్ రాసుకోవచ్చు.
-
     } catch (err) {
         console.error("Job Matching Outage:", err.message);
     }
 }
+
+/**
+ * 📊 'job_applications' నుండి ఈ టీచర్ అప్లై చేసిన కౌంట్ తేవడం
+ */
+async function loadTotalApplicationsCount(teacherId) {
+    try {
+        const { count, error } = await _supabase
+            .from('job_applications')
+            .select('*', { count: 'exact', head: true })
+            .eq('teacher_id', teacherId);
+
+        if (error) throw error;
+
+        const countDisplay = document.getElementById('total-apps');
+        if (countDisplay) {
+            countDisplay.innerText = count || 0;
+        }
+    } catch (err) {
+        console.error("Applications Count Error:", err.message);
+    }
+}
+
+// లాగ్ అవుట్ ఈవెంట్ లిజనర్ బైండింగ్
+document.getElementById('logout-btn').addEventListener('click', async (e) => {
+    e.preventDefault();
+    await logoutSessionRouter();
+});
 
 // పేజీ లోడ్ కాగానే ఇంజన్ స్టార్ట్ అవ్వాలి
 window.onload = initTeacherDashboard;
