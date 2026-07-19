@@ -199,39 +199,48 @@
         // 🚀 సింగిల్ క్లిక్ జాబ్ అప్లికేషన్ ఇంజన్ (`job_applications` టేబుల్ లోకి)
         async function applyForThisJob(jobId) {
             if(!confirm("మీరు ఈ ఉద్యోగానికి దరఖాస్తు చేయాలనుకుంటున్నారా?")) return;
+        // 🚀 సింగిల్ క్లిక్ జాబ్ అప్లికేషన్ ఇంజన్ [Schema Synced & Fixed]
+        async function applyForThisJob(jobId) {
+            if(!confirm("మీరు ఈ ఉద్యోగానికి దరఖాస్తు చేయాలనుకుంటున్నారా?")) return;
 
             try {
-                // ముందే ఆల్రెడీ అప్లై చేసారేమో చెక్ చేయడం
-                const { data: alreadyApplied } = await _supabase
+                // 1. ముందే ఆల్రెడీ అప్లై చేసారేమో చెక్ చేయడం (school_job_id కాలమ్ తో)
+                const { data: alreadyApplied, error: checkError } = await _supabase
                     .from('job_applications')
                     .select('id')
-                    .eq('school_job_id', jobId)
+                    .eq('school_job_id', jobId) 
                     .eq('teacher_id', currentTeacherId);
+
+                if (checkError) throw checkError;
 
                 if (alreadyApplied && alreadyApplied.length > 0) {
                     alert("⚠️ మీరు ఆల్రెడీ ఈ ఉద్యోగానికి అప్లై చేశారు!");
                     return;
                 }
 
-                // కొత్త అప్లికేషన్ రికార్డ్ క్రియేషన్
+                // 2. మీ కొత్త టేబుల్ స్కీమా ప్రకారం పక్కా పేలోడ్ ఇన్సర్షన్
                 const { error } = await _supabase
                     .from('job_applications')
                     .insert({
-                        school_job_id: jobId,
+                        school_job_id: jobId,         // 🎯 job_id ని school_job_id గా మార్చాం
                         teacher_id: currentTeacherId,
-                        employer_status: 'applied', // డిఫాల్ట్ స్టేటస్ మీ ఫ్రెండ్ ప్లాన్ ప్రకారం
-                        applied_at: new Date().toISOString()
+                        application_type: 'school',   // 🎯 NOT NULL కాబట్టి 'school' అని పంపుతున్నాం
+                        employer_status: 'applied',
+                        application_status: 'pending',
+                        admin_status: 'pending',
+                        applied_at: new Date().toISOString() // 🎯 created_at ని applied_at గా మార్చాం
                     });
 
                 if (error) throw error;
 
                 alert("✓ Success! మీ అప్లికేషన్ విజయవంతంగా స్కూల్‌కు పంపబడింది.");
-                window.location.href = "applied-jobs.html"; // అప్లై చేసిన జాబ్స్ లిస్ట్ కి రీడైరెక్ట్
+                window.location.href = "applied-jobs.html";
 
             } catch (err) {
                 alert("Application Error: " + err.message);
             }
         }
+
 
         document.getElementById('logout-btn').addEventListener('click', async (e) => {
             e.preventDefault();
