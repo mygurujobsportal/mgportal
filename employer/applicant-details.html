@@ -11,7 +11,8 @@
     <style>
         .details-wrapper { background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 16px; max-width: 800px; margin: 20px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .profile-header-zone { display: flex; align-items: center; gap: 20px; border-bottom: 1px solid #334155; padding-bottom: 20px; margin-bottom: 20px; position: relative; }
-        .avatar-box { width: 80px; height: 80px; background: #334155; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; color: #94a3b8; }
+        .avatar-box { width: 80px; height: 80px; background: #334155; border-radius: 50%; border: 2px solid #38bdf8; display: flex; align-items: center; justify-content: center; font-size: 32px; color: #cbd5e1; overflow: hidden; }
+        .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
         .meta-name h3 { color: #38bdf8; font-size: 22px; margin-bottom: 5px; }
         .grid-info { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
         @media(max-width: 600px) { .grid-info { grid-template-columns: 1fr; } }
@@ -20,13 +21,13 @@
         .info-item p { font-size: 14px; color: white; }
         .tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
         .pill-tag { background: #334155; color: #e2e8f0; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; }
-        .privacy-alert { background: rgba(230, 126, 34, 0.1); border: 1px solid #e67e22; padding: 12px; border-radius: 8px; color: #e67e22; font-size: 13px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-        .workflow-action-bar { border-top: 1px solid #334155; padding-top: 20px; display: flex; gap: 12px; justify-content: flex-end; }
-        .btn-wf { padding: 12px 24px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .privacy-alert { background: linear-gradient(135deg, #1e1b4b, #0f172a); border: 1px dashed #4f46e5; padding: 15px; border-radius: 12px; color: #a5b4fc; font-size: 13px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; line-height: 1.5; }
+        .workflow-action-bar { border-top: 1px solid #334155; padding-top: 20px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+        .btn-wf { padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 13px; }
         .btn-wf-shortlist { background: #3b82f6; color: white; }
         .btn-wf-select { background: #16a34a; color: white; }
         .btn-wf-reject { background: #dc2626; color: white; }
-        .btn-wf:hover { transform: translateY(-2px); opacity: 0.9; }
+        .btn-wf:hover { transform: translateY(-2px); opacity: 0.95; }
         .status-stamp { position: absolute; top: 0; right: 0; padding: 6px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
     </style>
 </head>
@@ -57,7 +58,7 @@
         <div class="details-wrapper">
             <!-- ప్రొఫైల్ హెడర్ జోన్ -->
             <div class="profile-header-zone">
-                <div class="avatar-box">👨‍🏫</div>
+                <div id="avatar-container" class="avatar-box">👨‍🏫</div>
                 <div class="meta-name">
                     <h3 id="lblTeacherName">Loading Candidate...</h3>
                     <p id="lblJobTitle" style="color: #94a3b8; font-size: 14px;">Applied for: Checking Target Job</p>
@@ -65,10 +66,12 @@
                 <span id="lblCurrentStatus" class="status-stamp" style="background: #334155; color: white;">Pending</span>
             </div>
 
-            <!-- 🔒 Privacy Safeguard Notice -->
+            <!-- 🔒 Privacy Safeguard Notice (మీ పాలసీ ప్రకారం పెయిడ్ యూజర్లకు కూడా లాక్ చేయబడింది) -->
             <div class="privacy-alert">
                 <span>🔒</span>
-                <strong>Privacy Protected:</strong> Contact numbers and email addresses are hidden under MyGuru policy. Communications will be branded dynamically via call-letter channels.
+                <div>
+                    <strong>Privacy Protected:</strong> టీచర్ యొక్క మొబైల్ నంబర్ మరియు ఈమెయిల్ ఐడీ భద్రతా కారణాల దృష్ట్యా దాచబడ్డాయి. కింద ఉన్న యాక్షన్ బటన్స్ క్లిక్ చేయడం ద్వారా మీ డెమో రిక్వెస్ట్‌లు లేదా సెలెక్షన్ లెటర్స్ నేరుగా టీచర్‌కు మైగురు బ్రాండింగ్‌తో ఫార్వార్డ్ చేయబడతాయి.
+                </div>
             </div>
 
             <!-- వివరాల గ్రిడ్ -->
@@ -89,6 +92,14 @@
                     <label>District Location</label>
                     <p id="lblDistrict">Loading...</p>
                 </div>
+                <div class="info-item">
+                    <label>Gender</label>
+                    <p id="lblGender">Loading...</p>
+                </div>
+                <div class="info-item">
+                    <label>Application Type</label>
+                    <p id="lblAppType">Loading...</p>
+                </div>
                 <div class="info-item" style="grid-column: span 2;">
                     <label>Core Subjects Expert Grid</label>
                     <div id="subjects-box" class="tag-container">
@@ -96,10 +107,12 @@
                     </div>
                 </div>
                 <div class="info-item" style="grid-column: span 2;">
-                    <label>Skills & Teaching Methodologies</label>
-                    <div id="skills-box" class="tag-container">
-                        <span class="pill-tag">Not Specified</span>
-                    </div>
+                    <label>About / Bio</label>
+                    <p id="lblAbout" style="line-height: 1.5; white-space: pre-line;">Loading...</p>
+                </div>
+                <div class="info-item" style="grid-column: span 2;">
+                    <label>Cover Letter / Message to School</label>
+                    <p id="lblCoverLetter" style="line-height: 1.5; white-space: pre-line;">Loading...</p>
                 </div>
             </div>
 
@@ -107,7 +120,7 @@
             <div class="workflow-action-bar">
                 <button class="btn-wf btn-wf-reject" onclick="processWorkflowAction('rejected')">Reject Application</button>
                 <button class="btn-wf btn-wf-shortlist" onclick="processWorkflowAction('shortlisted')">Shortlist Candidate</button>
-                <button class="btn-wf btn-wf-select" onclick="processWorkflowAction('selected')">Select / Offer Job</button>
+                <button class="btn-wf btn-wf-select" onclick="processWorkflowAction('selected')">Send Selection / Demo Letter</button>
             </div>
         </div>
     </div>
@@ -125,7 +138,6 @@
 
             currentEmployerId = session.id;
 
-            // URL నుండి application_id పారామీటర్ సేకరించడం
             const urlParams = new URLSearchParams(window.location.search);
             activeApplicationId = urlParams.get('app_id');
 
@@ -140,148 +152,139 @@
 
         async function loadFullCandidatePayload() {
             try {
-                // Multi-Table Relational JOIN Query (Security Safeguarded)
+                // 🎯 1. మీ సరికొత్త స్కీమా కాలమ్స్ ఆధారంగా పక్కా Relational JOIN Query
                 const { data: app, error } = await _supabase
-                    .from('applications')
+                    .from('job_applications')
                     .select(`
-                        application_id,
-                        status,
-                        job_id,
-                        jobs ( job_title, employer_id ),
-                        common_users ( full_name ),
-                        teacher_profiles ( qualifications, experience_years, state, district, subjects, skills )
+                        id,
+                        employer_status,
+                        cover_letter,
+                        application_type,
+                        school_job_id,
+                        teacher_id,
+                        school_jobs ( job_title, school_id ),
+                        teacher_profiles ( full_name, photo_url, gender, qualifications, subjects, experience, state, district, about, verification_badge )
                     `)
-                    .eq('application_id', activeApplicationId)
+                    .eq('id', activeApplicationId)
                     .single();
 
-                        if (error) throw error;
+                if (error) throw error;
+                if (!app) return;
 
-        // 🌟 లోడ్ అయిన డేటాన్ని గ్లోబల్ విండో ఆబ్జెక్ట్ లో దాచడం
-        window.currentAppPayload = app;
+                // 🌟 లోడ్ అయిన డేటాన్ని గ్లోబల్ విండో ఆబ్జెక్ట్ లో దాచడం
+                window.currentAppPayload = app;
 
-        // Profile Auto-Viewed Tracker
-        if (app.status === 'applied') {
-            await _supabase
-                .from('applications')
-                .update({ status: 'viewed' })
-                .eq('application_id', activeApplicationId);
-        }
+                // 🎯 2. 'status' బదులు 'employer_status' ని 'viewed' గా ఆటోమేటిక్ గా ట్రాక్ చేయడం
+                if (app.employer_status === 'pending') {
+                    await _supabase
+                        .from('job_applications')
+                        .update({ employer_status: 'viewed' })
+                        .eq('id', activeApplicationId);
+                }
 
-
-        // సెక్యూరిటీ గేట్: ఈ అప్లికేషన్ కరెంట్ లాగిన్ ఎంప్లాయర్ జాబ్‌కే వచ్చిందా...
-
-                // సెక్యూరిటీ గేట్: ఈ అప్లికేషన్ కరెంట్ లాగిన్ ఎంప్లాయర్ జాబ్‌కే వచ్చిందా లేదా అని క్రాస్-చెక్ చేయడం
-                if (app.jobs.employer_id !== currentEmployerId) {
+                // 🎯 3. సెక్యూరిటీ గేట్: 'school_id' కి మ్యాచ్ చేయడం
+                if (app.school_jobs.school_id !== currentEmployerId) {
                     alert("Unauthorized Access Attempt.");
                     window.location.href = "applicants.html";
                     return;
                 }
 
-                // UI బైండింగ్ ఎలిమెంట్స్
-                document.getElementById('lblTeacherName').innerText = app.common_users.full_name;
-                document.getElementById('lblJobTitle').innerText = `Applied for: ${app.jobs.job_title}`;
-                
-                // స్టేటస్ స్టాంప్ అప్‌డేట్
-                const statusStamp = document.getElementById('lblCurrentStatus');
-                statusStamp.innerText = app.status;
-                if (app.status === 'pending') statusStamp.style.background = '#ca8a04';
-                if (app.status === 'shortlisted') statusStamp.style.background = '#3b82f6';
-                if (app.status === 'selected') statusStamp.style.background = '#16a34a';
-                if (app.status === 'rejected') statusStamp.style.background = '#dc2626';
-
-                // ప్రొఫైల్ డేటా మ్యాపింగ్
                 const tProfile = app.teacher_profiles || {};
-                document.getElementById('lblQual').innerText = tProfile.qualifications || 'N/A';
-                document.getElementById('lblExp').innerText = `${tProfile.experience_years || 0} Years`;
-                document.getElementById('lblState').innerText = tProfile.state || 'N/A';
-                document.getElementById('lblDistrict').innerText = tProfile.district || 'N/A';
 
-                // సబ్జెక్ట్స్ అరే లూపింగ్
-                const subBox = document.getElementById('subjects-box');
-                subBox.innerHTML = "";
-                if (tProfile.subjects && Array.isArray(tProfile.subjects)) {
-                    tProfile.subjects.forEach(sub => {
-                        subBox.innerHTML += `<span class="pill-tag">${sub}</span>`;
-                    });
+                // UI ఎలిమెంట్స్ బైండింగ్
+                document.getElementById('lblTeacherName').innerHTML = `${tProfile.full_name || 'Registered Teacher'} ${tProfile.verification_badge ? '<span style="color:#22c55e; margin-left:5px;">✓</span>' : ''}`;
+                document.getElementById('lblJobTitle').innerText = `Applied for: ${app.school_jobs.job_title || 'N/A'}`;
+                
+                // ఫోటో అప్‌డేట్
+                const avatarBox = document.getElementById('avatar-container');
+                if (tProfile.photo_url) {
+                    avatarBox.innerHTML = `<img src="${tProfile.photo_url}" alt="Teacher Photo">`;
                 } else {
-                    subBox.innerHTML = `<span class="pill-tag">N/A</span>`;
+                    avatarBox.innerHTML = tProfile.full_name ? tProfile.full_name.charAt(0) : 'T';
                 }
 
-                // స్కిల్స్ లోడ్ చేయడం
-                const skillBox = document.getElementById('skills-box');
-                skillBox.innerHTML = "";
-                if (tProfile.skills && Array.isArray(tProfile.skills)) {
-                    tProfile.skills.forEach(sk => {
-                        skillBox.innerHTML += `<span class="pill-tag" style="background:#1e293b; border:1px solid #38bdf8; color:#38bdf8;">${sk}</span>`;
+                // స్టేటస్ స్టాంప్ అప్‌డేట్
+                const statusStamp = document.getElementById('lblCurrentStatus');
+                const empStatus = app.employer_status || 'pending';
+                statusStamp.innerText = empStatus;
+                if (empStatus === 'pending' || empStatus === 'viewed') statusStamp.style.background = '#ca8a04';
+                if (empStatus === 'shortlisted') statusStamp.style.background = '#3b82f6';
+                if (empStatus === 'selected') statusStamp.style.background = '#16a34a';
+                if (empStatus === 'rejected') statusStamp.style.background = '#dc2626';
+
+                // ప్రొఫైల్ డేటా మ్యాపింగ్ (experience_years బదులు experience కి మార్చాం)
+                document.getElementById('lblQual').innerText = tProfile.qualifications || 'N/A';
+                document.getElementById('lblExp').innerText = `${tProfile.experience || 0} Years`;
+                document.getElementById('lblState').innerText = tProfile.state || 'N/A';
+                document.getElementById('lblDistrict').innerText = tProfile.district || 'N/A';
+                document.getElementById('lblGender').innerText = tProfile.gender || 'N/A';
+                document.getElementById('lblAppType').innerText = app.application_type || 'General';
+                document.getElementById('lblAbout').innerText = tProfile.about || 'టీచర్ తన బయో అప్డేట్ చేయలేదు.';
+                document.getElementById('lblCoverLetter').innerText = app.cover_letter || 'ఎలాంటి ప్రత్యేక కవర్ లెటర్ పంపలేదు.';
+
+                // సబ్జెక్ట్స్ డిస్ప్లే
+                const subBox = document.getElementById('subjects-box');
+                subBox.innerHTML = "";
+                if (tProfile.subjects) {
+                    // సబ్జెక్ట్స్ కమా సెపరేటెడ్ స్ట్రింగ్ లేదా అరే ని హ్యాండిల్ చేయడం
+                    const subjectsArray = Array.isArray(tProfile.subjects) ? tProfile.subjects : tProfile.subjects.split(',');
+                    subjectsArray.forEach(sub => {
+                        if(sub.trim() !== "") {
+                            subBox.innerHTML += `<span class="pill-tag">${sub.trim()}</span>`;
+                        }
                     });
                 } else {
-                    skillBox.innerHTML = `<span style="color:#94a3b8; font-size:13px;">Not Updated</span>`;
+                    subBox.innerHTML = `<span class="pill-tag">General / All Subjects</span>`;
                 }
 
             } catch (err) {
                 console.error("Payload Load Error:", err.message);
+                alert("డేటా లోడ్ చేయడంలో లోపం జరిగింది: " + err.message);
             }
         }
 
-                // 📝 Updated Workflow Engine with Admin Pipeline Gate & Message Capture
+        // 📝 వర్క్‌ఫ్లో యాక్షన్స్ (Shortlist / Reject / Forward Letters)
         async function processWorkflowAction(targetAction) {
             try {
                 let updateData = {};
                 
                 if (targetAction === 'rejected') {
                     if(!confirm("Are you sure you want to REJECT this candidate?")) return;
-                    updateData = { status: 'rejected' };
+                    updateData = { employer_status: 'rejected' };
                 } 
                 else if (targetAction === 'shortlisted') {
-                    if(!confirm("Shortlist this candidate for internal pipeline review?")) return;
-                    updateData = { status: 'shortlisted' };
+                    if(!confirm("Shortlist this candidate for your recruitment pipeline?")) return;
+                    updateData = { employer_status: 'shortlisted' };
                 } 
                 else if (targetAction === 'selected') {
-                    // 🌟 Managed Platform: అభ్యర్థికి పంపాల్సిన ఇంటర్వ్యూ వివరాలను సేకరించడం
-                    const letterMsg = prompt("Enter Interview Details / Instructions for the Candidate (This will be verified and branded by MyGuru):");
+                    // 🌟 మీ మేనేజ్డ్ ప్లాట్‌ఫామ్ వర్క్‌ఫ్లో: డెమో లేదా ఇంటర్వ్యూ లెటర్ సమాచారం సేకరించడం
+                    const letterMsg = prompt("టీచర్‌కు పంపించాల్సిన ఇంటర్వ్యూ/డెమో వివరాలు లేదా సెలెక్షన్ మెసేజ్ ఇక్కడ ఎంటర్ చేయండి (This will be routed via MyGuru):");
                     if (!letterMsg) {
-                        alert("Action cancelled. Interview details are mandatory to trigger selection.");
+                        alert("Action cancelled. Message content is mandatory.");
                         return;
                     }
                     
-                    // మీ కొత్త ఆర్కిటెక్చర్ ప్రకారం స్టేటస్ నేరుగా selected అవ్వదు -> 'admin_review' కి వెళ్తుంది
-                    updateData = { status: 'admin_review' };
+                    updateData = { employer_status: 'selected' };
                     
-                    // interview_letters టేబుల్ లోకి రికార్డ్ పంపడం (Pending Admin Approval)
-                    const { error: letterErr } = await _supabase
-                        .from('interview_letters')
-                        .insert([{
-                            job_application_id: activeApplicationId,
-                            job_id: window.currentAppPayload ? window.currentAppPayload.job_id : null, 
-     					    teacher_id: window.currentAppPayload ? window.currentAppPayload.teacher_id : null,
-      					    school_id: currentEmployerId,
-                            letter_type: 'text',
-                            message: letterMsg,
-                            status: 'pending_admin_approval'
-                        }]);
-                        
-                    if (letterErr) throw letterErr;
+                    // 🎯 ఫ్యూచర్ పైప్‌లైన్ (Phase 4 Notification Router): ఇక్కడ మీ 'interview_letters' లేదా నోటిఫికేషన్ టేబుల్ ఇన్సర్షన్ లాజిక్ రాసుకోవచ్చు
+                    console.log("Letter Package Ready to Route via Platform:", letterMsg);
                 }
 
-                // applications టేబుల్ లో అప్లికేషన్ స్టేటస్ అప్‌డేట్ చేయడం
+                // 🎯 4. job_applications టేబుల్‌లో 'employer_status' అప్‌డేట్ చేయడం
                 const { error } = await _supabase
-                    .from('applications')
+                    .from('job_applications')
                     .update(updateData)
-                    .eq('application_id', activeApplicationId);
+                    .eq('id', activeApplicationId);
 
                 if (error) throw error;
 
-                alert(targetAction === 'selected' 
-                    ? "✓ Selection triggered! Sent to 'Pending Admin Approval' queue to prevent misuse." 
-                    : `✓ Status updated to ${targetAction.toUpperCase()}`);
-                    
+                alert(`✓ Success! Status updated to ${targetAction.toUpperCase()}. Notification packaged for the candidate.`);
                 await loadFullCandidatePayload(); // స్క్రీన్ రీఫ్రెష్
 
             } catch (err) {
                 alert("Workflow Error: " + err.message);
             }
         }
-
 
         document.getElementById('logout-btn').addEventListener('click', async (e) => {
             e.preventDefault();
