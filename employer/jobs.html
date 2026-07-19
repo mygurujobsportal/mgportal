@@ -150,7 +150,7 @@
 
             try {
                 const { error } = await _supabase
-                    .from('jobs')
+                    .from('school_jobs')
                     .delete()
                     .eq('job_id', jobId);
 
