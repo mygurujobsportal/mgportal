@@ -120,21 +120,24 @@
         }
 
         // 📥 డేటాబేస్ నుండి జాబ్స్ తేవడం + ఫిల్టర్ చేయడం
+                // 📥 డేటాబేస్ నుండి జాబ్స్ తేవడం + ఫిల్టర్ చేయడం
         async function fetchFilteredJobs() {
             try {
                 const subInput = document.getElementById('filterSubject').value.trim();
                 const distInput = document.getElementById('filterDistrict').value.trim();
                 const typeInput = document.getElementById('filterSchoolType').value;
 
-                // 🔒 ప్రైవసీ రూల్: కేవలం డిస్ప్లే చేయాల్సిన కాలమ్స్ మాత్రమే సెలెక్ట్ చేస్తున్నాం (No phone, No email)
+                // 🎯 బగ్ రాకుండా ఉండటానికి '*' పెట్టి అన్ని కాలమ్స్ లాగుతున్నాం
                 let query = _supabase
                     .from('school_jobs')
-                    .select('id,job_title, district, state, subject, salary, qualification_required,experience_required, status')
-                    .eq('status', 'open'); // కేవలం యాక్టివ్ జాబ్స్ మాత్రమే
+                    .select('*')
+                    .eq('status', 'open'); 
 
                 if (subInput) query = query.ilike('subject', `%${subInput}%`);
                 if (distInput) query = query.ilike('district', `%${distInput}%`);
-                if (typeInput) query = query.ilike('institution_name', `%${typeInput}%`); // లేదా మీ టేబుల్ లోని స్కూల్ టైప్ కాలమ్
+                
+                // 🎯 కొత్తగా యాడ్ చేసిన కాలమ్ తో పక్కా ఫిల్టర్
+                if (typeInput) query = query.eq('management_type', typeInput); 
 
                 const { data: jobs, error } = await query.order('id', { ascending: false });
 
@@ -150,7 +153,7 @@
         function renderJobCards(jobs) {
             const container = document.getElementById('jobs-container');
             if (!jobs || jobs.length === 0) {
-                container.innerHTML = `<p style="color: #94a3b8;">మీరు వెతికిన సబ్జెక్ట్ లేదా జిల్లాలో ప్రస్తుతానికి ఉద్యోగాలు లేవు.</p>`;
+                container.innerHTML = `<p style="color: #94a3b8;">మీరు వెతికిన సలహాలో ప్రస్తుతానికి ఉద్యోగాలు లేవు.</p>`;
                 return;
             }
 
@@ -159,13 +162,16 @@
                 const card = document.createElement('div');
                 card.className = 'job-card';
 
-                // 🔒 ఎంప్లాయర్ కాంటాక్ట్ డీటెయిల్స్ పూర్తిగా హెడెన్!
+                // 🎯 undefined ని రూపుమాపడానికి టేబుల్ లో ఉండే ఏ రకమైన పేరునైనా తీసుకునే బ్యాకప్ లాజిక్
+                const displayName = job.school_name || job.institution_name || job.name || 'MyGuru Partner School';
+                const schoolType = job.management_type || 'Private';
+
                 card.innerHTML = `
                     <div>
                         <div class="job-header">
                             <div class="school-info">
-                                <h4>${job.institution_name}</h4>
-                                <span>📍 ${job.district}, ${job.state}</span>
+                                <h4>${displayName}</h4>
+                                <span>📍 ${job.district}, ${job.state} <br><small style="color: #38bdf8;">Type: ${schoolType}</small></span>
                             </div>
                             <div class="job-badge">${job.subject}</div>
                         </div>
@@ -188,6 +194,7 @@
                 container.appendChild(card);
             });
         }
+
 
         // 🚀 సింగిల్ క్లిక్ జాబ్ అప్లికేషన్ ఇంజన్ (`job_applications` టేబుల్ లోకి)
         async function applyForThisJob(jobId) {
