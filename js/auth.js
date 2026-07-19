@@ -59,9 +59,9 @@ function routeUserToDashboard(role) {
     const lowerRole = role.toLowerCase();
     
     if (lowerRole === 'teacher') {
+        // 🎯 teacher_dashboard.html ని dashboard.html గా మార్చాం
         window.location.href = '../teacher/dashboard.html';
     } else if (lowerRole === 'employer' || lowerRole === 'school') {
-        // ⚠️ టాబ్‌లో లోకల్ ఫైల్స్ రన్ అవుతున్నప్పుడు ఒక అడుగు వెనక్కి (../) వెళ్లి employer ఫోల్డర్ వెతకాలి
         window.location.href = './employer/employer_dashboard.html'; 
     } else if (lowerRole === 'parent') {
         window.location.href = '../parent/parent_dashboard.html';
