@@ -95,20 +95,20 @@
                 // 🎯 2. కేవలం ఈ స్కూల్ జాబ్స్ ఐడీలకు సంబంధించిన అప్లికేషన్లను మాత్రమే ফিল্টার చేసి తెస్తున్నాం
                 const { data: appCounts, error: appErr } = await _supabase
                     .from('applications')
-                    .select('id')
-                    .in('id', jobIds);
+                    .select('job_id')
+                    .in('job_id', jobIds);
                 
                 if (appErr) throw appErr;
 
                 const countMap = {};
                 if(appCounts) {
                     appCounts.forEach(app => {
-                        countMap[app.id] = (countMap[app.id] || 0) + 1;
+                        countMap[app.job_id] = (countMap[app.job_id] || 0) + 1;
                     });
                 }
 
                 jobs.forEach(job => {
-                    const applicantsCount = countMap[job.id] || 0;
+                    const applicantsCount = countMap[job.job_id] || 0;
                     // 🎯 'created_at' కి మార్చాం
                     const formattedDate = job.created_at ? new Date(job.created_at).toLocaleDateString('en-IN') : 'N/A';
                     
@@ -142,7 +142,7 @@
         }
 
         function goToApplicantsPage(jobId) {
-            window.location.href = `applicants.html?id=${jobId}`;
+            window.location.href = `applicants.html?job_id=${jobId}`;
         }
 
         async function deleteJobGate(jobId) {
@@ -152,7 +152,7 @@
                 const { error } = await _supabase
                     .from('jobs')
                     .delete()
-                    .eq('id', jobId);
+                    .eq('job_id', jobId);
 
                 if (error) throw error;
 
