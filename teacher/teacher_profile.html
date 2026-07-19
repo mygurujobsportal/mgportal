@@ -3,39 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyGuru Teacher - Smart Profile Terminal</title>
+    <title>MyGuru Teacher - My Profile</title>
     <link rel="stylesheet" href="../css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .profile-container { max-width: 800px; margin: 20px auto; display: grid; grid-template-columns: 1fr; gap: 20px; }
+        /* 🎛️ Layout & Grid Splitting */
+        .workspace-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 25px; margin-top: 20px; }
+        @media(max-width: 1024px) { .workspace-grid { grid-template-columns: 1fr; } }
+        
+        .profile-container { display: grid; grid-template-columns: 1fr; gap: 20px; }
         .section-box { background: #1e293b; border: 1px solid #334155; padding: 25px; border-radius: 12px; position: relative; }
-        .section-title { font-size: 16px; color: #38bdf8; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 5px; }
+        .section-title { font-size: 15px; color: #38bdf8; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 5px; text-transform: uppercase; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        @media(max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group label { font-size: 12px; color: #94a3b8; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 10px; }
+        .form-group label { font-size: 11px; color: #94a3b8; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
         .form-group input, .form-group select, .form-group textarea { padding: 10px; background: #0f172a; border: 1px solid #2e3c51; border-radius: 6px; color: white; font-size: 14px; }
         
-        /* 🔒 లాక్ అయిన ఫీల్డ్స్ కి స్పెషల్ స్టైలింగ్ */
-        .form-group input:disabled, .form-group select:disabled { background: #131a26; color: #94a3b8; border-color: #1e293b; cursor: not-allowed; font-weight: 600; }
-        
-        /* ➕ అదనపు డేటా ఫీల్డ్స్ */
-        .append-zone { margin-top: 15px; background: rgba(56, 189, 248, 0.03); border: 1px dashed #2e3c51; padding: 15px; border-radius: 8px; display: none; }
-        
+        /* 🔒 Lock & Append Fields Styles */
+        .form-group input:disabled, .form-group select:disabled { background: #131a26; color: #64748b; border-color: #1e293b; cursor: not-allowed; }
+        .append-zone { background: rgba(56, 189, 248, 0.02); border: 1px dashed #334155; padding: 12px; border-radius: 6px; margin-top: 8px; display: none; }
+
         .sticky-counter { position: sticky; top: 10px; background: #0f172a; padding: 15px; border-radius: 10px; border: 1px solid #4f46e5; display: flex; justify-content: space-between; align-items: center; z-index: 100; margin-bottom: 15px; }
-        .progress-bg { background: #1e293b; border-radius: 10px; height: 15px; width: 60%; overflow: hidden; border: 1px solid #334155; }
+        .progress-bg { background: #1e293b; border-radius: 10px; height: 12px; width: 50%; overflow: hidden; }
         .progress-fill { background: linear-gradient(90deg, #10b981, #34d399); height: 100%; width: 0%; transition: width 0.3s; }
+
+        /* 📄 🖨️ Beautiful Dynamic Resume Preview Paper Terminal */
+        .resume-preview-panel { background: #ffffff; color: #0f172a; border-radius: 12px; padding: 30px; position: sticky; top: 85px; height: fit-content; box-shadow: 0 10px 30px rgba(0,0,0,0.5); overflow: hidden; border: 1px solid #e2e8f0; }
+        .resume-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 20px; }
+        .resume-title-block h3 { font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 5px; }
+        .resume-title-block p { font-size: 13px; color: #475569; font-weight: 600; }
+        .resume-photo-box { width: 95px; height: 115px; border: 2px solid #0f172a; background: #f1f5f9; border-radius: 6px; overflow: hidden; }
+        .resume-photo-box img { width: 100%; height: 100%; object-fit: cover; }
         
-        .btn-zone { margin-top: 20px; display: flex; gap: 15px; }
-        .btn-p { padding: 12px 25px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; flex: 1; text-align: center; }
-        .btn-save { background: #10b981; color: white; }
+        .resume-section { margin-bottom: 18px; }
+        .resume-section-title { font-size: 13px; font-weight: 800; color: #0f172a; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .resume-row { display: flex; margin-bottom: 6px; font-size: 13px; }
+        .resume-row .lbl { width: 130px; font-weight: 700; color: #334155; }
+        .resume-row .val { flex: 1; color: #000000; font-weight: 500; }
         
-        .history-badge { position: absolute; top: 20px; right: 25px; background: #047857; color: #a7f3d0; font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: bold; display: none; }
+        /* 🪙 Watermark Effect */
+        .resume-preview-panel::before {
+            content: "MYGURU JOB PORTAL"; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg);
+            font-size: 42px; font-weight: 950; color: rgba(15, 23, 42, 0.04); white-space: nowrap; pointer-events: none; z-index: 0;
+        }
+        .resume-content-wrapper { position: relative; z-index: 1; }
+
+        .action-btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-action { padding: 10px; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; font-size: 13px; text-align: center; display: block; width: 100%; }
+        
+        .lock-badge { position: absolute; top: 25px; right: 25px; background: #065f46; color: #a7f3d0; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; display: none; }
+
+        /* 🖨️ STRICT PDF PRINT SPECIFICATIONS */
+        @media print {
+            body { background: white !important; color: black !important; }
+            .sidebar, .sticky-counter, #master-profile-form, .action-btn-group, .header, .lock-badge { display: none !important; }
+            .content { padding: 0 !important; margin: 0 !important; width: 100% !important; }
+            .workspace-grid { display: block !important; }
+            .resume-preview-panel { border: none !important; box-shadow: none !important; padding: 0 !important; width: 100% !important; position: relative !important; top: 0 !important; }
+            .resume-preview-panel::before { color: rgba(0, 0, 0, 0.05) !important; }
+        }
     </style>
 </head>
 <body>
 
-    <!-- 🧭 ప్రెజెంట్ ప్రాజెక్ట్ Sidebar Navigation -->
+    <!-- 🧭 Navigation Sidebar -->
     <div class="sidebar">
         <div style="text-align: center; padding: 10px;">
             <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 80px; height: auto; border-radius: 50%;">
@@ -53,10 +84,14 @@
     </div>
 
     <div class="content">
-        <!-- Progress Meter -->
+        <div class="header">
+            <h3>ఉపాధ్యాయ ప్రొఫైల్ మేనేజ్‌మెంట్ Terminal</h3>
+        </div>
+
+        <!-- Sticky Progress Counter -->
         <div class="sticky-counter">
             <div>
-                <span style="color: white; font-weight: bold;">Profile Ledger Status:</span>
+                <span style="color: white; font-weight: bold;">Profile Completion:</span>
                 <span id="txtPercent" style="color: #10b981; font-weight: bold; margin-left: 5px;">0%</span>
             </div>
             <div class="progress-bg">
@@ -64,148 +99,204 @@
             </div>
         </div>
 
-        <form id="master-profile-form" class="profile-container">
+        <!-- 🎛️ Main 2-Column Split Workspace Grid -->
+        <div class="workspace-grid">
             
-            <!-- 1️⃣ PERSONAL DETAILS (🔒 ఒకసారి నింపితే లాక్ అవుతుంది) -->
-            <div class="section-box">
-                <div class="section-title">1. Personal Details (వ్యక్తిగత వివరాలు)</div>
-                <span id="badge_personal" class="history-badge">🔒 Locked History</span>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Full Name *</label>
-                        <input type="text" id="p_name" required oninput="calculateRealtimeProgress()">
-                    </div>
-                    <div class="form-group">
-                        <label>Gender *</label>
-                        <select id="p_gender" required onchange="calculateRealtimeProgress()">
-                            <option value="">Select</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                        </select>
-                    </div>
-                    <div class="form-grid" style="grid-column: span 2; gap: 15px; padding: 0;">
-                        <div class="form-group">
-                            <label>State *</label>
-                            <input type="text" id="p_state" required placeholder="e.g., Telangana" oninput="calculateRealtimeProgress()">
-                        </div>
-                        <div class="form-group">
-                            <label>District *</label>
-                            <input type="text" id="p_district" required placeholder="e.g., Hanamkonda" oninput="calculateRealtimeProgress()">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 2️⃣ CONTACT DETAILS (🔒 Read-only, Admin control) -->
-            <div class="section-box">
-                <div class="section-title">2. Contact Details (🔒 Hidden from Employers)</div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Mobile Number</label>
-                        <input type="text" id="c_mobile" disabled>
-                    </div>
-                    <div class="form-group">
-                        <label>Email Address</label>
-                        <input type="email" id="c_email" disabled>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 3️⃣ QUALIFICATIONS (➕ Append-Only Zone) -->
-            <div class="section-box">
-                <div class="section-title">3. Qualifications (విద్యార్హతలు)</div>
-                <span id="badge_qual" class="history-badge">📜 Ledger Active</span>
-                <div class="form-group">
-                    <label>Registered Core Degrees</label>
-                    <input type="text" id="q_qual" disabled placeholder="No core qualification locked yet">
-                </div>
-                <!-- 🎯 కొత్త అర్హతలను చేర్చడానికి మాత్రమే అనుమతించే బాక్స్ (పాతది డిలీట్ అవ్వదు) -->
-                <div class="append-zone" id="qualAppendZone">
-                    <div class="form-group">
-                        <label style="color: #38bdf8;">+ Add Additional Qualification (అదనపు అర్హతలు చేర్చండి)</label>
-                        <input type="text" id="q_qual_new" placeholder="e.g., BLiSc, PGDCA (కామాలతో విడదీసి రాయండి)">
-                    </div>
-                </div>
-            </div>
-
-            <!-- 4️⃣ EXPERIENCE DETAILS (➕ Append-Only Zone) -->
-            <div class="section-box">
-                <div class="section-title">4. Teaching Experience (అనుభవం)</div>
-                <span id="badge_exp" class="history-badge">💼 Ledger Active</span>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Locked Total Experience (Years)</label>
-                        <input type="number" id="e_exp" disabled value="0">
-                    </div>
-                    <div class="form-group">
-                        <label>Last Logged Institution</label>
-                        <input type="text" id="e_school" disabled placeholder="None registered">
-                    </div>
-                </div>
-                <!-- 🎯 కొత్త అనుభవాన్ని అప్-ఎండ్ చేసే జోన్ -->
-                <div class="append-zone" id="expAppendZone">
+            <!-- ⬅️ Left Column: Secure Append-Only Input Form -->
+            <form id="master-profile-form" class="profile-container">
+                
+                <!-- Section 1: Personal Details -->
+                <div class="section-box">
+                    <div class="section-title">1. Personal Details</div>
+                    <div id="lock_personal" class="lock-badge">🔒 Locked Ledger</div>
                     <div class="form-grid">
                         <div class="form-group">
-                            <label style="color: #38bdf8;">+ Add More Experience (Years)</label>
-                            <input type="number" id="e_exp_new" min="0" placeholder="అదనపు సంవత్సరాలు">
+                            <label>Full Name *</label>
+                            <input type="text" id="p_name" required oninput="syncLivePreview()">
                         </div>
                         <div class="form-group">
-                            <label style="color: #38bdf8;">+ New Institution/School Work</label>
-                            <input type="text" id="e_school_new" placeholder="కొత్త స్కూల్ పేరు">
+                            <label>Gender *</label>
+                            <select id="p_gender" required onchange="syncLivePreview()">
+                                <option value="">Select</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                        <div class="form-grid" style="grid-column: span 2; gap: 15px; padding: 0;">
+                            <div class="form-group">
+                                <label>State *</label>
+                                <input type="text" id="p_state" required placeholder="Telangana" oninput="syncLivePreview()">
+                            </div>
+                            <div class="form-group">
+                                <label>District *</label>
+                                <input type="text" id="p_district" required placeholder="Hanamkonda" oninput="syncLivePreview()">
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- 5️⃣ TEACHING PREFERENCES -->
-            <div class="section-box">
-                <div class="section-title">5. Teaching Preferences (బోధనా వివరాలు)</div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Expert Subjects *</label>
-                        <input type="text" id="t_subjects" required placeholder="e.g., Zoology, Biology">
-                    </div>
-                    <div class="form-group">
-                        <label>Target Classes *</label>
-                        <input type="text" id="t_classes" required placeholder="e.g., 11th, 12th, Degree">
+                <!-- Section 2: Contact Details -->
+                <div class="section-box">
+                    <div class="section-title">2. Contact Details (Hidden from Employers)</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Mobile Number (Read-only)</label>
+                            <input type="text" id="c_mobile" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label>Email Address (Read-only)</label>
+                            <input type="email" id="c_email" disabled>
+                        </div>
                     </div>
                 </div>
-                <div class="form-group" style="margin-top: 15px;">
-                    <label>About My Teaching Style (Bio)</label>
-                    <textarea id="t_about" rows="3" placeholder="మీ గురించి క్లుప్తంగా రాయండి..."></textarea>
+
+                <!-- Section 3: Qualifications (🔒 History Lock & Append) -->
+                <div class="section-box">
+                    <div class="section-title">3. Qualifications</div>
+                    <div id="lock_qual" class="lock-badge">📜 Active Record</div>
+                    <div class="form-group">
+                        <label>Registered Core Degrees</label>
+                        <input type="text" id="q_qual" placeholder="e.g., B.Sc, M.Sc Zoology, B.Ed" oninput="syncLivePreview()">
+                    </div>
+                    <div class="append-zone" id="qualAppendBox">
+                        <div class="form-group">
+                            <label style="color: #38bdf8;">+ Add Additional Degree/Diploma (అదనపు విద్యార్హత)</label>
+                            <input type="text" id="q_qual_new" placeholder="e.g., BLiSc, PGDCA" oninput="syncLivePreview()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4: Experience Details (🔒 History Lock & Append) -->
+                <div class="section-box">
+                    <div class="section-title">4. Teaching Experience</div>
+                    <div id="lock_exp" class="lock-badge">💼 Active Record</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Total Experience (Years)</label>
+                            <input type="number" id="e_exp" min="0" value="0" oninput="syncLivePreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>Last Logged Institution</label>
+                            <input type="text" id="e_school" placeholder="School Name" oninput="syncLivePreview()">
+                        </div>
+                    </div>
+                    <div class="append-zone" id="expAppendBox">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label style="color: #38bdf8;">+ Add More Experience (Years)</label>
+                                <input type="number" id="e_exp_new" min="0" placeholder="Years" oninput="syncLivePreview()">
+                            </div>
+                            <div class="form-group">
+                                <label style="color: #38bdf8;">+ New Institution/School</label>
+                                <input type="text" id="e_school_new" placeholder="School Name" oninput="syncLivePreview()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 5: Teaching Preferences -->
+                <div class="section-box">
+                    <div class="section-title">5. Teaching Preferences</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Expert Subjects *</label>
+                            <input type="text" id="t_subjects" required placeholder="e.g., Zoology, Biology" oninput="syncLivePreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>Target Classes *</label>
+                            <input type="text" id="t_classes" required placeholder="e.g., 11th, 12th" oninput="syncLivePreview()">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label>About My Teaching Style (Bio)</label>
+                        <textarea id="t_about" rows="3" placeholder="Briefly describe your teaching method..." oninput="syncLivePreview()"></textarea>
+                    </div>
+                </div>
+
+                <div class="btn-zone">
+                    <button type="submit" class="btn-p btn-save">Save Ledger & Sync Profile</button>
+                </div>
+            </form>
+
+            <!-- ➡️ Right Column: Beautiful Live Resume Document Terminal Preview -->
+            <div>
+                <div class="resume-preview-panel" id="printResumeArea">
+                    <div class="resume-content-wrapper">
+                        
+                        <div class="resume-header">
+                            <div class="resume-title-block">
+                                <h3 id="view_name">Name Pending</h3>
+                                <p id="view_role">PROFESSIONAL BIOLOGY TEACHER</p>
+                            </div>
+                            <!-- Live Avatar Box (Uses system placeholder or Base64 uploaded photo) -->
+                            <div class="resume-photo-box">
+                                <img id="view_avatar" src="https://via.placeholder.com/150/f1f5f9/0f172a?text=MyGuru+Faculty" alt="Faculty Image">
+                            </div>
+                        </div>
+
+                        <div class="resume-section">
+                            <div class="resume-section-title">Personal Metadata</div>
+                            <div class="resume-row"><span class="lbl">Gender:</span><span class="val" id="view_gender">-</span></div>
+                            <div class="resume-row"><span class="lbl">Location Node:</span><span class="val" id="view_location">-</span></div>
+                            <div class="resume-row"><span class="lbl">Contact Phone:</span><span class="val" style="color:#64748b; font-size:11px;">🔒 Protected by Admin Channel</span></div>
+                        </div>
+
+                        <div class="resume-section">
+                            <div class="resume-section-title">Educational Profile</div>
+                            <div class="resume-row"><span class="lbl">Qualifications:</span><span class="val" id="view_qual">-</span></div>
+                        </div>
+
+                        <div class="resume-section">
+                            <div class="resume-section-title">Work & Experience Ledger</div>
+                            <div class="resume-row"><span class="lbl">Experience Matrix:</span><span class="val" id="view_exp">0 Years</span></div>
+                            <div class="resume-row"><span class="lbl">Institutions Served:</span><span class="val" id="view_schools">-</span></div>
+                        </div>
+
+                        <div class="resume-section">
+                            <div class="resume-section-title">Teaching Domains</div>
+                            <div class="resume-row"><span class="lbl">Expert Fields:</span><span class="val" id="view_subjects">-</span></div>
+                            <div class="resume-row"><span class="lbl">Target Segments:</span><span class="val" id="view_classes">-</span></div>
+                        </div>
+
+                        <div class="resume-section" style="margin-bottom:0;">
+                            <div class="resume-section-title">Pedagogical Statement (Bio)</div>
+                            <p id="view_about" style="font-size:12px; line-height:1.5; color:#334155; font-style:italic;">No pedagogical overview submitted.</p>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Interactive Preview and Print Control Deck -->
+                <div class="action-btn-group">
+                    <button class="btn-action" style="background:#3b82f6; color:white;" onclick="alert('ఇదిగో మీ నిరూపితమైన లైవ్ రెజ్యూమ్ ప్రివ్యూ పక్కనే సిద్ధంగా ఉంది!')">👁️ Refresh Preview</button>
+                    <button class="btn-action" style="background:linear-gradient(135deg, #a855f7, #ec4899); color:white;" onclick="triggerSecurePrinter()">🖨️ Save as PDF / Print Official Resume</button>
                 </div>
             </div>
 
-            <div class="btn-zone">
-                <button type="submit" class="btn-p btn-save">Save Profile & Lock Details</button>
-            </div>
-        </form>
+        </div>
     </div>
 
     <script src="../js/supabase.js"></script>
     <script src="../js/auth.js"></script>
     <script>
         let currentTeacherId = null;
-        let existingQualifications = "";
-        let existingExperienceYears = 0;
-        let existingSchools = "";
-        let hasExistingProfile = false;
+        let isExistingUser = false;
+        let baseQual = "", baseExp = 0, baseSchools = "";
+        let profileStatus = 'pending';
 
         async function initProfileManagement() {
             const session = await checkLiveUserSession('Teacher');
             if (!session) return;
-            
             currentTeacherId = session.id;
-            
-            // Secure Auth Session Sync
+
             document.getElementById('c_mobile').value = session.phone || session.mobile || '';
             document.getElementById('c_email').value = session.email || '';
 
-            await fetchAndLockProfileHistory();
+            await fetchAndEnforceHistoryLock();
         }
 
-        // 🔒 డేటాబేస్ నుండి పాత హిస్టరీని లాగి, ఇన్పుట్లను ఫ్రీజ్ చేసే కోడ్
-        async function fetchAndLockProfileHistory() {
+        // 🔒 History Lock Logic: ఒకసారి డేటా ఉంటే ఎరేజ్ అవ్వకుండా ఫ్రీజ్ చేసి అపెండ్ ఆప్షన్ ఇస్తుంది
+        async function fetchAndEnforceHistoryLock() {
             try {
                 const { data: prof, error } = await _supabase
                     .from('teacher_profiles')
@@ -215,8 +306,9 @@
 
                 if (error && error.code !== 'PGRST116') throw error;
 
-                if(prof && prof.full_name) {
-                    hasExistingProfile = true;
+                if (prof && prof.full_name) {
+                    isExistingUser = true;
+                    profileStatus = prof.profile_status || 'pending';
 
                     // 1. పర్సనల్ డీటెయిల్స్ నింపి లాక్ చేయడం (No Erase Gate)
                     document.getElementById('p_name').value = prof.full_name;
@@ -227,101 +319,120 @@
                     document.getElementById('p_state').disabled = true;
                     document.getElementById('p_district').value = prof.district || '';
                     document.getElementById('p_district').disabled = true;
-                    document.getElementById('badge_personal').style.display = 'block';
+                    document.getElementById('lock_personal').style.display = 'block';
 
-                    // 2. క్వాలిఫికేషన్స్ హిస్టరీ లాక్ + అపెండ్ జోన్ ఆన్
-                    existingQualifications = prof.qualifications || "";
-                    document.getElementById('q_qual').value = existingQualifications;
-                    document.getElementById('qualAppendZone').style.display = 'block';
-                    document.getElementById('badge_qual').style.display = 'block';
+                    // 2. క్వాలిఫికేషన్స్ రికార్డ్ లాక్ + అపెండ్ బాక్స్ ఆన్
+                    baseQual = prof.qualifications || "";
+                    document.getElementById('q_qual').value = baseQual;
+                    document.getElementById('q_qual').disabled = true;
+                    document.getElementById('qualAppendBox').style.display = 'block';
+                    document.getElementById('lock_qual').style.display = 'block';
 
-                    // 3. ఎక్స్ పీరియన్స్ హిస్టరీ లాక్ + అపెండ్ జోన్ ఆన్
-                    existingExperienceYears = parseInt(prof.experience) || 0;
-                    existingSchools = prof.school_name || ""; // లేదా మీ పాత కాలమ్ address/current_school
-                    document.getElementById('e_exp').value = existingExperienceYears;
-                    document.getElementById('e_school').value = existingSchools;
-                    document.getElementById('expAppendZone').style.display = 'block';
-                    document.getElementById('badge_exp').style.display = 'block';
+                    // 3. ఎక్స్ పీరియన్స్ రికార్డ్ లాక్ + అపెండ్ బాక్స్ ఆన్
+                    baseExp = parseInt(prof.experience) || 0;
+                    baseSchools = prof.school_name || "";
+                    document.getElementById('e_exp').value = baseExp;
+                    document.getElementById('e_exp').disabled = true;
+                    document.getElementById('e_school').value = baseSchools;
+                    document.getElementById('e_school').disabled = true;
+                    document.getElementById('expAppendBox').style.display = 'block';
+                    document.getElementById('lock_exp').style.display = 'block';
 
-                    // 4. ప్రిఫరెన్సెస్ (ఇవి ఎప్పుడైనా మార్చుకోవచ్చు)
+                    // 4. ప్రిఫరెన్సెస్ (ఎడిట్ చేసుకోవచ్చు)
                     document.getElementById('t_subjects').value = prof.subjects || '';
-                    document.getElementById('t_classes').value = prof.address || ''; // address ని క్లాసెస్ కి వాడుతున్నాం
+                    document.getElementById('t_classes').value = prof.address || ''; 
                     document.getElementById('t_about').value = prof.about || '';
-                } else {
-                    // ఫస్ట్ టైమ్ యూజర్ అయితే క్వాలిఫికేషన్ మరియు ఎక్స్ పీరియన్స్ డైరెక్ట్ ఇన్‌పుట్స్ ఓపెన్ ఉంచాలి
-                    document.getElementById('q_qual').disabled = false;
-                    document.getElementById('q_qual').required = true;
-                    document.getElementById('e_exp').disabled = false;
-                    document.getElementById('e_exp').required = true;
-                    document.getElementById('e_school').disabled = false;
                 }
-                calculateRealtimeProgress();
-            } catch(err) {
-                console.error("Profile Ledger Fetch Error:", err.message);
+                
+                syncLivePreview();
+            } catch (err) {
+                console.error("Ledger Engine Defect:", err.message);
             }
+        }
+
+        // 👁️ Live Paper Preview Sync Engine
+        function syncLivePreview() {
+            const name = document.getElementById('p_name').value.trim();
+            const gender = document.getElementById('p_gender').value;
+            const state = document.getElementById('p_state').value.trim();
+            const dist = document.getElementById('p_district').value.trim();
+            
+            // Qualifications Merge Preview
+            let qual = document.getElementById('q_qual').value.trim();
+            const newQual = document.getElementById('q_qual_new') ? document.getElementById('q_qual_new').value.trim() : "";
+            if(newQual) qual = qual ? `${qual}, ${newQual}` : newQual;
+
+            // Experience Merge Preview
+            let exp = parseInt(document.getElementById('e_exp').value) || 0;
+            const newExp = document.getElementById('e_exp_new') ? parseInt(document.getElementById('e_exp_new').value) || 0 : 0;
+            const totalExp = exp + newExp;
+
+            // Schools Merge Preview
+            let schools = document.getElementById('e_school').value.trim();
+            const newSchool = document.getElementById('e_school_new') ? document.getElementById('e_school_new').value.trim() : "";
+            if(newSchool) schools = schools ? `${schools}, ${newSchool}` : newSchool;
+
+            const sub = document.getElementById('t_subjects').value.trim();
+            const cls = document.getElementById('t_classes').value.trim();
+            const about = document.getElementById('t_about').value.trim();
+
+            // UI Elements Rendering
+            document.getElementById('view_name').innerText = name || "Name Pending";
+            document.getElementById('view_gender').innerText = gender || "-";
+            document.getElementById('view_location').innerText = (dist || state) ? `${dist}, ${state}` : "-";
+            document.getElementById('view_qual').innerText = qual || "-";
+            document.getElementById('view_exp').innerText = `${totalExp} Years Ledger Locked`;
+            document.getElementById('view_schools').innerText = schools || "-";
+            document.getElementById('view_subjects').innerText = sub || "-";
+            document.getElementById('view_classes').innerText = cls || "-";
+            document.getElementById('view_about').innerText = about || "No pedagogical overview submitted.";
+
+            calculateRealtimeProgress();
         }
 
         function calculateRealtimeProgress() {
             let score = 0;
-            // Personal Check
-            if(hasExistingProfile || (document.getElementById('p_name').value.trim() && document.getElementById('p_gender').value)) score += 20;
-            // Qualifications Check
-            if(hasExistingProfile || document.getElementById('q_qual').value.trim()) score += 25;
-            // Experience Check
-            if(hasExistingProfile || document.getElementById('e_exp').value.trim() !== "") score += 20;
-            // Preferences Check
+            if(isExistingUser || (document.getElementById('p_name').value.trim() && document.getElementById('p_gender').value)) score += 20;
+            if(isExistingUser || document.getElementById('q_qual').value.trim()) score += 25;
+            if(isExistingUser || document.getElementById('e_exp').value.trim() !== "") score += 20;
             if(document.getElementById('t_subjects').value.trim() && document.getElementById('t_classes').value.trim()) score += 10;
-            // Static Documents
-            score += 25; 
+            score += 25; // Default Approved Nodes
 
             document.getElementById('txtPercent').innerText = `${score}%`;
             document.getElementById('meterFill').style.width = `${score}%`;
             return score;
         }
 
-        // 💾 సబ్మిట్ చేసేటప్పుడు పాత డేటాకు కొత్త డేటాను యాప్-ఎండ్ (Append) చేసే మెకానిజం
+        // 💾 Ledger Processing (Append-Only Engine)
         document.getElementById('master-profile-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            let finalQualifications = document.getElementById('q_qual').value;
-            let finalExperienceYears = parseInt(document.getElementById('e_exp').value) || 0;
-            let finalSchool = document.getElementById('e_school').value;
-
-            // ఒకవేళ పాత ప్రొఫైల్ ఆల్రెడీ ఉంటే, కొత్తగా టైప్ చేసిన వాటిని పాత వాటికి కలుపుతాం (Append Only)
-            if(hasExistingProfile) {
-                const newQual = document.getElementById('q_qual_new').value.trim();
-                if(newQual) {
-                    finalQualifications = existingQualifications ? `${existingQualifications}, ${newQual}` : newQual;
-                }
-
-                const newExpText = document.getElementById('e_exp_new').value.trim();
-                if(newExpText) {
-                    finalExperienceYears = existingExperienceYears + (parseInt(newExpText) || 0);
-                }
-
-                const newSchool = document.getElementById('e_school_new').value.trim();
-                if(newSchool) {
-                    finalSchool = finalSchool ? `${finalSchool}, ${newSchool}` : newSchool;
-                }
-            } else {
-                // ఫస్ట్ టైమ్ యూజర్ అయితే డైరెక్ట్ బాక్స్ నుండి తీసుకుంటుంది
-                finalQualifications = document.getElementById('q_qual').value;
-                finalExperienceYears = parseInt(document.getElementById('e_exp').value) || 0;
-                finalSchool = document.getElementById('e_school').value;
-            }
-
             const currentPercentage = calculateRealtimeProgress();
+
+            let finalQualifications = document.getElementById('q_qual').value.trim();
+            let finalExperienceYears = parseInt(document.getElementById('e_exp').value) || 0;
+            let finalSchool = document.getElementById('e_school').value.trim();
+
+            if (isExistingUser) {
+                const addedQual = document.getElementById('q_qual_new').value.trim();
+                if(addedQual) finalQualifications = baseQual ? `${baseQual}, ${addedQual}` : addedQual;
+
+                const addedExp = parseInt(document.getElementById('e_exp_new').value) || 0;
+                finalExperienceYears = baseExp + addedExp;
+
+                const addedSchool = document.getElementById('e_school_new').value.trim();
+                if(addedSchool) finalSchool = baseSchools ? `${baseSchools}, ${addedSchool}` : addedSchool;
+            }
 
             const payload = {
                 id: currentTeacherId,
-                full_name: hasExistingProfile ? document.getElementById('p_name').value : document.getElementById('p_name').value,
-                gender: hasExistingProfile ? document.getElementById('p_gender').value : document.getElementById('p_gender').value,
-                state: hasExistingProfile ? document.getElementById('p_state').value : document.getElementById('p_state').value,
-                district: hasExistingProfile ? document.getElementById('p_district').value : document.getElementById('p_district').value,
+                full_name: document.getElementById('p_name').value,
+                gender: document.getElementById('p_gender').value,
+                state: document.getElementById('p_state').value,
+                district: document.getElementById('p_district').value,
                 mobile: document.getElementById('c_mobile').value,
-                qualifications: finalQualifications, // 🎯 Appended Ledger
-                experience: finalExperienceYears,    // 🎯 Added Years Ledger
-                school_name: finalSchool,            // 🎯 Appended Schools Ledger
+                qualifications: finalQualifications,
+                experience: finalExperienceYears,
+                school_name: finalSchool,
                 subjects: document.getElementById('t_subjects').value,
                 address: document.getElementById('t_classes').value, 
                 about: document.getElementById('t_about').value,
@@ -333,12 +444,26 @@
                 const { error } = await _supabase.from('teacher_profiles').upsert(payload);
                 if (error) throw error;
 
-                alert("✓ ప్రొఫైల్ వివరాలు జవాబుదారీతనంతో భద్రపరచబడ్డాయి!");
-                window.location.reload(); // చేంజెస్ లైవ్ లో లాక్ అవ్వడానికి రీలోడ్
+                // Cache refresh
+                const cached = JSON.parse(localStorage.getItem('myguru_user') || '{}');
+                cached.profileData = payload;
+                localStorage.setItem('myguru_user', JSON.stringify(cached));
+
+                alert("✓ మీ ప్రొఫైల్ లెడ్జర్ విజయవంతంగా సింక్ అయింది!");
+                window.location.reload();
             } catch(err) {
-                alert("Error locking profile: " + err.message);
+                alert("Error: " + err.message);
             }
         });
+
+        // 🖨️ PDF Printer Verification Node
+        function triggerSecurePrinter() {
+            if(profileStatus !== 'approved') {
+                alert("⚠️ దయచేసి అఫీషియల్ రెజ్యూమ్ ప్రింట్ లేదా PDF డౌన్‌లోడ్ చేయడానికి మీ ప్రొఫైల్‌ను 100% పూర్తిగా నింపండి!");
+                return;
+            }
+            window.print();
+        }
 
         document.getElementById('logout-btn').addEventListener('click', async (e) => {
             e.preventDefault();
