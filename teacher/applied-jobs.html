@@ -93,40 +93,47 @@
         }
 
         // 🔗 Supabase Join Query via foreign keys to grab job info dynamically
+                // 🔗 Two-Step Grid Query Engine (Assures no Schema Cache Relation Outage)
         async function loadAppliedJobsLedger() {
             const gridBody = document.getElementById('applicationsGridBody');
             
             try {
-                // job_applications నుండి డేటా లాగుతూ, రిలేషన్ ద్వారా jobs లోని వివరాలను కూడా తెచ్చుకుంటున్నాం
-                const { data: apps, error } = await _supabase
+                // స్టెప్ 1: ముందుగా టీచర్ అప్లై చేసిన అప్లికేషన్స్ అన్నీ లాగడం
+                const { data: apps, error: appError } = await _supabase
                     .from('job_applications')
-                    .select(`
-                        id,
-                        status,
-                        created_at,
-                        jobs (
-                            school_name,
-                            subject
-                        )
-                    `)
+                    .select('id, job_id, status, created_at')
                     .eq('teacher_id', currentTeacherId)
                     .order('created_at', { ascending: false });
 
-                if (error) throw error;
+                if (appError) throw appError;
 
                 if (!apps || apps.length === 0) {
                     gridBody.innerHTML = `<tr><td colspan="5" class="empty-state">⚠️ మీరు ఇంకా ఏ ఉద్యోగానికి దరఖాస్తు చేయలేదు.</td></tr>`;
                     return;
                 }
 
-                gridBody.innerHTML = ""; // క్లియర్ ప్రాసెస్
+                gridBody.innerHTML = ""; // క్లియర్ స్క్రీన్
 
-                apps.forEach(app => {
+                // స్టెప్ 2: ప్రతి అప్లికేషన్ లోని job_id ని బట్టి jobs టేబుల్ నుండి స్కూల్ వివరాలు లూప్ లో లాగడం
+                for (const app of apps) {
+                    let schoolName = "Unknown Institution";
+                    let subject = "General";
+
+                    if (app.job_id) {
+                        const { data: jobData } = await _supabase
+                            .from('jobs')
+                            .select('school_name, subject')
+                            .eq('id', app.job_id)
+                            .single();
+                        
+                        if (jobData) {
+                            schoolName = jobData.school_name || "Unknown Institution";
+                            subject = jobData.subject || "General";
+                        }
+                    }
+
                     const dateObj = new Date(app.created_at);
                     const formattedDate = dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-                    
-                    const schoolName = app.jobs ? app.jobs.school_name : "Unknown Institution";
-                    const subject = app.jobs ? app.jobs.subject : "General";
                     const currentStatus = app.status || "applied";
 
                     // Status Badge Mapping Rules
@@ -149,13 +156,14 @@
                         </td>
                     `;
                     gridBody.appendChild(tr);
-                });
+                }
 
             } catch (err) {
                 console.error("Tracker Failure:", err.message);
                 gridBody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color:#ef4444;">Ledger Sync Outage: ${err.message}</td></tr>`;
             }
         }
+
 
         document.getElementById('logout-btn').addEventListener('click', async (e) => {
             e.preventDefault();
