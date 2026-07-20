@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Teacher - Applied Jobs Ledger</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .tracker-container { max-width: 950px; margin: 20px auto; }
+        
+        /* 📊 Professional Styled Data Grid Table */
+        .ledger-table-box { background: #1e293b; border: 1px solid #334155; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .ledger-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; color: white; }
+        .ledger-table th { background: #0f172a; padding: 15px; color: #38bdf8; font-weight: bold; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #334155; }
+        .ledger-table td { padding: 15px; border-bottom: 1px solid #334155; vertical-align: middle; }
+        .ledger-table tr:hover { background: rgba(56, 189, 248, 0.02); }
+        
+        /* 🟢 Custom Badge Tags for Status Flow */
+        .status-badge { display: inline-block; padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; text-transform: capitalize; }
+        .st-applied { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); }
+        .st-viewed { background: rgba(168, 85, 247, 0.15); color: #a855f7; border: 1px solid rgba(168,85,247,0.3); }
+        .st-shortlisted { background: rgba(234, 179, 8, 0.15); color: #eab308; border: 1px solid rgba(234,179,8,0.3); }
+        .st-interview { background: rgba(236, 72, 153, 0.15); color: #ec4899; border: 1px solid rgba(236,72,153,0.3); }
+        .st-rejected { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+        .st-selected { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+        .st-joined { background: rgba(20, 184, 166, 0.15); color: #20b8a6; border: 1px solid rgba(20,184,166,0.3); }
+
+        .btn-view-status { background: #0f172a; color: #38bdf8; border: 1px solid #38bdf8; padding: 6px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s; text-decoration: none; font-size: 13px; }
+        .btn-view-status:hover { background: #38bdf8; color: #0f172a; }
+        
+        .empty-state { padding: 40px; text-align: center; color: #94a3b8; font-weight: 500; }
+    </style>
+</head>
+<body>
+
+    <!-- 🧭 Sidebar Navigation Grid Sinks -->
+    <div class="sidebar">
+        <div style="text-align: center; padding: 10px;">
+            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 80px; height: auto; border-radius: 50%;">
+            <h2>MyGuru Jobs</h2>
+        </div>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="profile.html">My Profile</a>
+        <a href="jobs.html">Search Jobs</a>
+        <a href="applied-jobs.html" class="active">Applied Jobs</a>
+        <a href="interview-letters.html">Interview Letters</a>
+        <a href="notifications.html">Notifications</a>
+        <a href="support.html">Support</a>
+        <a href="settings.html">Settings</a>
+        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
+    </div>
+
+    <div class="content">
+        <div class="header">
+            <h3>సమర్పించిన ఉద్యోగ దరఖాస్తుల నివేదిక (Application Tracker)</h3>
+        </div>
+
+        <div class="tracker-container">
+            <div class="ledger-table-box">
+                <table class="ledger-table" id="applicationsTable">
+                    <thead>
+                        <tr>
+                            <th>School Name</th>
+                            <th>Subject Domain</th>
+                            <th>Applied Date</th>
+                            <th>Application Status</th>
+                            <th style="text-align: center;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="applicationsGridBody">
+                        <!-- డేటా జావాస్క్రిప్ట్ ద్వారా లోడ్ అవుతుంది -->
+                        <tr>
+                            <td colspan="5" class="empty-state">Syncing Application Ledger Engine...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        let currentTeacherId = null;
+
+        async function initAppliedJobsTracker() {
+            const session = await checkLiveUserSession('Teacher');
+            if (!session) return;
+            currentTeacherId = session.id;
+
+            await loadAppliedJobsLedger();
+        }
+
+        // 🔗 Supabase Join Query via foreign keys to grab job info dynamically
+        async function loadAppliedJobsLedger() {
+            const gridBody = document.getElementById('applicationsGridBody');
+            
+            try {
+                // job_applications నుండి డేటా లాగుతూ, రిలేషన్ ద్వారా jobs లోని వివరాలను కూడా తెచ్చుకుంటున్నాం
+                const { data: apps, error } = await _supabase
+                    .from('job_applications')
+                    .select(`
+                        id,
+                        status,
+                        created_at,
+                        jobs (
+                            school_name,
+                            subject
+                        )
+                    `)
+                    .eq('teacher_id', currentTeacherId)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (!apps || apps.length === 0) {
+                    gridBody.innerHTML = `<tr><td colspan="5" class="empty-state">⚠️ మీరు ఇంకా ఏ ఉద్యోగానికి దరఖాస్తు చేయలేదు.</td></tr>`;
+                    return;
+                }
+
+                gridBody.innerHTML = ""; // క్లియర్ ప్రాసెస్
+
+                apps.forEach(app => {
+                    const dateObj = new Date(app.created_at);
+                    const formattedDate = dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+                    
+                    const schoolName = app.jobs ? app.jobs.school_name : "Unknown Institution";
+                    const subject = app.jobs ? app.jobs.subject : "General";
+                    const currentStatus = app.status || "applied";
+
+                    // Status Badge Mapping Rules
+                    let badgeClass = "st-applied";
+                    if(currentStatus === "viewed") badgeClass = "st-viewed";
+                    if(currentStatus === "shortlisted") badgeClass = "st-shortlisted";
+                    if(currentStatus === "interview letter sent") badgeClass = "st-interview";
+                    if(currentStatus === "rejected") badgeClass = "st-rejected";
+                    if(currentStatus === "selected") badgeClass = "st-selected";
+                    if(currentStatus === "joined") badgeClass = "st-joined";
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="font-weight: 600; color: #fff;">${schoolName}</td>
+                        <td style="color: #cbd5e1;">${subject}</td>
+                        <td style="color: #94a3b8;">${formattedDate}</td>
+                        <td><span class="status-badge ${badgeClass}">${currentStatus}</span></td>
+                        <td style="text-align: center;">
+                            <a href="application-details.html?id=${app.id}" class="btn-view-status">View Status</a>
+                        </td>
+                    `;
+                    gridBody.appendChild(tr);
+                });
+
+            } catch (err) {
+                console.error("Tracker Failure:", err.message);
+                gridBody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color:#ef4444;">Ledger Sync Outage: ${err.message}</td></tr>`;
+            }
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutSessionRouter();
+        });
+
+        window.onload = initAppliedJobsTracker;
+    </script>
+</body>
+</html>
