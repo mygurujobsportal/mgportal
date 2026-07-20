@@ -41,7 +41,7 @@
             <h2>MyGuru Jobs</h2>
         </div>
         <a href="dashboard.html">Dashboard</a>
-        <a href="profile.html">My Profile</a>
+        <a href="teacher_profile.html">My Profile</a>
         <a href="jobs.html">Search Jobs</a>
         <a href="applied-jobs.html" class="active">Applied Jobs</a>
         <a href="interview-letters.html">Interview Letters</a>
@@ -101,9 +101,9 @@
                 // స్టెప్ 1: ముందుగా టీచర్ అప్లై చేసిన అప్లికేషన్స్ అన్నీ లాగడం
                 const { data: apps, error: appError } = await _supabase
                     .from('job_applications')
-                    .select('id, school_job_id, status, created_at')
+                    .select('id, school_job_id, application_status, applied_at')
                     .eq('teacher_id', currentTeacherId)
-                    .order('created_at', { ascending: false });
+                    .order('applied_at', { ascending: false });
 
                 if (appError) throw appError;
 
