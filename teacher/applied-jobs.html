@@ -101,7 +101,7 @@
                 // స్టెప్ 1: ముందుగా టీచర్ అప్లై చేసిన అప్లికేషన్స్ అన్నీ లాగడం
                 const { data: apps, error: appError } = await _supabase
                     .from('job_applications')
-                    .select('id, job_id, status, created_at')
+                    .select('id, school_job_id, status, created_at')
                     .eq('teacher_id', currentTeacherId)
                     .order('created_at', { ascending: false });
 
