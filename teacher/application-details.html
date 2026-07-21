@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Teacher - Application Details</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .details-container { max-width: 850px; margin: 30px auto; background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); color: #fff; }
+        .back-link { display: inline-block; margin-bottom: 20px; color: #38bdf8; text-decoration: none; font-weight: bold; font-size: 14px; }
+        .back-link:hover { text-decoration: underline; }
+        
+        /* 📊 Job Summary Header Box */
+        .job-header-card { background: #0f172a; border-left: 4px solid #38bdf8; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+        .job-header-card h2 { margin: 0 0 10px 0; color: #38bdf8; font-size: 20px; }
+        .job-header-card p { margin: 4px 0; color: #cbd5e1; font-size: 14px; }
+
+        /* 📍 Timeline UI Styles */
+        .timeline-title { font-size: 16px; font-weight: bold; color: #f8fafc; margin-bottom: 25px; border-bottom: 1px solid #334155; padding-bottom: 10px; }
+        .timeline-stepper { display: flex; justify-content: space-between; align-items: center; position: relative; margin: 40px 0; }
+        .timeline-stepper::before { content: ''; position: absolute; top: 20px; left: 5%; width: 90%; height: 4px; background: #334155; z-index: 1; }
+        
+        .step-item { position: relative; z-index: 2; text-align: center; width: 20%; }
+        .step-circle { width: 40px; height: 40px; border-radius: 50%; background: #0f172a; border: 3px solid #334155; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto; font-weight: bold; color: #64748b; transition: 0.3s; }
+        .step-label { font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase; }
+
+        /* 🟢 Active/Completed Step Styles */
+        .step-item.completed .step-circle { background: #10b981; border-color: #10b981; color: #fff; }
+        .step-item.completed .step-label { color: #10b981; }
+        .step-item.active .step-circle { background: #3b82f6; border-color: #38bdf8; color: #fff; box-shadow: 0 0 12px rgba(56, 189, 248, 0.5); }
+        .step-item.active .step-label { color: #38bdf8; font-weight: bold; }
+        .step-item.rejected .step-circle { background: #ef4444; border-color: #ef4444; color: #fff; }
+        .step-item.rejected .step-label { color: #ef4444; }
+
+        /* 💬 Employer Remarks Box */
+        .remarks-box { background: rgba(15, 23, 42, 0.6); border: 1px dashed #475569; border-radius: 8px; padding: 20px; margin-top: 30px; }
+        .remarks-box h4 { margin: 0 0 10px 0; color: #e2e8f0; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        .remarks-content { color: #94a3b8; font-size: 14px; line-height: 1.6; }
+    </style>
+</head>
+<body>
+
+    <div class="content">
+        <div class="details-container">
+            <a href="applied-jobs.html" class="back-link">← Back to Application Tracker</a>
+
+            <!-- 📋 Job & Institution Summary Header -->
+            <div class="job-header-card" id="jobHeaderCard">
+                <h2>Loading Application Details...</h2>
+            </div>
+
+            <!-- 📍 Dynamic Status Timeline Bar -->
+            <div class="timeline-title">📍 Application Progress Tracker</div>
+            
+            <div class="timeline-stepper" id="timelineStepper">
+                <div class="step-item" id="step-applied">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">Applied</div>
+                </div>
+                <div class="step-item" id="step-viewed">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">Viewed</div>
+                </div>
+                <div class="step-item" id="step-demo">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">Demo / Shortlist</div>
+                </div>
+                <div class="step-item" id="step-interview">
+                    <div class="step-circle">4</div>
+                    <div class="step-label">Interview Letter</div>
+                </div>
+                <div class="step-item" id="step-joined">
+                    <div class="step-circle">5</div>
+                    <div class="step-label">Selected</div>
+                </div>
+            </div>
+
+            <!-- 💬 Employer Updates & Notes -->
+            <div class="remarks-box">
+                <h4>💬 Status Notes & Communication</h4>
+                <div class="remarks-content" id="remarksContent">
+                    మీ అప్లికేషన్ వివరాలను పరిశీలిస్తున్నారు. స్కూల్ యాజమాన్యం నుండి ఏవైనా సూచనలు వస్తే ఇక్కడ అప్‌డేట్ అవుతాయి.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        async function loadApplicationDetails() {
+            const session = await checkLiveUserSession('Teacher');
+            if (!session) return;
+
+            // URL నుండి అప్లికేషన్ ID ని లాగడం
+            const urlParams = new URLSearchParams(window.location.search);
+            const appId = urlParams.get('id');
+
+            if (!appId) {
+                alert("అప్లికేషన్ ఐడీ దొరకలేదు!");
+                window.location.href = "applied-jobs.html";
+                return;
+            }
+
+            try {
+                // Step 1: Fetch Application Data with Foreign Key Join
+                const { data: app, error } = await _supabase
+                    .from('job_applications')
+                    .select(`
+                        id,
+                        application_status,
+                        employer_status,
+                        applied_at,
+                        cover_letter,
+                        school_jobs (
+                            job_title,
+                            subject,
+                            district,
+                            management_type,
+                            school_profiles (
+                                school_name
+                            )
+                        )
+                    `)
+                    .eq('id', appId)
+                    .single();
+
+                if (error) throw error;
+
+                // Step 2: Display Job Header Info
+                const headerBox = document.getElementById('jobHeaderCard');
+                let instName = "Private Institution";
+                let jobSubject = "General Subject";
+
+                if (app.school_jobs) {
+                    const sj = app.school_jobs;
+                    jobSubject = sj.subject ? `${sj.subject} (${sj.job_title || ''})` : (sj.job_title || "General");
+
+                    if (sj.school_profiles && sj.school_profiles.school_name) {
+                        instName = sj.school_profiles.school_name;
+                    } else if (sj.district) {
+                        instName = `${sj.management_type || 'Private'} Institution (${sj.district})`;
+                    }
+                }
+
+                const appDate = app.applied_at ? new Date(app.applied_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
+
+                headerBox.innerHTML = `
+                    <h2>${jobSubject}</h2>
+                    <p><strong>Institution:</strong> ${instName}</p>
+                    <p><strong>Applied Date:</strong> ${appDate}</p>
+                    <p><strong>Current Status:</strong> <span style="color:#38bdf8; font-weight:bold; text-transform:uppercase;">${(app.employer_status || app.application_status || 'pending').replace('_', ' ')}</span></p>
+                `;
+
+                // Step 3: Render Timeline Active Steps
+                updateTimelineSteps(app.employer_status || app.application_status || 'pending');
+
+            } catch (err) {
+                console.error("Details Fetch Error:", err.message);
+                document.getElementById('jobHeaderCard').innerHTML = `<h2 style="color:#ef4444;">Error Loading Application: ${err.message}</h2>`;
+            }
+        }
+
+        function updateTimelineSteps(status) {
+            const st = status.toLowerCase();
+
+            const stepApplied = document.getElementById('step-applied');
+            const stepViewed = document.getElementById('step-viewed');
+            const stepDemo = document.getElementById('step-demo');
+            const stepInterview = document.getElementById('step-interview');
+            const stepJoined = document.getElementById('step-joined');
+            const remarks = document.getElementById('remarksContent');
+
+            // Default Stage: Step 1 Always Completed
+            stepApplied.classList.add('completed');
+
+            if (st.includes('view')) {
+                stepViewed.classList.add('completed');
+                remarks.innerHTML = "👀 స్కూల్ యాజమాన్యం మీ దరఖాస్తును మరియు ప్రొఫైల్‌ను పరిశీలించింది.";
+            } else if (st.includes('demo') || st.includes('shortlist')) {
+                stepViewed.classList.add('completed');
+                stepDemo.classList.add('active');
+                remarks.innerHTML = "🎉 **అభినందనలు!** స్కూల్ యాజమాన్యం మిమ్మల్ని డెమో/ఇంటర్వ్యూ కి షార్ట్‌లిస్ట్ చేసింది.";
+            } else if (st.includes('interview')) {
+                stepViewed.classList.add('completed');
+                stepDemo.classList.add('completed');
+                stepInterview.classList.add('active');
+                remarks.innerHTML = "📩 మీకు స్కూల్ నుండి **ఇంటర్వ్యూ లెటర్ (Interview Call Letter)** పంపబడింది. దయచేసి Interview Letters సెక్షన్ చెక్ చేయండి.";
+            } else if (st.includes('select') || st.includes('join')) {
+                stepViewed.classList.add('completed');
+                stepDemo.classList.add('completed');
+                stepInterview.classList.add('completed');
+                stepJoined.classList.add('completed');
+                remarks.innerHTML = "🎊 **కంగ్రాచ్యులేషన్స్!** మీరు ఈ ఉద్యోగానికి ఎంపికయ్యారు.";
+            } else if (st.includes('reject')) {
+                stepDemo.classList.add('rejected');
+                stepDemo.querySelector('.step-label').innerText = "Rejected";
+                remarks.innerHTML = "⚠️ మీ దరఖాస్తు ఈ ఉద్యోగానికి పరిశీలించబడలేదు. ఇతర ఉద్యోగాలకు అప్లై చేయడం కొనసాగించండి.";
+            }
+        }
+
+        window.onload = loadApplicationDetails;
+    </script>
+</body>
+</html>
