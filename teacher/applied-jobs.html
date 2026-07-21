@@ -134,7 +134,7 @@
                             // Step 3: school_id ఆధారంగా school_profiles టేబుల్ నుండి స్కూల్ నేమ్ లాగడం
                             if (jobData.school_id) {
                                 const { data: schoolProf } = await _supabase
-                                    .from('school_profile')
+                                    .from('school_profiles')
                                     .select('school_name')
                                     .eq('id', jobData.school_id)
                                     .single();
