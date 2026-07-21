@@ -130,11 +130,11 @@
                     subject = jobData.subject || "General Subject";
 
                     // Step 3: school_id ఆధారంగా school_profiles టేబుల్ నుండి అసలైన స్కూల్ పేరు లాగడం
-                    if (jobData.school_id) {
+                    if (jobData.school.id) {
                         const { data: schoolProf } = await _supabase
                             .from('school_profiles') // లేదా మీ స్కూల్ ప్రొఫైల్స్ టేబుల్ పేరు
                             .select('school_name')
-                            .eq('id', jobData.school_id)
+                            .eq('id', jobData.school.id)
                             .single();
 
                         if (schoolProf && schoolProf.school_name) {
