@@ -119,11 +119,11 @@
                     let schoolName = "Unknown Institution";
                     let subject = "General";
 
-                    if (app.job_id) {
+                    if (app.school_job_id) {
                         const { data: jobData } = await _supabase
                             .from('jobs')
                             .select('school_name, subject')
-                            .eq('id', app.job_id)
+                            .eq('id', app.school_job_id)
                             .single();
                         
                         if (jobData) {
@@ -132,9 +132,9 @@
                         }
                     }
 
-                    const dateObj = new Date(app.created_at);
+                    const dateObj = new Date(app.applied_at);
                     const formattedDate = dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-                    const currentStatus = app.status || "applied";
+                    const currentStatus = app.application_status || "applied";
 
                     // Status Badge Mapping Rules
                     let badgeClass = "st-applied";
