@@ -96,14 +96,30 @@
                 // 🔗 Two-Step Grid Query Engine (Assures no Schema Cache Relation Outage)
                 // 🔗 3-Step Live Relational Engine
                 // 🔗 3-Step Live Relational Engine (Synced with public.school_profiles Schema)
+                // 🔗 100% Schema-Matched Relational Fetch Engine
         async function loadAppliedJobsLedger() {
             const gridBody = document.getElementById('applicationsGridBody');
             
             try {
-                // Step 1: teacher_id ఆధారంగా job_applications నుండి వివరాలు లాగడం
+                // job_applications ద్వారా నేరుగా school_jobs మరియు దాని లోపల ఉన్న school_profiles ని ఒక్కటే క్వెరీతో లాగడం
                 const { data: apps, error: appError } = await _supabase
                     .from('job_applications')
-                    .select('id, school_job_id, application_status, employer_status, applied_at')
+                    .select(`
+                        id,
+                        application_status,
+                        employer_status,
+                        applied_at,
+                        school_jobs (
+                            id,
+                            job_title,
+                            subject,
+                            district,
+                            management_type,
+                            school_profiles (
+                                school_name
+                            )
+                        )
+                    `)
                     .eq('teacher_id', currentTeacherId)
                     .order('applied_at', { ascending: false });
 
@@ -116,58 +132,35 @@
 
                 gridBody.innerHTML = ""; // Clear grid
 
-                for (const app of apps) {
+                apps.forEach(app => {
                     let schoolName = "School Institution";
                     let subjectDisplay = "General";
 
-                    // Step 2: school_job_id ఆధారంగా school_jobs టేబుల్ నుండి వివరాలు లాగడం
-                    if (app.school_job_id) {
-                        const { data: jobData } = await _supabase
-                            .from('school_jobs')
-                            .select('job_title, subject, school_id')
-                            .eq('id', app.school_job_id)
-                            .single();
+                    if (app.school_jobs) {
+                        const sj = app.school_jobs;
                         
-                        if (jobData) {
-                            subjectDisplay = jobData.subject ? `${jobData.subject} (${jobData.job_title || ''})` : (jobData.job_title || "General");
+                        // 1. Subject & Title Setting
+                        subjectDisplay = sj.subject ? `${sj.subject} (${sj.job_title || ''})` : (sj.job_title || "General");
 
-                            // Step 3: 'school_profiles' టేబుల్ నుండి school_name లాగడం 🎯
-                            if (jobData.school_id) {
-                                // Try 1: By primary key 'id'
-                                let { data: schoolProf } = await _supabase
-                                    .from('school_profiles')
-                                    .select('school_name')
-                                    .eq('id', jobData.school_id)
-                                    .maybeSingle();
-
-                                // Try 2: By 'auth_id' (If school_id was saved as auth_id)
-                                if (!schoolProf) {
-                                    const { data: schoolProfAuth } = await _supabase
-                                        .from('school_profiles')
-                                        .select('school_name')
-                                        .eq('auth_id', jobData.school_id)
-                                        .maybeSingle();
-                                    schoolProf = schoolProfAuth;
-                                }
-
-                                if (schoolProf && schoolProf.school_name) {
-                                    schoolName = schoolProf.school_name;
-                                }
-                            }
+                        // 2. School Name Extraction with Fallback
+                        if (sj.school_profiles && sj.school_profiles.school_name) {
+                            schoolName = sj.school_profiles.school_name;
+                        } else if (sj.district) {
+                            schoolName = `${sj.management_type || 'Private'} Institution (${sj.district})`;
                         }
                     }
 
-                    // Date Formatter
+                    // 3. Date Formatting
                     let formattedDate = "N/A";
                     if (app.applied_at) {
                         const dateObj = new Date(app.applied_at);
                         formattedDate = dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
                     }
 
-                    // Status Determination
+                    // 4. Status Determination
                     const currentStatus = app.employer_status || app.application_status || "pending";
 
-                    // Status Badge Mapping
+                    // 5. Badge Class Mapping
                     let badgeClass = "st-applied";
                     const statusLower = currentStatus.toLowerCase();
                     if(statusLower.includes("view")) badgeClass = "st-viewed";
@@ -188,13 +181,14 @@
                         </td>
                     `;
                     gridBody.appendChild(tr);
-                }
+                });
 
             } catch (err) {
                 console.error("Tracker Failure:", err.message);
                 gridBody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color:#ef4444;">Ledger Sync Outage: ${err.message}</td></tr>`;
             }
         }
+
 
 
 
