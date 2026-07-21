@@ -169,7 +169,7 @@
                         school_job_id,
                         teacher_id,
                         school_jobs ( job_title, school_id ),
-                        teacher_profiles ( full_name, photo_url, gender, qualifications, subjects, experience, state, district, about, verification_badge )
+                        teacher_profiles ( full_name, avatar_url, gender, qualifications, subjects, experience, state, district, about, verification_badge )
                     `)
                     .eq('id', activeApplicationId)
                     .single();
