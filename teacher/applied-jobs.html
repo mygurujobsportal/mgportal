@@ -95,74 +95,91 @@
         // 🔗 Supabase Join Query via foreign keys to grab job info dynamically
                 // 🔗 Two-Step Grid Query Engine (Assures no Schema Cache Relation Outage)
         async function loadAppliedJobsLedger() {
-            const gridBody = document.getElementById('applicationsGridBody');
-            
-            try {
-                // స్టెప్ 1: ముందుగా టీచర్ అప్లై చేసిన అప్లికేషన్స్ అన్నీ లాగడం
-                const { data: apps, error: appError } = await _supabase
-                    .from('job_applications')
-                    .select('id, school_job_id, application_status, applied_at')
-                    .eq('teacher_id', currentTeacherId)
-                    .order('applied_at', { ascending: false });
+    const gridBody = document.getElementById('applicationsGridBody');
+    
+    try {
+        // Step 1: teacher_id ఆధారంగా job_applications లాగడం
+        const { data: apps, error: appError } = await _supabase
+            .from('job_applications')
+            .select('id, school_job_id, application_status, applied_at')
+            .eq('teacher_id', currentTeacherId)
+            .order('applied_at', { ascending: false });
 
-                if (appError) throw appError;
+        if (appError) throw appError;
 
-                if (!apps || apps.length === 0) {
-                    gridBody.innerHTML = `<tr><td colspan="5" class="empty-state">⚠️ మీరు ఇంకా ఏ ఉద్యోగానికి దరఖాస్తు చేయలేదు.</td></tr>`;
-                    return;
-                }
+        if (!apps || apps.length === 0) {
+            gridBody.innerHTML = `<tr><td colspan="5" class="empty-state">⚠️ మీరు ఇంకా ఏ ఉద్యోగానికి దరఖాస్తు చేయలేదు.</td></tr>`;
+            return;
+        }
 
-                gridBody.innerHTML = ""; // క్లియర్ స్క్రీన్
+        gridBody.innerHTML = ""; // Clear table
 
-                // స్టెప్ 2: ప్రతి అప్లికేషన్ లోని job_id ని బట్టి jobs టేబుల్ నుండి స్కూల్ వివరాలు లూప్ లో లాగడం
-                for (const app of apps) {
-                    let schoolName = "Unknown Institution";
-                    let subject = "General";
+        for (const app of apps) {
+            let schoolName = "School Institution";
+            let subject = "General Subject";
 
-                    if (app.school_job_id) {
-                        const { data: jobData } = await _supabase
-                            .from('jobs')
-                            .select('school_name, subject')
-                            .eq('id', app.school_job_id)
+            if (app.school_job_id) {
+                // Step 2: school_job_id నుండి జాబ్ వివరాలు మరియు school_id లాగడం
+                const { data: jobData } = await _supabase
+                    .from('jobs') // లేదా మీ టేబుల్ పేరు 'school_jobs' అయితే అది ఇవ్వండి
+                    .select('subject, school_id') 
+                    .eq('id', app.school_job_id)
+                    .single();
+                
+                if (jobData) {
+                    subject = jobData.subject || "General Subject";
+
+                    // Step 3: school_id ఆధారంగా school_profiles టేబుల్ నుండి అసలైన స్కూల్ పేరు లాగడం
+                    if (jobData.school_id) {
+                        const { data: schoolProf } = await _supabase
+                            .from('school_profiles') // లేదా మీ స్కూల్ ప్రొఫైల్స్ టేబుల్ పేరు
+                            .select('school_name')
+                            .eq('id', jobData.school_id)
                             .single();
-                        
-                        if (jobData) {
-                            schoolName = jobData.school_name || "Unknown Institution";
-                            subject = jobData.subject || "General";
+
+                        if (schoolProf && schoolProf.school_name) {
+                            schoolName = schoolProf.school_name;
                         }
                     }
-
-                    const dateObj = new Date(app.applied_at);
-                    const formattedDate = dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-                    const currentStatus = app.application_status || "applied";
-
-                    // Status Badge Mapping Rules
-                    let badgeClass = "st-applied";
-                    if(currentStatus === "viewed") badgeClass = "st-viewed";
-                    if(currentStatus === "shortlisted") badgeClass = "st-shortlisted";
-                    if(currentStatus === "interview letter sent") badgeClass = "st-interview";
-                    if(currentStatus === "rejected") badgeClass = "st-rejected";
-                    if(currentStatus === "selected") badgeClass = "st-selected";
-                    if(currentStatus === "joined") badgeClass = "st-joined";
-
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td style="font-weight: 600; color: #fff;">${schoolName}</td>
-                        <td style="color: #cbd5e1;">${subject}</td>
-                        <td style="color: #94a3b8;">${formattedDate}</td>
-                        <td><span class="status-badge ${badgeClass}">${currentStatus}</span></td>
-                        <td style="text-align: center;">
-                            <a href="application-details.html?id=${app.id}" class="btn-view-status">View Status</a>
-                        </td>
-                    `;
-                    gridBody.appendChild(tr);
                 }
-
-            } catch (err) {
-                console.error("Tracker Failure:", err.message);
-                gridBody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color:#ef4444;">Ledger Sync Outage: ${err.message}</td></tr>`;
             }
+
+            let formattedDate = "N/A";
+            if (app.applied_at) {
+                const dateObj = new Date(app.applied_at);
+                formattedDate = dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+            }
+
+            const currentStatus = app.application_status || "applied";
+
+            // Status Badge Rules
+            let badgeClass = "st-applied";
+            const statusLower = currentStatus.toLowerCase();
+            if(statusLower.includes("viewed")) badgeClass = "st-viewed";
+            if(statusLower.includes("shortlist")) badgeClass = "st-shortlisted";
+            if(statusLower.includes("interview")) badgeClass = "st-interview";
+            if(statusLower.includes("reject")) badgeClass = "st-rejected";
+            if(statusLower.includes("select")) badgeClass = "st-selected";
+            if(statusLower.includes("join")) badgeClass = "st-joined";
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="font-weight: 600; color: #fff;">${schoolName}</td>
+                <td style="color: #cbd5e1;">${subject}</td>
+                <td style="color: #94a3b8;">${formattedDate}</td>
+                <td><span class="status-badge ${badgeClass}">${currentStatus}</span></td>
+                <td style="text-align: center;">
+                    <a href="application-details.html?id=${app.id}" class="btn-view-status">View Status</a>
+                </td>
+            `;
+            gridBody.appendChild(tr);
         }
+
+    } catch (err) {
+        console.error("Tracker Failure:", err.message);
+        gridBody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color:#ef4444;">Ledger Sync Outage: ${err.message}</td></tr>`;
+    }
+}
 
 
         document.getElementById('logout-btn').addEventListener('click', async (e) => {
