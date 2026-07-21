@@ -7,9 +7,9 @@
     <link rel="stylesheet" href="../css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .details-card { max-width: 800px; margin: 30px auto; background: #1e293b; border-radius: 12px; padding: 25px; color: #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .details-card { max-width: 800px; margin: 30px auto; background: #1e293b; border-radius: 12px; padding: 25px; color: #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid #334155; }
         .candidate-header { display: flex; align-items: center; gap: 20px; border-bottom: 1px solid #334155; padding-bottom: 20px; margin-bottom: 20px; }
-        .candidate-avatar { width: 70px; height: 70px; border-radius: 50%; background: #0f172a; border: 2px solid #38bdf8; display: flex; align-items: center; justify-content: center; font-size: 30px; overflow: hidden; }
+        .candidate-avatar { width: 75px; height: 75px; border-radius: 50%; background: #0f172a; border: 2px solid #38bdf8; display: flex; align-items: center; justify-content: center; font-size: 30px; overflow: hidden; flex-shrink: 0; }
         .candidate-avatar img { width: 100%; height: 100%; object-fit: cover; }
         
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
@@ -24,30 +24,37 @@
         .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
 
         .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 25px; }
-        .btn-act { width: 100%; padding: 12px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; color: #fff; font-size: 14px; }
+        .btn-act { width: 100%; padding: 12px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; color: #fff; font-size: 14px; transition: 0.2s; }
         .btn-reject { background: #ef4444; }
         .btn-shortlist { background: #3b82f6; }
         .btn-demo { background: #f59e0b; color: #000; }
         .btn-select { background: #10b981; }
+        .btn-act:hover { opacity: 0.9; }
+
+        .privacy-notice { background: rgba(56, 189, 248, 0.08); border: 1px dashed #38bdf8; padding: 12px; border-radius: 6px; font-size: 12px; color: #7dd3fc; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
     </style>
 </head>
 <body>
 
     <div class="content">
         <div class="details-card">
-            <a href="applicants.html" style="color:#38bdf8; text-decoration:none; font-size:13px; font-weight:bold;">← Back to Applicants List</a>
+            <a href="applicants.html" style="color:#38bdf8; text-decoration:none; font-size:13px; font-weight:bold;">← Back to Received Applications</a>
             
             <div class="candidate-header" style="margin-top: 15px;">
                 <div class="candidate-avatar" id="avatarBox">👨‍🏫</div>
                 <div>
-                    <h2 id="candName" style="margin:0; color:#38bdf8;">Registered Teacher</h2>
-                    <p id="candJobTitle" style="margin:5px 0 0 0; color:#94a3b8; font-size:13px;">Applied Job Position</p>
+                    <h2 id="candName" style="margin:0; color:#38bdf8;">Loading Candidate...</h2>
+                    <p id="candJobTitle" style="margin:5px 0 0 0; color:#94a3b8; font-size:13px;">Target Job Title</p>
                 </div>
+            </div>
+
+            <div class="privacy-notice">
+                🔒 <strong>Privacy Guard:</strong> టీచర్ వ్యక్తిగత ఫోన్ నంబర్ మరియు ఇమెయిల్ ఐడీ భద్రతా కారణాల దృష్ట్యా దాచబడ్డాయి. మీరు కింద ఉన్న యాక్షన్ బటన్స్ ద్వారా మాత్రమే కమ్యూనికేట్ చేయగలరు.
             </div>
 
             <!-- Candidate Info Grid -->
             <div class="info-grid">
-                <div class="info-box"><label>Qualification</label><p id="candQual">Loading...</p></div>
+                <div class="info-box"><label>Qualifications</label><p id="candQual">Loading...</p></div>
                 <div class="info-box"><label>Experience</label><p id="candExp">Loading...</p></div>
                 <div class="info-box"><label>State / Region</label><p id="candState">Loading...</p></div>
                 <div class="info-box"><label>District Location</label><p id="candDist">Loading...</p></div>
@@ -57,22 +64,22 @@
 
             <!-- 🎥 Demo Video Player Section (Dynamic) -->
             <div id="demoVideoDisplay" class="demo-video-box" style="display: none;">
-                <h4>📹 Candidate Teaching Demo Video</h4>
+                <h4>📹 Teaching Demo Video</h4>
                 <div id="videoPlayerArea">
                     <!-- Embedded Video or Direct Link Rendered Here -->
                 </div>
             </div>
 
             <div class="info-box" style="margin-bottom: 20px;">
-                <label>Cover Letter / Message to School</label>
+                <label>Cover Letter / Message / Bio</label>
                 <p id="candCover" style="font-weight: normal; color: #cbd5e1; white-space: pre-line;">No message provided.</p>
             </div>
 
             <!-- Status Update Action Buttons -->
             <div class="btn-group">
                 <button class="btn-act btn-shortlist" onclick="updateAppStatus('shortlisted')">Shortlist Candidate</button>
-                <button class="btn-act btn-demo" onclick="updateAppStatus('demo_requested')">Request Demo Video/Lesson</button>
-                <button class="btn-act btn-select" onclick="updateAppStatus('selected')">Select / Offer Job</button>
+                <button class="btn-act btn-demo" onclick="updateAppStatus('demo_requested')">Request Demo Video / Lesson</button>
+                <button class="btn-act btn-select" onclick="updateAppStatus('selected')">Select Candidate for Interview</button>
                 <button class="btn-act btn-reject" onclick="updateAppStatus('rejected')">Reject Application</button>
             </div>
         </div>
@@ -84,8 +91,13 @@
         let currentAppId = null;
 
         async function loadApplicantDetails() {
-            const session = await checkLiveUserSession('Employer');
-            if (!session) return;
+            // Safe Session Fetch
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (!session) {
+                console.warn("Session missing, redirecting...");
+                window.location.href = "../login.html";
+                return;
+            }
 
             const urlParams = new URLSearchParams(window.location.search);
             currentAppId = urlParams.get('app_id') || urlParams.get('id');
@@ -118,35 +130,49 @@
 
                 if (error) throw error;
 
-                // 2. Fetch Teacher Profile Safely (Without photo_url crash)
+                // 2. Fetch Teacher Profile with Schema-Matched Columns
                 let teacherProf = null;
                 if (app.teacher_id) {
-                    const { data: tp } = await _supabase
+                    const { data: tp, error: tpErr } = await _supabase
                         .from('teacher_profiles')
-                        .select('*')
+                        .select('full_name, avatar_url, qualifications, experience, state, district, about')
                         .eq('id', app.teacher_id)
                         .maybeSingle();
-                    teacherProf = tp;
+                    
+                    if(!tpErr) teacherProf = tp;
                 }
 
-                // Render Info
-                document.getElementById('candName').innerText = teacherProf ? (teacherProf.full_name || teacherProf.name || 'Registered Teacher') : 'Registered Teacher';
+                // Render Header & Avatar
+                const nameDisplay = (teacherProf && teacherProf.full_name) ? teacherProf.full_name : 'Registered Teacher';
+                document.getElementById('candName').innerText = nameDisplay;
+
+                if (teacherProf && teacherProf.avatar_url) {
+                    document.getElementById('avatarBox').innerHTML = `<img src="${teacherProf.avatar_url}" alt="Profile Photo" onError="this.parentElement.innerHTML='👨‍🏫'">`;
+                }
+
+                // Job Title Display
                 document.getElementById('candJobTitle').innerText = app.school_jobs ? `${app.school_jobs.subject} (${app.school_jobs.job_title})` : 'Applied Job Position';
-                document.getElementById('candQual').innerText = teacherProf ? (teacherProf.qualification || teacherProf.highest_qualification || 'N/A') : 'N/A';
-                document.getElementById('candExp').innerText = teacherProf ? `${teacherProf.experience_years || teacherProf.experience || 0} Years` : 'N/A';
+
+                // Grid Details
+                document.getElementById('candQual').innerText = teacherProf ? (teacherProf.qualifications || 'N/A') : 'N/A';
+                document.getElementById('candExp').innerText = teacherProf ? `${teacherProf.experience || 0} Years` : '0 Years';
                 document.getElementById('candState').innerText = teacherProf ? (teacherProf.state || 'N/A') : 'N/A';
                 document.getElementById('candDist').innerText = teacherProf ? (teacherProf.district || 'N/A') : 'N/A';
-                document.getElementById('candAppliedAt').innerText = app.applied_at ? new Date(app.applied_at).toLocaleDateString('en-IN') : 'N/A';
+                
+                const appDate = app.applied_at ? new Date(app.applied_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
+                document.getElementById('candAppliedAt').innerText = appDate;
                 
                 const curSt = app.employer_status || app.application_status || 'pending';
                 document.getElementById('candStatus').innerText = curSt.toUpperCase().replace('_', ' ');
 
-                // Display Cover Letter
-                if (app.cover_letter) {
-                    document.getElementById('candCover').innerText = app.cover_letter;
+                // Cover Letter / About Text
+                let coverText = app.cover_letter || '';
+                if (teacherProf && teacherProf.about) {
+                    coverText += `\n\n[About Teacher]: ${teacherProf.about}`;
                 }
+                document.getElementById('candCover').innerText = coverText.trim() || 'No additional notes provided.';
 
-                // 3. Render Demo Video Player (Check demo_video_url or cover_letter fallback)
+                // 3. Render Demo Video Section (Check demo_video_url or cover_letter fallback)
                 let rawVideoUrl = app.demo_video_url;
                 if (!rawVideoUrl && app.cover_letter && app.cover_letter.includes("Demo Video:")) {
                     rawVideoUrl = app.cover_letter.replace("Demo Video:", "").trim();
@@ -157,7 +183,6 @@
                     const playerArea = document.getElementById('videoPlayerArea');
                     demoSec.style.display = 'block';
 
-                    // Check if YouTube Link
                     if (rawVideoUrl.includes('youtube.com') || rawVideoUrl.includes('youtu.be')) {
                         let embedUrl = rawVideoUrl;
                         if(rawVideoUrl.includes('watch?v=')) {
@@ -171,10 +196,9 @@
                             </div>
                         `;
                     } else {
-                        // Google Drive / Direct URL Link Fallback
                         playerArea.innerHTML = `
                             <div style="background:#1e293b; padding:15px; border-radius:6px; text-align:center;">
-                                <p style="margin-bottom:10px; color:#cbd5e1;">📹 Teacher Submitted Video Link:</p>
+                                <p style="margin-bottom:10px; color:#cbd5e1;">📹 Teacher Submitted Demo Link:</p>
                                 <a href="${rawVideoUrl}" target="_blank" style="color:#38bdf8; font-weight:bold; word-break:break-all;">${rawVideoUrl}</a>
                             </div>
                         `;
@@ -182,7 +206,7 @@
                 }
 
             } catch (err) {
-                console.error("Applicant Load Error:", err.message);
+                console.error("Applicant Load Failure:", err.message);
                 alert("డేటా లోడ్ చేయడంలో లోపం జరిగింది: " + err.message);
             }
         }
@@ -199,7 +223,7 @@
 
                 if (error) throw error;
 
-                alert(`✅ Status Updated to ${newStatus.toUpperCase()}`);
+                alert(`✅ Application Status Updated to: ${newStatus.toUpperCase().replace('_', ' ')}`);
                 window.location.reload();
 
             } catch (err) {
@@ -211,3 +235,4 @@
     </script>
 </body>
 </html>
+
