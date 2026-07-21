@@ -204,7 +204,7 @@
                 // ఫోటో అప్‌డేట్
                 const avatarBox = document.getElementById('avatar-container');
                 if (tProfile.photo_url) {
-                    avatarBox.innerHTML = `<img src="${tProfile.photo_url}" alt="Teacher Photo">`;
+                    avatarBox.innerHTML = `<img src="${tProfile.avatar_url}" alt="Teacher Photo">`;
                 } else {
                     avatarBox.innerHTML = tProfile.full_name ? tProfile.full_name.charAt(0) : 'T';
                 }
