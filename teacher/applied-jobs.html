@@ -121,8 +121,8 @@
             if (app.school_job_id) {
                 // Step 2: school_job_id నుండి జాబ్ వివరాలు మరియు school_id లాగడం
                 const { data: jobData } = await _supabase
-                    .from('jobs') // లేదా మీ టేబుల్ పేరు 'school_jobs' అయితే అది ఇవ్వండి
-                    .select('subject, school_id') 
+                    .from('school_jobs') // లేదా మీ టేబుల్ పేరు 'school_jobs' అయితే అది ఇవ్వండి
+                    .select('subject, school.id') 
                     .eq('id', app.school_job_id)
                     .single();
                 
