@@ -277,7 +277,7 @@
                 const { error } = await _supabase
                     .from('job_applications')
                     .update({ 
-                        cover_letter: `Demo Video: ${linkInput}`,
+                        demo_video_url: `Demo Video: ${linkInput}`,
                         updated_at: new Date().toISOString()
                     })
                     .eq('id', currentAppId);
