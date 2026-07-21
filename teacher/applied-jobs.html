@@ -95,11 +95,12 @@
         // 🔗 Supabase Join Query via foreign keys to grab job info dynamically
                 // 🔗 Two-Step Grid Query Engine (Assures no Schema Cache Relation Outage)
                 // 🔗 3-Step Live Relational Engine
+                // 🔗 3-Step Live Relational Engine (Synced with public.school_profiles Schema)
         async function loadAppliedJobsLedger() {
             const gridBody = document.getElementById('applicationsGridBody');
             
             try {
-                // Step 1: teacher_id ఆధారంగా job_applications నుండి డేటా లాగడం
+                // Step 1: teacher_id ఆధారంగా job_applications నుండి వివరాలు లాగడం
                 const { data: apps, error: appError } = await _supabase
                     .from('job_applications')
                     .select('id, school_job_id, application_status, employer_status, applied_at')
@@ -119,7 +120,7 @@
                     let schoolName = "School Institution";
                     let subjectDisplay = "General";
 
-                    // Step 2: school_job_id ఆధారంగా school_jobs టేబుల్ నుండి జాబ్ & స్కూల్ ఐడీ లాగడం
+                    // Step 2: school_job_id ఆధారంగా school_jobs టేబుల్ నుండి వివరాలు లాగడం
                     if (app.school_job_id) {
                         const { data: jobData } = await _supabase
                             .from('school_jobs')
@@ -128,16 +129,26 @@
                             .single();
                         
                         if (jobData) {
-                            // subject మరియు job_title ని కలిపి చూపించడం (e.g., Chemistry - Junior Lecturer)
                             subjectDisplay = jobData.subject ? `${jobData.subject} (${jobData.job_title || ''})` : (jobData.job_title || "General");
 
-                            // Step 3: school_id ఆధారంగా school_profiles టేబుల్ నుండి స్కూల్ నేమ్ లాగడం
+                            // Step 3: 'school_profiles' టేబుల్ నుండి school_name లాగడం 🎯
                             if (jobData.school_id) {
-                                const { data: schoolProf } = await _supabase
+                                // Try 1: By primary key 'id'
+                                let { data: schoolProf } = await _supabase
                                     .from('school_profiles')
                                     .select('school_name')
                                     .eq('id', jobData.school_id)
-                                    .single();
+                                    .maybeSingle();
+
+                                // Try 2: By 'auth_id' (If school_id was saved as auth_id)
+                                if (!schoolProf) {
+                                    const { data: schoolProfAuth } = await _supabase
+                                        .from('school_profiles')
+                                        .select('school_name')
+                                        .eq('auth_id', jobData.school_id)
+                                        .maybeSingle();
+                                    schoolProf = schoolProfAuth;
+                                }
 
                                 if (schoolProf && schoolProf.school_name) {
                                     schoolName = schoolProf.school_name;
@@ -153,10 +164,10 @@
                         formattedDate = dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
                     }
 
-                    // Status Determination (employer_status లేదా application_status)
+                    // Status Determination
                     const currentStatus = app.employer_status || app.application_status || "pending";
 
-                    // Status Badge Mapping Rules
+                    // Status Badge Mapping
                     let badgeClass = "st-applied";
                     const statusLower = currentStatus.toLowerCase();
                     if(statusLower.includes("view")) badgeClass = "st-viewed";
@@ -184,6 +195,7 @@
                 gridBody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color:#ef4444;">Ledger Sync Outage: ${err.message}</td></tr>`;
             }
         }
+
 
 
         document.getElementById('logout-btn').addEventListener('click', async (e) => {
