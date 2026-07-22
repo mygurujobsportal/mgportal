@@ -137,138 +137,160 @@
     <script>
                 let currentAppId = null;
 
-        async function loadApplicantDetails() {
-            const urlParams = new URLSearchParams(window.location.search);
-            currentAppId = urlParams.get('app_id') || urlParams.get('id');
+async function loadApplicantDetails() {
+    const urlParams = new URLSearchParams(window.location.search);
+    currentAppId = urlParams.get('app_id') || urlParams.get('id');
 
-            if (!currentAppId) {
-                alert("అప్లికెంట్ ఐడీ దొరకలేదు!");
-                window.location.href = "applicants.html";
-                return;
-            }
+    if (!currentAppId) {
+        alert("అప్లికెంట్ ఐడీ దొరకలేదు!");
+        window.location.href = "applicants.html";
+        return;
+    }
 
-            try {
-                // 1. Fetch Application Record
-                const { data: app, error: appErr } = await _supabase
-                    .from('job_applications')
-                    .select(`
-                        id,
-                        teacher_id,
-                        application_status,
-                        employer_status,
-                        applied_at,
-                        cover_letter,
-                        demo_video_url,
-                        school_jobs (
-                            job_title,
-                            subject
-                        )
-                    `)
-                    .eq('id', currentAppId)
-                    .single();
+    try {
+        // 1. Fetch Application Record
+        const { data: app, error: appErr } = await _supabase
+            .from('job_applications')
+            .select(`
+                id,
+                teacher_id,
+                application_status,
+                employer_status,
+                applied_at,
+                cover_letter,
+                demo_video_url,
+                school_jobs (
+                    job_title,
+                    subject
+                )
+            `)
+            .eq('id', currentAppId)
+            .single();
 
-                if (appErr) throw appErr;
+        if (appErr) throw appErr;
 
-                // 2. Fetch Teacher Profile safely using teacher_id
-                let teacherProf = null;
-                if (app.teacher_id) {
-                    const { data: tp } = await _supabase
-                        .from('teacher_profiles')
-                        .select('full_name, avatar_url, qualifications, experience, state, district, about')
-                        .eq('id', app.teacher_id)
-                        .maybeSingle();
-                    
-                    teacherProf = tp;
-                }
+        // 2. Fetch Teacher Profile (Safely mapped with avatar_url)
+        let teacherProf = null;
+        if (app.teacher_id) {
+            const { data: tp, error: tpErr } = await _supabase
+                .from('teacher_profiles')
+                .select('*')
+                .eq('id', app.teacher_id)
+                .maybeSingle();
+            
+            if (!tpErr) teacherProf = tp;
+        }
 
-                // 3. Render Name and Photo safely
-                const tName = (teacherProf && teacherProf.full_name) ? teacherProf.full_name : 'Registered Teacher';
-                document.getElementById('candName').innerText = tName;
+        // 3. Bind UI Elements safely
+        const candNameElem = document.getElementById('candName');
+        if (candNameElem) {
+            candNameElem.innerText = (teacherProf && teacherProf.full_name) ? teacherProf.full_name : 'Registered Teacher';
+        }
 
-                if (teacherProf && teacherProf.avatar_url) {
-                    document.getElementById('avatarBox').innerHTML = `<img src="${teacherProf.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="Teacher Photo">`;
-                } else {
-                    document.getElementById('avatarBox').innerHTML = `👨‍🏫`;
-                }
-
-                // Render Job & Qualifications
-                document.getElementById('candJobTitle').innerText = app.school_jobs ? `${app.school_jobs.subject} (${app.school_jobs.job_title})` : 'Applied Job';
-                document.getElementById('candQual').innerText = teacherProf ? (teacherProf.qualifications || 'N/A') : 'N/A';
-                document.getElementById('candExp').innerText = teacherProf ? `${teacherProf.experience || 0} Years` : '0 Years';
-                document.getElementById('candState').innerText = teacherProf ? (teacherProf.state || 'N/A') : 'N/A';
-                document.getElementById('candDist').innerText = teacherProf ? (teacherProf.district || 'N/A') : 'N/A';
-                
-                const appDate = app.applied_at ? new Date(app.applied_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
-                document.getElementById('candAppliedAt').innerText = appDate;
-                
-                const currentStatus = app.employer_status || app.application_status || 'pending';
-                document.getElementById('candStatus').innerText = currentStatus.toUpperCase().replace('_', ' ');
-
-                // 4. In-App Embedded Video Player Handling 🎥
-                let videoUrl = app.demo_video_url;
-                if (!videoUrl && app.cover_letter && app.cover_letter.includes("Demo Video:")) {
-                    videoUrl = app.cover_letter.replace("Demo Video:", "").trim();
-                }
-
-                if (videoUrl) {
-                    const demoSec = document.getElementById('demoVideoDisplay');
-                    const playerArea = document.getElementById('videoPlayerArea');
-                    demoSec.style.display = 'block';
-
-                    let embedIframe = '';
-                    if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
-                        let embedUrl = videoUrl;
-                        if(videoUrl.includes('watch?v=')) {
-                            embedUrl = videoUrl.replace('watch?v=', 'embed/');
-                        } else if(videoUrl.includes('youtu.be/')) {
-                            embedUrl = videoUrl.replace('youtu.be/', 'youtube.com/embed/');
-                        }
-                        embedIframe = `<iframe src="${embedUrl}?rel=0&modestbranding=1" style="width:100%; height:315px; border:0; border-radius:8px;" allowfullscreen></iframe>`;
-                    } else {
-                        embedIframe = `<a href="${videoUrl}" target="_blank" style="color:#38bdf8; font-weight:bold;">▶️ Open External Video Link</a>`;
-                    }
-
-                    playerArea.innerHTML = `
-                        <button onclick="toggleVideoPlayer()" style="background:#f59e0b; color:#000; font-weight:bold; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; margin-bottom:10px;">
-                            ▶️ Watch Demo Video
-                        </button>
-                        <div id="videoContainerBox" style="display:none; margin-top:10px;">
-                            ${embedIframe}
-                        </div>
-                    `;
-                }
-
-            } catch (err) {
-                console.error("Fetch Error:", err.message);
+        const avatarBox = document.getElementById('avatarBox');
+        if (avatarBox) {
+            if (teacherProf && teacherProf.avatar_url) {
+                avatarBox.innerHTML = `<img src="${teacherProf.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="Teacher Photo">`;
+            } else {
+                avatarBox.innerHTML = `👨‍🏫`;
             }
         }
 
-        function toggleVideoPlayer() {
-            const box = document.getElementById('videoContainerBox');
-            if (box) {
-                box.style.display = box.style.display === 'none' ? 'block' : 'none';
-            }
+        if (document.getElementById('candJobTitle')) {
+            document.getElementById('candJobTitle').innerText = app.school_jobs ? `${app.school_jobs.subject || ''} (${app.school_jobs.job_title || ''})` : 'Applied Position';
+        }
+        if (document.getElementById('candQual')) {
+            document.getElementById('candQual').innerText = teacherProf ? (teacherProf.qualifications || 'N/A') : 'N/A';
+        }
+        if (document.getElementById('candExp')) {
+            document.getElementById('candExp').innerText = teacherProf ? `${teacherProf.experience || 0} Years` : '0 Years';
+        }
+        if (document.getElementById('candState')) {
+            document.getElementById('candState').innerText = teacherProf ? (teacherProf.state || 'N/A') : 'N/A';
+        }
+        if (document.getElementById('candDist')) {
+            document.getElementById('candDist').innerText = teacherProf ? (teacherProf.district || 'N/A') : 'N/A';
+        }
+        if (document.getElementById('candAppliedAt')) {
+            document.getElementById('candAppliedAt').innerText = app.applied_at ? new Date(app.applied_at).toLocaleDateString('en-IN') : 'N/A';
+        }
+        if (document.getElementById('candStatus')) {
+            const st = app.employer_status || app.application_status || 'pending';
+            document.getElementById('candStatus').innerText = st.toUpperCase().replace('_', ' ');
+        }
+        if (document.getElementById('candCover')) {
+            document.getElementById('candCover').innerText = app.cover_letter || 'No cover letter provided.';
         }
 
-        async function updateAppStatus(newStatus) {
-            try {
-                const { error } = await _supabase
-                    .from('job_applications')
-                    .update({ 
-                        employer_status: newStatus,
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('id', currentAppId);
-
-                if (error) throw error;
-
-                alert(`✅ Application Status Updated to: ${newStatus.toUpperCase().replace('_', ' ')}`);
-                window.location.reload();
-
-            } catch (err) {
-                alert("Status Update Failed: " + err.message);
-            }
+        // 4. Embedded Demo Video Toggle Button
+        let videoUrl = app.demo_video_url;
+        if (!videoUrl && app.cover_letter && app.cover_letter.includes("Demo Video:")) {
+            videoUrl = app.cover_letter.replace("Demo Video:", "").trim();
         }
+
+        const demoSec = document.getElementById('demoVideoDisplay');
+        const playerArea = document.getElementById('videoPlayerArea');
+
+        if (videoUrl && demoSec && playerArea) {
+            demoSec.style.display = 'block';
+
+            let embedIframe = '';
+            if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+                let embedUrl = videoUrl;
+                if(videoUrl.includes('watch?v=')) {
+                    embedUrl = videoUrl.replace('watch?v=', 'embed/');
+                } else if(videoUrl.includes('youtu.be/')) {
+                    embedUrl = videoUrl.replace('youtu.be/', 'youtube.com/embed/');
+                }
+                embedIframe = `<iframe src="${embedUrl}?rel=0&modestbranding=1" style="width:100%; height:300px; border:0; border-radius:8px;" allowfullscreen></iframe>`;
+            } else {
+                embedIframe = `<a href="${videoUrl}" target="_blank" style="color:#38bdf8; font-weight:bold; word-break:break-all;">▶️ Open External Video Link</a>`;
+            }
+
+            playerArea.innerHTML = `
+                <button type="button" onclick="toggleVideoPlayer()" style="background:#f59e0b; color:#000; font-weight:bold; border:none; padding:10px 18px; border-radius:6px; cursor:pointer; margin-bottom:10px;">
+                    ▶️ Watch Demo Video
+                </button>
+                <div id="videoContainerBox" style="display:none; margin-top:10px;">
+                    ${embedIframe}
+                </div>
+            `;
+        }
+
+    } catch (err) {
+        console.error("Fetch Error:", err.message);
+    }
+}
+
+function toggleVideoPlayer() {
+    const box = document.getElementById('videoContainerBox');
+    if (box) {
+        box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    }
+}
+
+async function updateAppStatus(newStatus) {
+    try {
+        const { error } = await _supabase
+            .from('job_applications')
+            .update({ 
+                employer_status: newStatus,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', currentAppId);
+
+        if (error) throw error;
+
+        alert(`✅ Status Updated to: ${newStatus.toUpperCase().replace('_', ' ')}`);
+        window.location.reload();
+
+    } catch (err) {
+        alert("Status Update Failed: " + err.message);
+    }
+}
+
+window.onload = loadApplicantDetails;
+
 
         window.onload = loadApplicantDetails;
 
