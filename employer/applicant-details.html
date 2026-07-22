@@ -25,11 +25,12 @@
         .demo-video-box h4 { margin: 0 0 10px 0; color: #f59e0b; font-size: 15px; }
 
         .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 25px; }
-        .btn-act { width: 100%; padding: 12px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; color: #fff; font-size: 14px; }
+        .btn-act { width: 100%; padding: 12px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; color: #fff; font-size: 14px; transition: 0.2s; }
         .btn-reject { background: #ef4444; }
         .btn-shortlist { background: #3b82f6; }
         .btn-demo { background: #f59e0b; color: #000; }
         .btn-select { background: #10b981; }
+        .btn-act:hover { opacity: 0.9; }
 
         .privacy-notice { background: rgba(56, 189, 248, 0.08); border: 1px dashed #38bdf8; padding: 12px; border-radius: 6px; font-size: 12px; color: #7dd3fc; margin-bottom: 20px; }
     </style>
@@ -132,7 +133,7 @@
                     teacherProf = tp;
                 }
 
-                // 3. Populate HTML Elements Safely
+                // 3. Populate Basic Info
                 document.getElementById('candName').innerText = (teacherProf && teacherProf.full_name) ? teacherProf.full_name : 'Registered Teacher';
                 
                 if (teacherProf && teacherProf.avatar_url) {
@@ -150,47 +151,66 @@
                 
                 const st = app.employer_status || app.application_status || 'pending';
                 document.getElementById('candStatus').innerText = st.toUpperCase().replace('_', ' ');
-                
-                document.getElementById('candCover').innerText = app.cover_letter || 'No additional notes provided.';
 
-                // 4. Demo Video Button & Player Logic
-                let videoUrl = app.demo_video_url;
-                if (!videoUrl && app.cover_letter && app.cover_letter.includes("Demo Video:")) {
-                    videoUrl = app.cover_letter.replace("Demo Video:", "").trim();
+                // 4. Handle Demo Video Link & Filter Cover Letter Display
+                let rawVideoUrl = app.demo_video_url || '';
+                let rawCover = app.cover_letter || '';
+
+                if (!rawVideoUrl && rawCover.includes("Demo Video:")) {
+                    const splitParts = rawCover.split("Demo Video:");
+                    rawVideoUrl = splitParts[1] ? splitParts[1].trim() : '';
+                    rawCover = splitParts[0].trim();
                 }
 
-                if (videoUrl) {
+                // Clean URL strings out of Cover Letter text
+                if (rawCover.includes("Demo Video:")) {
+                    rawCover = rawCover.replace(/Demo Video:.*$/gi, '').trim();
+                }
+
+                document.getElementById('candCover').innerText = rawCover || 'No cover letter provided.';
+
+                // 5. Render Responsive Video Player 🎥
+                if (rawVideoUrl) {
                     const demoSec = document.getElementById('demoVideoDisplay');
                     const playerArea = document.getElementById('videoPlayerArea');
                     demoSec.style.display = 'block';
 
-                    let embedIframe = '';
-                    if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
-                        let embedUrl = videoUrl;
-                        if(videoUrl.includes('watch?v=')) {
-                            embedUrl = videoUrl.replace('watch?v=', 'embed/');
-                        } else if(videoUrl.includes('youtu.be/')) {
-                            embedUrl = videoUrl.replace('youtu.be/', 'youtube.com/embed/');
-                        }
-                        embedIframe = `<iframe src="${embedUrl}?rel=0&modestbranding=1" style="width:100%; height:300px; border:0; border-radius:8px;" allowfullscreen></iframe>`;
-                    } else {
-                        embedIframe = `<a href="${videoUrl}" target="_blank" style="color:#38bdf8; font-weight:bold;">▶️ Open External Video Link</a>`;
-                    }
+                    const ytId = extractYouTubeId(rawVideoUrl);
 
-                    playerArea.innerHTML = `
-                        <button type="button" onclick="toggleVideoPlayer()" style="background:#f59e0b; color:#000; font-weight:bold; border:none; padding:10px 18px; border-radius:6px; cursor:pointer; margin-bottom:10px;">
-                            ▶️ Watch Demo Video
-                        </button>
-                        <div id="videoContainerBox" style="display:none; margin-top:10px;">
-                            ${embedIframe}
-                        </div>
-                    `;
+                    if (ytId) {
+                        playerArea.innerHTML = `
+                            <button type="button" onclick="toggleVideoPlayer()" style="background:#f59e0b; color:#000; font-weight:bold; border:none; padding:12px 20px; border-radius:6px; cursor:pointer; width:100%; font-size:14px;">
+                                ▶️ Watch Demo Video
+                            </button>
+                            <div id="videoContainerBox" style="display:none; margin-top:15px; position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:8px; background:#000;">
+                                <iframe src="https://www.youtube.com/embed/${ytId}?rel=0&modestbranding=1&controls=1" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;" allowfullscreen></iframe>
+                            </div>
+                        `;
+                    } else {
+                        // Drive/External Link Embed Fallback
+                        playerArea.innerHTML = `
+                            <button type="button" onclick="toggleVideoPlayer()" style="background:#f59e0b; color:#000; font-weight:bold; border:none; padding:12px 20px; border-radius:6px; cursor:pointer; width:100%; font-size:14px;">
+                                ▶️ Watch Demo Video
+                            </button>
+                            <div id="videoContainerBox" style="display:none; margin-top:15px;">
+                                <iframe src="${rawVideoUrl.replace('/view', '/preview')}" style="width:100%; height:320px; border:0; border-radius:8px;" allowfullscreen></iframe>
+                            </div>
+                        `;
+                    }
                 }
 
             } catch (err) {
                 console.error("Fetch Error:", err);
                 alert("డేటా లోడ్ చేయడం సాధ్యపడలేదు: " + err.message);
             }
+        }
+
+        // Safe YouTube Video ID Extractor Regex
+        function extractYouTubeId(url) {
+            if (!url) return null;
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
         }
 
         function toggleVideoPlayer() {
