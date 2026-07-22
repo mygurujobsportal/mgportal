@@ -87,7 +87,7 @@
 
     <script src="../js/supabase.js"></script>
     <script>
-        let currentAppId = null;
+                let currentAppId = null;
 
         async function loadApplicantDetails() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -121,19 +121,32 @@
 
                 if (appErr) throw appErr;
 
-                // 2. Fetch Teacher Profile details separately
+                // 2. Dual-Query Fallback to Fetch Teacher Profile Safely 🎯
                 let teacherProf = null;
+
                 if (app.teacher_id) {
-                    const { data: tp } = await _supabase
+                    // Try Query 1: Search by Primary Key 'id'
+                    let { data: tp1 } = await _supabase
                         .from('teacher_profiles')
                         .select('full_name, avatar_url, qualifications, experience, state, district, about')
                         .eq('id', app.teacher_id)
                         .maybeSingle();
-                    
-                    teacherProf = tp;
+
+                    if (tp1) {
+                        teacherProf = tp1;
+                    } else {
+                        // Try Query 2: Search by Foreign Key 'auth_id' (If app.teacher_id stored auth_id)
+                        let { data: tp2 } = await _supabase
+                            .from('teacher_profiles')
+                            .select('full_name, avatar_url, qualifications, experience, state, district, about')
+                            .eq('auth_id', app.teacher_id)
+                            .maybeSingle();
+                        
+                        if (tp2) teacherProf = tp2;
+                    }
                 }
 
-                // 3. Populate Basic Info
+                // 3. Render Profile Info & Avatar
                 document.getElementById('candName').innerText = (teacherProf && teacherProf.full_name) ? teacherProf.full_name : 'Registered Teacher';
                 
                 if (teacherProf && teacherProf.avatar_url) {
@@ -144,7 +157,7 @@
 
                 document.getElementById('candJobTitle').innerText = app.school_jobs ? `${app.school_jobs.subject || ''} (${app.school_jobs.job_title || ''})` : 'Applied Job';
                 document.getElementById('candQual').innerText = teacherProf ? (teacherProf.qualifications || 'N/A') : 'N/A';
-                document.getElementById('candExp').innerText = teacherProf ? `${teacherProf.experience || 0} Years` : '0 Years';
+                document.getElementById('candExp').innerText = (teacherProf && teacherProf.experience !== null) ? `${teacherProf.experience} Years` : '0 Years';
                 document.getElementById('candState').innerText = teacherProf ? (teacherProf.state || 'N/A') : 'N/A';
                 document.getElementById('candDist').innerText = teacherProf ? (teacherProf.district || 'N/A') : 'N/A';
                 document.getElementById('candAppliedAt').innerText = app.applied_at ? new Date(app.applied_at).toLocaleDateString('en-IN') : 'N/A';
@@ -152,24 +165,12 @@
                 const st = app.employer_status || app.application_status || 'pending';
                 document.getElementById('candStatus').innerText = st.toUpperCase().replace('_', ' ');
 
-                // 4. Handle Demo Video Link & Filter Cover Letter Display
-                let rawVideoUrl = app.demo_video_url || '';
-                let rawCover = app.cover_letter || '';
-
-                if (!rawVideoUrl && rawCover.includes("Demo Video:")) {
-                    const splitParts = rawCover.split("Demo Video:");
-                    rawVideoUrl = splitParts[1] ? splitParts[1].trim() : '';
-                    rawCover = splitParts[0].trim();
-                }
-
-                // Clean URL strings out of Cover Letter text
-                if (rawCover.includes("Demo Video:")) {
-                    rawCover = rawCover.replace(/Demo Video:.*$/gi, '').trim();
-                }
-
-                document.getElementById('candCover').innerText = rawCover || 'No cover letter provided.';
+                // 4. Clean Cover Letter Text Display
+                document.getElementById('candCover').innerText = app.cover_letter || 'No cover letter provided.';
 
                 // 5. Render Responsive Video Player 🎥
+                let rawVideoUrl = app.demo_video_url || '';
+
                 if (rawVideoUrl) {
                     const demoSec = document.getElementById('demoVideoDisplay');
                     const playerArea = document.getElementById('videoPlayerArea');
@@ -187,7 +188,6 @@
                             </div>
                         `;
                     } else {
-                        // Drive/External Link Embed Fallback
                         playerArea.innerHTML = `
                             <button type="button" onclick="toggleVideoPlayer()" style="background:#f59e0b; color:#000; font-weight:bold; border:none; padding:12px 20px; border-radius:6px; cursor:pointer; width:100%; font-size:14px;">
                                 ▶️ Watch Demo Video
@@ -205,7 +205,6 @@
             }
         }
 
-        // Safe YouTube Video ID Extractor Regex
         function extractYouTubeId(url) {
             if (!url) return null;
             const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
@@ -241,6 +240,7 @@
         }
 
         window.onload = loadApplicantDetails;
+
     </script>
 </body>
 </html>
