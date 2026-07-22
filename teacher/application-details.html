@@ -157,36 +157,25 @@
             try {
                 // Fetch Application Details
                 const { data: app, error } = await _supabase
-    .from('job_applications')
-    .select(`
-        id,
-        application_status,
-        employer_status,
-        applied_at,
-        cover_letter,
-        demo_video_url,
-        school_jobs ( ... )
-    `)
-    .eq('id', currentAppId)
-    .single();
-
-// 2. Demo Check Logic
-if (currentStatus.includes('demo')) {
-    demoCard.style.display = 'block';
-
-    // ఒకవేళ ఆల్రెడీ demo_video_url లో లింక్ ఉంటే 🔒
-    if (app.demo_video_url) {
-        demoCard.style.borderColor = "#10b981";
-        demoCard.innerHTML = `
-            <h3 style="color: #10b981;">✅ Demo Video Submitted</h3>
-            <p style="color: #cbd5e1; font-size: 14px; margin-bottom: 10px;">మీరు డెమో వీడియోను విజయవంతంగా సమర్పించారు. స్కూల్ యాజమాన్యం దీనిని పరిశీలిస్తోంది.</p>
-            <div style="background: #1e293b; padding: 12px; border-radius: 6px; border: 1px solid #334155; word-break: break-all;">
-                <strong style="color: #38bdf8; font-size: 13px;">Submitted Link:</strong> 
-                <a href="${app.demo_video_url}" target="_blank" style="color: #f59e0b; text-decoration: underline; font-size: 13px; margin-left: 5px;">${app.demo_video_url}</a>
-            </div>
-        `;
-    } else { ... }
-}
+                    .from('job_applications')
+                    .select(`
+                        id,
+                        application_status,
+                        employer_status,
+                        applied_at,
+                        cover_letter,
+                        school_jobs (
+                            job_title,
+                            subject,
+                            district,
+                            management_type,
+                            school_profiles (
+                                school_name
+                            )
+                        )
+                    `)
+                    .eq('id', currentAppId)
+                    .single();
 
                 if (error) throw error;
 
@@ -269,14 +258,29 @@ if (currentStatus.includes('demo')) {
             }
         }
 
-        // Update demo_video_url column in job_applications
-const { error } = await _supabase
-    .from('job_applications')
-    .update({ 
-        demo_video_url: linkInput,
-        updated_at: new Date().toISOString()
-    })
-    .eq('id', currentAppId);
+        async function submitDemoVideoLink() {
+            const linkInput = document.getElementById('demoVideoUrl').value.trim();
+
+            if (!linkInput) {
+                alert("⚠️ దయచేసి వీడియో లింక్‌ను నమోదు చేయండి!");
+                return;
+            }
+
+            // Regex Check for Phone Numbers
+            const phoneRegex = /[6-9]\d{9}/;
+            if (phoneRegex.test(linkInput)) {
+                alert("⚠️ నిబంధనల ఉల్లంఘన: మీ లింక్ టెక్స్ట్‌లో ఫోన్ నంబర్ ఉంది!");
+                return;
+            }
+
+            try {
+                const { error } = await _supabase
+                    .from('job_applications')
+                    .update({ 
+                        cover_letter: `Demo Video: ${linkInput}`,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', currentAppId);
 
                 if (error) throw error;
 
