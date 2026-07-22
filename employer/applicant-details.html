@@ -135,162 +135,143 @@
     <script src="../js/supabase.js"></script>
     <script src="../js/auth.js"></script>
     <script>
-        let currentEmployerId = null;
-        let activeApplicationId = null;
+                let currentAppId = null;
 
-        async function initApplicantDetailsPage() {
-            const session = await checkLiveUserSession('School');
-            if (!session) return;
-
-            currentEmployerId = session.id;
-
+        async function loadApplicantDetails() {
             const urlParams = new URLSearchParams(window.location.search);
-            activeApplicationId = urlParams.get('app_id');
+            currentAppId = urlParams.get('app_id') || urlParams.get('id');
 
-            if (!activeApplicationId) {
-                alert("Invalid Application Scope Context.");
+            if (!currentAppId) {
+                alert("అప్లికెంట్ ఐడీ దొరకలేదు!");
                 window.location.href = "applicants.html";
                 return;
             }
 
-            await loadFullCandidatePayload();
-        }
-
-        async function loadFullCandidatePayload() {
             try {
-                // 🎯 1. మీ సరికొత్త స్కీమా కాలమ్స్ ఆధారంగా పక్కా Relational JOIN Query
-                const { data: app, error } = await _supabase
+                // 1. Fetch Application Record
+                const { data: app, error: appErr } = await _supabase
                     .from('job_applications')
                     .select(`
                         id,
-                        employer_status,
-                        cover_letter,
-                        application_type,
-                        school_job_id,
                         teacher_id,
-                        school_jobs ( job_title, school_id ),
-                        teacher_profiles ( full_name, avatar_url, gender, qualifications, subjects, experience, state, district, about, verification_badge )
+                        application_status,
+                        employer_status,
+                        applied_at,
+                        cover_letter,
+                        demo_video_url,
+                        school_jobs (
+                            job_title,
+                            subject
+                        )
                     `)
-                    .eq('id', activeApplicationId)
+                    .eq('id', currentAppId)
                     .single();
 
-                if (error) throw error;
-                if (!app) return;
+                if (appErr) throw appErr;
 
-                // 🌟 లోడ్ అయిన డేటాన్ని గ్లోబల్ విండో ఆబ్జెక్ట్ లో దాచడం
-                window.currentAppPayload = app;
-
-                // 🎯 2. 'status' బదులు 'employer_status' ని 'viewed' గా ఆటోమేటిక్ గా ట్రాక్ చేయడం
-                if (app.employer_status === 'pending') {
-                    await _supabase
-                        .from('job_applications')
-                        .update({ employer_status: 'viewed' })
-                        .eq('id', activeApplicationId);
+                // 2. Fetch Teacher Profile safely using teacher_id
+                let teacherProf = null;
+                if (app.teacher_id) {
+                    const { data: tp } = await _supabase
+                        .from('teacher_profiles')
+                        .select('full_name, avatar_url, qualifications, experience, state, district, about')
+                        .eq('id', app.teacher_id)
+                        .maybeSingle();
+                    
+                    teacherProf = tp;
                 }
 
-                // 🎯 3. సెక్యూరిటీ గేట్: 'school_id' కి మ్యాచ్ చేయడం
-                if (app.school_jobs.school_id !== currentEmployerId) {
-                    alert("Unauthorized Access Attempt.");
-                    window.location.href = "applicants.html";
-                    return;
+                // 3. Render Name and Photo safely
+                const tName = (teacherProf && teacherProf.full_name) ? teacherProf.full_name : 'Registered Teacher';
+                document.getElementById('candName').innerText = tName;
+
+                if (teacherProf && teacherProf.avatar_url) {
+                    document.getElementById('avatarBox').innerHTML = `<img src="${teacherProf.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="Teacher Photo">`;
+                } else {
+                    document.getElementById('avatarBox').innerHTML = `👨‍🏫`;
                 }
 
-                const tProfile = app.teacher_profiles || {};
-
-                // UI ఎలిమెంట్స్ బైండింగ్
-                document.getElementById('lblTeacherName').innerHTML = `${tProfile.full_name || 'Registered Teacher'} ${tProfile.verification_badge ? '<span style="color:#22c55e; margin-left:5px;">✓</span>' : ''}`;
-                document.getElementById('lblJobTitle').innerText = `Applied for: ${app.school_jobs.job_title || 'N/A'}`;
+                // Render Job & Qualifications
+                document.getElementById('candJobTitle').innerText = app.school_jobs ? `${app.school_jobs.subject} (${app.school_jobs.job_title})` : 'Applied Job';
+                document.getElementById('candQual').innerText = teacherProf ? (teacherProf.qualifications || 'N/A') : 'N/A';
+                document.getElementById('candExp').innerText = teacherProf ? `${teacherProf.experience || 0} Years` : '0 Years';
+                document.getElementById('candState').innerText = teacherProf ? (teacherProf.state || 'N/A') : 'N/A';
+                document.getElementById('candDist').innerText = teacherProf ? (teacherProf.district || 'N/A') : 'N/A';
                 
-                // ఫోటో అప్‌డేట్
-                const avatarBox = document.getElementById('avatar-container');
-                if (tProfile.photo_url) {
-                    avatarBox.innerHTML = `<img src="${tProfile.avatar_url}" alt="Teacher Photo">`;
-                } else {
-                    avatarBox.innerHTML = tProfile.full_name ? tProfile.full_name.charAt(0) : 'T';
+                const appDate = app.applied_at ? new Date(app.applied_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
+                document.getElementById('candAppliedAt').innerText = appDate;
+                
+                const currentStatus = app.employer_status || app.application_status || 'pending';
+                document.getElementById('candStatus').innerText = currentStatus.toUpperCase().replace('_', ' ');
+
+                // 4. In-App Embedded Video Player Handling 🎥
+                let videoUrl = app.demo_video_url;
+                if (!videoUrl && app.cover_letter && app.cover_letter.includes("Demo Video:")) {
+                    videoUrl = app.cover_letter.replace("Demo Video:", "").trim();
                 }
 
-                // స్టేటస్ స్టాంప్ అప్‌డేట్
-                const statusStamp = document.getElementById('lblCurrentStatus');
-                const empStatus = app.employer_status || 'pending';
-                statusStamp.innerText = empStatus;
-                if (empStatus === 'pending' || empStatus === 'viewed') statusStamp.style.background = '#ca8a04';
-                if (empStatus === 'shortlisted') statusStamp.style.background = '#3b82f6';
-                if (empStatus === 'selected') statusStamp.style.background = '#16a34a';
-                if (empStatus === 'rejected') statusStamp.style.background = '#dc2626';
+                if (videoUrl) {
+                    const demoSec = document.getElementById('demoVideoDisplay');
+                    const playerArea = document.getElementById('videoPlayerArea');
+                    demoSec.style.display = 'block';
 
-                // ప్రొఫైల్ డేటా మ్యాపింగ్ (experience_years బదులు experience కి మార్చాం)
-                document.getElementById('lblQual').innerText = tProfile.qualifications || 'N/A';
-                document.getElementById('lblExp').innerText = `${tProfile.experience || 0} Years`;
-                document.getElementById('lblState').innerText = tProfile.state || 'N/A';
-                document.getElementById('lblDistrict').innerText = tProfile.district || 'N/A';
-                document.getElementById('lblGender').innerText = tProfile.gender || 'N/A';
-                document.getElementById('lblAppType').innerText = app.application_type || 'General';
-                document.getElementById('lblAbout').innerText = tProfile.about || 'టీచర్ తన బయో అప్డేట్ చేయలేదు.';
-                document.getElementById('lblCoverLetter').innerText = app.cover_letter || 'ఎలాంటి ప్రత్యేక కవర్ లెటర్ పంపలేదు.';
-
-                // సబ్జెక్ట్స్ డిస్ప్లే
-                const subBox = document.getElementById('subjects-box');
-                subBox.innerHTML = "";
-                if (tProfile.subjects) {
-                    // సబ్జెక్ట్స్ కమా సెపరేటెడ్ స్ట్రింగ్ లేదా అరే ని హ్యాండిల్ చేయడం
-                    const subjectsArray = Array.isArray(tProfile.subjects) ? tProfile.subjects : tProfile.subjects.split(',');
-                    subjectsArray.forEach(sub => {
-                        if(sub.trim() !== "") {
-                            subBox.innerHTML += `<span class="pill-tag">${sub.trim()}</span>`;
+                    let embedIframe = '';
+                    if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+                        let embedUrl = videoUrl;
+                        if(videoUrl.includes('watch?v=')) {
+                            embedUrl = videoUrl.replace('watch?v=', 'embed/');
+                        } else if(videoUrl.includes('youtu.be/')) {
+                            embedUrl = videoUrl.replace('youtu.be/', 'youtube.com/embed/');
                         }
-                    });
-                } else {
-                    subBox.innerHTML = `<span class="pill-tag">General / All Subjects</span>`;
+                        embedIframe = `<iframe src="${embedUrl}?rel=0&modestbranding=1" style="width:100%; height:315px; border:0; border-radius:8px;" allowfullscreen></iframe>`;
+                    } else {
+                        embedIframe = `<a href="${videoUrl}" target="_blank" style="color:#38bdf8; font-weight:bold;">▶️ Open External Video Link</a>`;
+                    }
+
+                    playerArea.innerHTML = `
+                        <button onclick="toggleVideoPlayer()" style="background:#f59e0b; color:#000; font-weight:bold; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; margin-bottom:10px;">
+                            ▶️ Watch Demo Video
+                        </button>
+                        <div id="videoContainerBox" style="display:none; margin-top:10px;">
+                            ${embedIframe}
+                        </div>
+                    `;
                 }
 
             } catch (err) {
-                console.error("Payload Load Error:", err.message);
-                alert("డేటా లోడ్ చేయడంలో లోపం జరిగింది: " + err.message);
+                console.error("Fetch Error:", err.message);
             }
         }
 
-        // 📝 వర్క్‌ఫ్లో యాక్షన్స్ (Shortlist / Reject / Forward Letters)
-        async function processWorkflowAction(targetAction) {
-            try {
-                let updateData = {};
-                
-                if (targetAction === 'rejected') {
-                    if(!confirm("Are you sure you want to REJECT this candidate?")) return;
-                    updateData = { employer_status: 'rejected' };
-                } 
-                else if (targetAction === 'shortlisted') {
-                    if(!confirm("Shortlist this candidate for your recruitment pipeline?")) return;
-                    updateData = { employer_status: 'shortlisted' };
-                } 
-                else if (targetAction === 'selected') {
-                    // 🌟 మీ మేనేజ్డ్ ప్లాట్‌ఫామ్ వర్క్‌ఫ్లో: డెమో లేదా ఇంటర్వ్యూ లెటర్ సమాచారం సేకరించడం
-                    const letterMsg = prompt("టీచర్‌కు పంపించాల్సిన ఇంటర్వ్యూ/డెమో వివరాలు లేదా సెలెక్షన్ మెసేజ్ ఇక్కడ ఎంటర్ చేయండి (This will be routed via MyGuru):");
-                    if (!letterMsg) {
-                        alert("Action cancelled. Message content is mandatory.");
-                        return;
-                    }
-                    
-                    updateData = { employer_status: 'selected' };
-                    
-                    // 🎯 ఫ్యూచర్ పైప్‌లైన్ (Phase 4 Notification Router): ఇక్కడ మీ 'interview_letters' లేదా నోటిఫికేషన్ టేబుల్ ఇన్సర్షన్ లాజిక్ రాసుకోవచ్చు
-                    console.log("Letter Package Ready to Route via Platform:", letterMsg);
-                }
+        function toggleVideoPlayer() {
+            const box = document.getElementById('videoContainerBox');
+            if (box) {
+                box.style.display = box.style.display === 'none' ? 'block' : 'none';
+            }
+        }
 
-                // 🎯 4. job_applications టేబుల్‌లో 'employer_status' అప్‌డేట్ చేయడం
+        async function updateAppStatus(newStatus) {
+            try {
                 const { error } = await _supabase
                     .from('job_applications')
-                    .update(updateData)
-                    .eq('id', activeApplicationId);
+                    .update({ 
+                        employer_status: newStatus,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', currentAppId);
 
                 if (error) throw error;
 
-                alert(`✓ Success! Status updated to ${targetAction.toUpperCase()}. Notification packaged for the candidate.`);
-                await loadFullCandidatePayload(); // స్క్రీన్ రీఫ్రెష్
+                alert(`✅ Application Status Updated to: ${newStatus.toUpperCase().replace('_', ' ')}`);
+                window.location.reload();
 
             } catch (err) {
-                alert("Workflow Error: " + err.message);
+                alert("Status Update Failed: " + err.message);
             }
         }
+
+        window.onload = loadApplicantDetails;
+
 
         document.getElementById('logout-btn').addEventListener('click', async (e) => {
             e.preventDefault();
