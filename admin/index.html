@@ -24,7 +24,12 @@
         <button type="submit" id="loginBtn">Authorize & Access</button>
     </form>
 </div>
-
+<script>
+    // Admin Session Check
+    if (localStorage.getItem('adminLoggedIn') !== 'true') {
+        window.location.href = 'index.html';
+    }
+</script>
 <script>
     const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
     const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // మీ సుపాబేస్ Anon Key వేయండి
