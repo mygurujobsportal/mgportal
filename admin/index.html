@@ -133,59 +133,53 @@
     </div>
 
     <script src="../js/supabase.js"></script>
-    <script>
-        async function handleAdminLogin(e) {
-            e.preventDefault();
-            
-            const email = document.getElementById('adminEmail').value.trim();
-            const password = document.getElementById('adminPassword').value.trim();
-            const errorBox = document.getElementById('errorBox');
-            const loginBtn = document.getElementById('loginBtn');
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // Supabase Initialization (ప్రాజెక్ట్ డిటెయిల్స్)
+    const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co'; // మీ సుపాబేస్ URL
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // మీ సుపాబేస్ Anon Key ఇక్కడ వేయండి
 
-            errorBox.style.display = 'none';
-            loginBtn.innerText = 'Verifying...';
-            loginBtn.disabled = true;
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-            try {
-                // 1. Supabase Auth Login
-                const { data: authData, error: authError } = await _supabase.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
+    async function handleAdminLogin(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('adminEmail').value.trim();
+        const password = document.getElementById('adminPassword').value.trim();
+        const errorBox = document.getElementById('errorBox');
+        const loginBtn = document.getElementById('loginBtn');
 
-                if (authError) throw authError;
+        errorBox.style.display = 'none';
+        loginBtn.innerText = 'Verifying...';
+        loginBtn.disabled = true;
 
-                const userId = authData.user.id;
+        try {
+            // 1. Auth Login
+            const { data: authData, error: authError } = await _supabase.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
 
-                // 2. Fetch User Role
-                let { data: userData, error: userError } = await _supabase
-                    .from('common_users')
-                    .select('role')
-                    .eq('id', userId)
-                    .maybeSingle();
-
-                // 3. Auto-Fix: common_users లో రికార్డ్ లేకపోతే ఆటోమేటిక్‌గా అప్‌డేట్ చేస్తుంది
-                if (!userData || userData.role !== 'admin') {
-                    const { error: upsertError } = await _supabase
-                        .from('common_users')
-                        .upsert({ id: userId, role: 'admin' });
-
-                    if (upsertError) {
-                        throw new Error("Admin Role Auto-Fix Failed: " + upsertError.message);
-                    }
-                }
-
-                // 4. Direct Redirect to Dashboard
-                window.location.href = "dashboard.html";
-
-            } catch (err) {
-                console.error("Login Error:", err);
-                errorBox.innerText = err.message || "లాగిన్ విఫలమైంది!";
-                errorBox.style.display = 'block';
-                loginBtn.innerText = 'Authorize & Access Dashboard';
-                loginBtn.disabled = false;
+            if (authError) {
+                alert("❌ Auth Error: " + authError.message);
+                throw authError;
             }
+
+            alert("✅ Login Success! Redirecting to Dashboard...");
+
+            // 2. Direct Redirect
+            window.location.href = "dashboard.html";
+
+        } catch (err) {
+            console.error("Login Error:", err);
+            errorBox.innerText = err.message || "లాగిన్ విఫలమైంది!";
+            errorBox.style.display = 'block';
+            loginBtn.innerText = 'Authorize & Access Dashboard';
+            loginBtn.disabled = false;
         }
-    </script>
+    }
+</script>
+
+    
 </body>
 </html>
