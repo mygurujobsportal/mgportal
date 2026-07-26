@@ -3,183 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyGuru Portal - Admin Access Gate</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <title>MyGuru Portal - Admin Gate</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: #0f172a;
-            color: #fff;
-            font-family: system-ui, -apple-system, sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
-
-        .login-card {
-            width: 100%;
-            max-width: 400px;
-            background: #1e293b;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            border: 1px solid #334155;
-        }
-
-        .brand-header {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        .brand-header h2 {
-            margin: 0;
-            color: #f59e0b;
-            font-size: 22px;
-            letter-spacing: 0.5px;
-        }
-
-        .brand-header p {
-            margin: 5px 0 0 0;
-            color: #94a3b8;
-            font-size: 12px;
-            text-transform: uppercase;
-            font-weight: bold;
-        }
-
-        .form-group {
-            margin-bottom: 18px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 12px;
-            color: #cbd5e1;
-            margin-bottom: 6px;
-            font-weight: 600;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid #334155;
-            background: #0f172a;
-            color: #fff;
-            font-size: 14px;
-            box-sizing: border-box;
-            outline: none;
-        }
-
-        .form-group input:focus {
-            border-color: #38bdf8;
-        }
-
-        .btn-login {
-            width: 100%;
-            padding: 12px;
-            background: #f59e0b;
-            color: #000;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 15px;
-            cursor: pointer;
-            transition: 0.2s;
-            margin-top: 10px;
-        }
-
-        .btn-login:hover {
-            background: #d97706;
-        }
-
-        .error-box {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid #ef4444;
-            color: #fca5a5;
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 13px;
-            margin-bottom: 15px;
-            display: none;
-        }
+        body { background: #0f172a; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: #1e293b; padding: 30px; border-radius: 10px; width: 320px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #334155; background: #0f172a; color: #fff; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #f59e0b; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 10px; }
+        .error { color: #fca5a5; font-size: 13px; display: none; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="login-card">
-        <div class="brand-header">
-            <h2>🛡️ MyGuru Admin Gate</h2>
-            <p>Restricted Access Area</p>
-        </div>
+<div class="card">
+    <h2 style="color: #f59e0b; text-align: center; margin-top: 0;">🛡️ Admin Login</h2>
+    <div id="errorBox" class="error"></div>
+    <form id="loginForm">
+        <input type="email" id="email" placeholder="Admin Email" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button type="submit" id="loginBtn">Authorize & Access</button>
+    </form>
+</div>
 
-        <div id="errorBox" class="error-box"></div>
-
-        <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
-            <div class="form-group">
-                <label for="adminEmail">ADMIN EMAIL</label>
-                <input type="email" id="adminEmail" required placeholder="admin@mygurujobs.com">
-            </div>
-
-            <div class="form-group">
-                <label for="adminPassword">PASSWORD</label>
-                <input type="password" id="adminPassword" required placeholder="••••••••">
-            </div>
-
-            <button type="submit" class="btn-login" id="loginBtn">Authorize & Access Dashboard</button>
-        </form>
-    </div>
-
-    <script src="../js/supabase.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    // Supabase Initialization (ప్రాజెక్ట్ డిటెయిల్స్)
-    const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co'; // మీ సుపాబేస్ URL
-    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // మీ సుపాబేస్ Anon Key ఇక్కడ వేయండి
-
+    const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // మీ సుపాబేస్ Anon Key వేయండి
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    async function handleAdminLogin(e) {
-        e.preventDefault();
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault(); // prevents page refresh
         
-        const email = document.getElementById('adminEmail').value.trim();
-        const password = document.getElementById('adminPassword').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value.trim();
         const errorBox = document.getElementById('errorBox');
         const loginBtn = document.getElementById('loginBtn');
 
         errorBox.style.display = 'none';
         loginBtn.innerText = 'Verifying...';
-        loginBtn.disabled = true;
 
         try {
-            // 1. Auth Login
-            const { data: authData, error: authError } = await _supabase.auth.signInWithPassword({
+            const { data, error } = await _supabase.auth.signInWithPassword({
                 email: email,
                 password: password
             });
 
-            if (authError) {
-                alert("❌ Auth Error: " + authError.message);
-                throw authError;
-            }
+            if (error) throw error;
 
-            alert("✅ Login Success! Redirecting to Dashboard...");
-
-            // 2. Direct Redirect
-            window.location.href = "dashboard.html";
+            // Success: Local Storage లో సెషన్ గుర్తుపెట్టుకొని రీడైరెక్ట్
+            localStorage.setItem('adminLoggedIn', 'true');
+            window.location.href = './dashboard.html';
 
         } catch (err) {
-            console.error("Login Error:", err);
-            errorBox.innerText = err.message || "లాగిన్ విఫలమైంది!";
+            errorBox.innerText = err.message || 'లాగిన్ విఫలమైంది!';
             errorBox.style.display = 'block';
-            loginBtn.innerText = 'Authorize & Access Dashboard';
-            loginBtn.disabled = false;
+            loginBtn.innerText = 'Authorize & Access';
         }
-    }
+    });
 </script>
-
-    
 </body>
 </html>
