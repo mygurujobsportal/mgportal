@@ -2,113 +2,13 @@
 <html lang="te">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyGuru Admin - Master Dashboard</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root { --sidebar-width: 250px; }
-        body { margin: 0; background: #0f172a; color: #fff; font-family: system-ui, sans-serif; display: flex; }
-        
-        /* Sidebar Styling */
-        .sidebar { width: var(--sidebar-width); background: #1e293b; min-height: 100vh; padding: 20px; border-right: 1px solid #334155; position: fixed; }
-        .sidebar h2 { color: #f59e0b; font-size: 20px; margin-bottom: 25px; border-bottom: 1px solid #334155; padding-bottom: 10px; }
-        .nav-link { display: flex; align-items: center; gap: 10px; padding: 12px; color: #cbd5e1; text-decoration: none; border-radius: 6px; margin-bottom: 6px; font-size: 14px; }
-        .nav-link:hover, .nav-link.active { background: #334155; color: #38bdf8; font-weight: bold; }
-
-        /* Main Content Styling */
-        .main-content { margin-left: var(--sidebar-width); padding: 30px; flex: 1; width: calc(100% - var(--sidebar-width)); }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: #1e293b; padding: 20px; border-radius: 10px; border: 1px solid #334155; }
-        .stat-card h4 { margin: 0; color: #94a3b8; font-size: 13px; text-transform: uppercase; }
-        .stat-card p { margin: 10px 0 0 0; font-size: 28px; font-weight: bold; color: #38bdf8; }
-
-        .section-card { background: #1e293b; border-radius: 10px; padding: 20px; border: 1px solid #334155; margin-bottom: 25px; }
-    </style>
+    <title>Admin Dashboard</title>
 </head>
-<body>
-
-    <!-- Admin Sidebar Navigation -->
-    <div class="sidebar">
-        <h2>🛡️ MyGuru Admin</h2>
-        <a href="dashboard.html" class="nav-link active">📊 Dashboard</a>
-        <a href="teachers.html" class="nav-link">👨‍🏫 Teachers</a>
-        <a href="schools.html" class="nav-link">🏫 Schools</a>
-        <a href="jobs.html" class="nav-link">💼 Jobs</a>
-        <a href="applications.html" class="nav-link">📑 Applications</a>
-        <a href="interview-letters.html" class="nav-link">✉️ Interview Letters</a>
-        <a href="reports.html" class="nav-link">📈 Reports</a>
-        <a href="notifications.html" class="nav-link">🔔 Notifications</a>
-        <a href="settings.html" class="nav-link">⚙️ Settings</a>
-    </div>
-
-    <!-- Main Content Area -->
-    <div class="main-content">
-        <h2>Welcome, Admin Panel 👋</h2>
-        
-        <!-- Live System Counters -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h4>Total Teachers</h4>
-                <p id="cntTeachers">0</p>
-            </div>
-            <div class="stat-card">
-                <h4>Registered Schools</h4>
-                <p id="cntSchools">0</p>
-            </div>
-            <div class="stat-card">
-                <h4>Active Job Posts</h4>
-                <p id="cntJobs">0</p>
-            </div>
-            <div class="stat-card">
-                <h4>Pending Approvals</h4>
-                <p id="cntPending" style="color: #f59e0b;">0</p>
-            </div>
-        </div>
-
-        <div class="section-card">
-            <h3 style="color: #f59e0b; margin-top: 0;">⚡ Quick Actions Needed</h3>
-            <div id="quickAlerts">
-                <p style="color: #cbd5e1;">పరిశీలించాల్సిన అభ్యర్థనలను లోడ్ చేస్తోంది...</p>
-            </div>
-        </div>
-    </div>
-
-    <script src="../js/supabase.js"></script>
-    <script>
-        async function loadAdminDashboardStats() {
-            try {
-                // Fetch Counts Parallelly
-                const [{ count: tCnt }, { count: sCnt }, { count: jCnt }, { count: pCnt }] = await Promise.all([
-                    _supabase.from('teacher_profiles').select('*', { count: 'exact', head: true }),
-                    _supabase.from('school_profiles').select('*', { count: 'exact', head: true }),
-                    _supabase.from('school_jobs').select('*', { count: 'exact', head: true }).eq('job_status', 'active'),
-                    _supabase.from('job_applications').select('*', { count: 'exact', head: true }).eq('employer_status', 'demo_requested')
-                ]);
-
-                document.getElementById('cntTeachers').innerText = tCnt || 0;
-                document.getElementById('cntSchools').innerText = sCnt || 0;
-                document.getElementById('cntJobs').innerText = jCnt || 0;
-                document.getElementById('cntPending').innerText = pCnt || 0;
-
-                const alertBox = document.getElementById('quickAlerts');
-                if (pCnt > 0) {
-                    alertBox.innerHTML = `
-                        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; padding: 15px; border-radius: 6px; color: #fcd34d;">
-                            ⚠️ <strong>${pCnt} Demo Video Requests Pending!</strong><br>
-                            టీచర్లు సమర్పించిన డెమో వీడియోలను వెరిఫై చేసి ఎంప్లాయర్లకు పబ్లిష్ చేయడానికి <a href="applications.html" style="color: #38bdf8; text-decoration: underline;">Applications Page</a> కి వెళ్లండి.
-                        </div>
-                    `;
-                } else {
-                    alertBox.innerHTML = `<p style="color: #10b981;">✅ అన్ని అభ్యర్థనలు క్లియర్ అయ్యాయి. పెండింగ్ పనులు ఏవీ లేవు!</p>`;
-                }
-
-            } catch (err) {
-                console.error("Dashboard Stats Error:", err);
-            }
-        }
-
-        window.onload = loadAdminDashboardStats;
-    </script>
+<body style="background: #0f172a; color: white; text-align: center; font-family: sans-serif; padding-top: 80px;">
+    <h1 style="color: #4ade80;">🎉 అభినందనలు విష్ణు గారు!</h1>
+    <h2>మీరు విజయవంతంగా అడ్మిన్ డ్యాష్‌బోర్డ్‌లోకి లాగిన్ అయ్యారు!</h2>
+    <p style="color: #94a3b8;">MyGuru Admin Hub is Live.</p>
+    <br>
+    <button onclick="localStorage.removeItem('adminLoggedIn'); window.location.href='index.html';" style="padding: 10px 20px; background: #ef4444; color: white; border: none; border-radius: 5px; cursor: pointer;">Logout</button>
 </body>
 </html>
