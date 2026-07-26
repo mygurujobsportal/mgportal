@@ -2,13 +2,69 @@
 <html lang="te">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Admin Access Gate</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background: #0f172a; color: #fff; font-family: system-ui, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: #1e293b; padding: 30px; border-radius: 12px; width: 340px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); border: 1px solid #334155; }
+        h2 { color: #f59e0b; text-align: center; margin-top: 0; font-size: 20px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff; box-sizing: border-box; outline: none; }
+        button { width: 100%; padding: 12px; background: #f59e0b; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; margin-top: 10px; color: #000; font-size: 15px; }
+        .error { color: #fca5a5; background: rgba(239,68,68,0.1); padding: 10px; border-radius: 6px; font-size: 13px; display: none; margin-bottom: 10px; border: 1px solid #ef4444; }
+    </style>
 </head>
-<body style="background: #0f172a; color: white; text-align: center; font-family: sans-serif; padding-top: 80px;">
-    <h1 style="color: #4ade80;">🎉 అభినందనలు విష్ణు గారు!</h1>
-    <h2>మీరు విజయవంతంగా అడ్మిన్ డ్యాష్‌బోర్డ్‌లోకి లాగిన్ అయ్యారు!</h2>
-    <p style="color: #94a3b8;">MyGuru Admin Hub is Live.</p>
-    <br>
-    <button onclick="localStorage.removeItem('adminLoggedIn'); window.location.href='index.html';" style="padding: 10px 20px; background: #ef4444; color: white; border: none; border-radius: 5px; cursor: pointer;">Logout</button>
+<body>
+
+<div class="card">
+    <h2>🛡️ MyGuru Admin Gate</h2>
+    <div id="errorBox" class="error"></div>
+    <form id="adminLoginForm">
+        <input type="email" id="email" placeholder="Admin Email" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button type="submit" id="loginBtn">Authorize & Access</button>
+    </form>
+</div>
+
+<script>
+    // Supabase Credentials
+    const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // మీ Anon Key ఇక్కడ ఉంచండి
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const errorBox = document.getElementById('errorBox');
+        const loginBtn = document.getElementById('loginBtn');
+
+        errorBox.style.display = 'none';
+        loginBtn.innerText = 'Verifying...';
+        loginBtn.disabled = true;
+
+        try {
+            const { data, error } = await _supabase.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+            if (error) throw error;
+
+            // Save login session flag
+            localStorage.setItem('adminLoggedIn', 'true');
+            
+            // Redirect to dashboard
+            window.location.href = 'dashboard.html';
+
+        } catch (err) {
+            errorBox.innerText = err.message || 'లాగిన్ విఫలమైంది!';
+            errorBox.style.display = 'block';
+            loginBtn.innerText = 'Authorize & Access';
+            loginBtn.disabled = false;
+        }
+    });
+</script>
 </body>
 </html>
