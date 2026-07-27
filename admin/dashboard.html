@@ -3,68 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyGuru Admin Access Gate</title>
+    <title>MyGuru - Admin Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background: #0f172a; color: #fff; font-family: system-ui, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: #1e293b; padding: 30px; border-radius: 12px; width: 340px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); border: 1px solid #334155; }
-        h2 { color: #f59e0b; text-align: center; margin-top: 0; font-size: 20px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff; box-sizing: border-box; outline: none; }
-        button { width: 100%; padding: 12px; background: #f59e0b; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; margin-top: 10px; color: #000; font-size: 15px; }
-        .error { color: #fca5a5; background: rgba(239,68,68,0.1); padding: 10px; border-radius: 6px; font-size: 13px; display: none; margin-bottom: 10px; border: 1px solid #ef4444; }
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; }
+        
+        /* Layout */
+        .wrapper { display: flex; min-height: 100vh; }
+        .sidebar { width: 250px; background-color: #1e293b; padding: 20px; border-right: 1px solid #334155; }
+        .main-content { flex: 1; padding: 30px; }
+        
+        /* Brand Header */
+        .brand { font-size: 20px; font-weight: bold; color: #f59e0b; margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
+        
+        /* Navigation Links */
+        .nav-list { list-style: none; padding: 0; margin: 0; }
+        .nav-item { margin-bottom: 10px; }
+        .nav-link { display: block; padding: 12px 15px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; transition: 0.2s; }
+        .nav-link:hover, .nav-link.active { background-color: #334155; color: #f59e0b; }
+        
+        /* Top Header */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid #334155; }
+        .btn-logout { background-color: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-logout:hover { background-color: #dc2626; }
+        
+        /* Metric Cards Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; }
+        .card-title { color: #94a3b8; font-size: 14px; font-weight: 600; text-transform: uppercase; margin-bottom: 10px; }
+        .card-value { font-size: 28px; font-weight: bold; color: #38bdf8; }
+        
+        /* Table / Box Section */
+        .content-box { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>🛡️ MyGuru Admin Gate</h2>
-    <div id="errorBox" class="error"></div>
-    <form id="adminLoginForm">
-        <input type="email" id="email" placeholder="Admin Email" required>
-        <input type="password" id="password" placeholder="Password" required>
-        <button type="submit" id="loginBtn">Authorize & Access</button>
-    </form>
+<div class="wrapper">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="brand">🛡️ MyGuru Admin</div>
+        <ul class="nav-list">
+            <li class="nav-item"><a href="dashboard.html" class="nav-link active">📊 Dashboard</a></li>
+            <li class="nav-item"><a href="teachers.html" class="nav-link">👨‍🏫 Teachers & Approvals</a></li>
+            <li class="nav-item"><a href="schools.html" class="nav-link">🏫 Schools & Institutional</a></li>
+            <li class="nav-item"><a href="jobs.html" class="nav-link">💼 Job Postings</a></li>
+            <li class="nav-item"><a href="payments.html" class="nav-link">💳 Subscriptions & Payments</a></li>
+            <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ System Settings</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <header class="header">
+            <div>
+                <h1 style="margin: 0; font-size: 24px;">Welcome Back, Admin!</h1>
+                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">MyGuru Jobs Portal Overview</p>
+            </div>
+            <button class="btn-logout" onclick="logoutAdmin()">Logout</button>
+        </header>
+
+        <!-- Dynamic Statistics Section -->
+        <div class="stats-grid">
+            <div class="card">
+                <div class="card-title">Total Teachers</div>
+                <div class="card-value" id="totalTeachers">--</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Pending Approvals</div>
+                <div class="card-value" id="pendingApprovals" style="color: #f59e0b;">--</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Registered Schools</div>
+                <div class="card-value" id="totalSchools" style="color: #4ade80;">--</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Active Job Posts</div>
+                <div class="card-value" id="activeJobs" style="color: #a855f7;">--</div>
+            </div>
+        </div>
+
+        <!-- Quick Activity Section -->
+        <div class="content-box">
+            <h3 style="margin-top: 0; color: #f59e0b;">🚀 System Status</h3>
+            <p style="color: #cbd5e1; font-size: 14px;">
+                Admin Hub operational. Use the navigation sidebar on the left to verify teacher profiles, approve school posts, and manage portal activities.
+            </p>
+        </div>
+    </main>
 </div>
 
 <script>
-    // Supabase Credentials
+    // 1. Session Check
+    if (localStorage.getItem('adminLoggedIn') !== 'true') {
+        window.location.href = 'index.html';
+    }
+
+    // 2. Supabase Integration for Quick Stats
     const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
-    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // మీ Anon Key ఇక్కడ ఉంచండి
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // మీ Anon Key ని ఇక్కడ పేస్ట్ చేయండి
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value.trim();
-        const errorBox = document.getElementById('errorBox');
-        const loginBtn = document.getElementById('loginBtn');
-
-        errorBox.style.display = 'none';
-        loginBtn.innerText = 'Verifying...';
-        loginBtn.disabled = true;
-
+    async function loadStats() {
         try {
-            const { data, error } = await _supabase.auth.signInWithPassword({
-                email: email,
-                password: password
-            });
+            // Count Teachers
+            const { count: teacherCount } = await _supabase.from('common_users').select('*', { count: 'exact', head: true }).eq('role', 'teacher');
+            document.getElementById('totalTeachers').innerText = teacherCount || 0;
 
-            if (error) throw error;
+            // Count Schools
+            const { count: schoolCount } = await _supabase.from('common_users').select('*', { count: 'exact', head: true }).eq('role', 'school');
+            document.getElementById('totalSchools').innerText = schoolCount || 0;
 
-            // Save login session flag
-            localStorage.setItem('adminLoggedIn', 'true');
-            
-            // Redirect to dashboard
-            window.location.href = 'dashboard.html';
+            // Count Active Jobs
+            const { count: jobCount } = await _supabase.from('jobs').select('*', { count: 'exact', head: true });
+            document.getElementById('activeJobs').innerText = jobCount || 0;
+
+            // Count Pending Approvals
+            const { count: pendingCount } = await _supabase.from('common_users').select('*', { count: 'exact', head: true }).eq('approval_status', 'pending');
+            document.getElementById('pendingApprovals').innerText = pendingCount || 0;
 
         } catch (err) {
-            errorBox.innerText = err.message || 'లాగిన్ విఫలమైంది!';
-            errorBox.style.display = 'block';
-            loginBtn.innerText = 'Authorize & Access';
-            loginBtn.disabled = false;
+            console.log("Stats fetch error:", err);
         }
-    });
+    }
+
+    function logoutAdmin() {
+        localStorage.removeItem('adminLoggedIn');
+        window.location.href = 'index.html';
+    }
+
+    loadStats();
 </script>
 </body>
 </html>
