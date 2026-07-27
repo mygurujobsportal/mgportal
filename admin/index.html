@@ -26,10 +26,11 @@
     </form>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    // Supabase Credentials
     const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0'; // మీ Anon Key ఇక్కడ ఉంచండి
+    const SUPABASE_ANON_KEY = 'YOUR_ACTUAL_ANON_KEY_HERE'; // మీ ఒరిజినల్ anon key వేయండి
+
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
@@ -42,7 +43,6 @@
 
         errorBox.style.display = 'none';
         loginBtn.innerText = 'Verifying...';
-        loginBtn.disabled = true;
 
         try {
             const { data, error } = await _supabase.auth.signInWithPassword({
@@ -50,19 +50,19 @@
                 password: password
             });
 
-            if (error) throw error;
+            if (error) {
+                alert("❌ లాగిన్ ఫెయిల్ అయ్యింది: " + error.message);
+                throw error;
+            }
 
-            // Save login session flag
+            alert("✅ లాగిన్ సక్సెస్! Dashboard కి రీడైరెక్ట్ అవుతోంది...");
             localStorage.setItem('adminLoggedIn', 'true');
-            
-            // Redirect to dashboard
             window.location.href = 'dashboard.html';
 
         } catch (err) {
             errorBox.innerText = err.message || 'లాగిన్ విఫలమైంది!';
             errorBox.style.display = 'block';
             loginBtn.innerText = 'Authorize & Access';
-            loginBtn.disabled = false;
         }
     });
 </script>
