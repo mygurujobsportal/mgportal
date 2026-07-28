@@ -107,62 +107,72 @@
 </div>
 
 <script>
-    // 1. Session Check
+    // 1. Session Guard
     if (localStorage.getItem('adminLoggedIn') !== 'true') {
         window.location.href = 'index.html';
     }
 
-    // 2. Supabase Integration
+    // 2. Supabase Client
     const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
-    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // మీ Anon Key ని ఇక్కడ పేస్ట్ చేయండి
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // మీ సుపాబేస్ Anon Key వేయండి
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function loadStats() {
-    try {
-        // 1. Fetch all users to check raw data & roles
-        const { data: users, error: userErr } = await _supabase
-            .from('common_users')
-            .select('role');
+        console.log("Fetching statistics from Supabase...");
 
-        if (userErr) {
-            console.error("❌ common_users Fetch Error:", userErr);
-        } else if (users) {
-            console.log("✅ Fetched Users Data:", users);
+        try {
+            // Test Direct Fetch without Head Filter
+            const { data: users, error: userError } = await _supabase
+                .from('common_users')
+                .select('role, approval_status');
 
-            // Filter counts directly in JS (Case-insensitive match)
-            const teacherCount = users.filter(u => u.role && u.role.toLowerCase() === 'teacher').length;
-            const schoolCount = users.filter(u => u.role && u.role.toLowerCase() === 'school').length;
-            const parentCount = users.filter(u => u.role && u.role.toLowerCase() === 'parent').length;
+            if (userError) {
+                console.error("Supabase User Fetch Error:", userError);
+                return;
+            }
 
-            document.getElementById('totalTeachers').innerText = teacherCount;
-            document.getElementById('totalSchools').innerText = schoolCount;
-            document.getElementById('totalParents').innerText = parentCount;
+            console.log("Raw Users Data Received:", users);
+
+            if (users && users.length > 0) {
+                // Calculate counts dynamically
+                const teacherCount = users.filter(u => u.role && u.role.toLowerCase() === 'teacher').length;
+                const schoolCount = users.filter(u => u.role && u.role.toLowerCase() === 'school').length;
+                const parentCount = users.filter(u => u.role && u.role.toLowerCase() === 'parent').length;
+                const pendingCount = users.filter(u => u.approval_status && u.approval_status.toLowerCase() === 'pending').length;
+
+                document.getElementById('totalTeachers').innerText = teacherCount;
+                document.getElementById('totalSchools').innerText = schoolCount;
+                document.getElementById('totalParents').innerText = parentCount;
+                document.getElementById('pendingApprovals').innerText = pendingCount;
+            } else {
+                console.warn("common_users table is empty or permission denied!");
+            }
+
+            // Fetch Jobs
+            const { data: jobs, error: jobError } = await _supabase.from('jobs').select('id');
+            if (jobs) {
+                document.getElementById('activeJobs').innerText = jobs.length;
+            }
+
+            // Fetch Applications
+            const { data: apps, error: appError } = await _supabase.from('applications').select('id');
+            if (apps) {
+                document.getElementById('totalApplications').innerText = apps.length;
+            }
+
+        } catch (err) {
+            console.error("Dashboard Execution Error:", err);
         }
-
-        // 2. Fetch Jobs Count
-        const { data: jobs, error: jobErr } = await _supabase.from('jobs').select('id');
-        if (jobs) {
-            document.getElementById('activeJobs').innerText = jobs.length;
-        }
-
-        // 3. Fetch Applications Count
-        const { data: apps, error: appErr } = await _supabase.from('applications').select('id');
-        if (apps) {
-            document.getElementById('totalApplications').innerText = apps.length;
-        }
-
-    } catch (err) {
-        console.error("Stats Function Exception:", err);
     }
-}
-
 
     function logoutAdmin() {
         localStorage.removeItem('adminLoggedIn');
         window.location.href = 'index.html';
     }
 
-    loadStats();
+    // Run on Load
+    document.addEventListener("DOMContentLoaded", loadStats);
 </script>
+
 </body>
 </html>
