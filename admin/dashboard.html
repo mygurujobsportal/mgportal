@@ -118,35 +118,44 @@
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function loadStats() {
-        try {
-            // Count Teachers
-            const { count: teacherCount } = await _supabase.from('common_users').select('*', { count: 'exact', head: true }).eq('role', 'teacher');
-            document.getElementById('totalTeachers').innerText = teacherCount || 0;
+    try {
+        // 1. Fetch all users to check raw data & roles
+        const { data: users, error: userErr } = await _supabase
+            .from('common_users')
+            .select('role');
 
-            // Count Schools
-            const { count: schoolCount } = await _supabase.from('common_users').select('*', { count: 'exact', head: true }).eq('role', 'school');
-            document.getElementById('totalSchools').innerText = schoolCount || 0;
+        if (userErr) {
+            console.error("❌ common_users Fetch Error:", userErr);
+        } else if (users) {
+            console.log("✅ Fetched Users Data:", users);
 
-            // Count Parents
-            const { count: parentCount } = await _supabase.from('common_users').select('*', { count: 'exact', head: true }).eq('role', 'parent');
-            document.getElementById('totalParents').innerText = parentCount || 0;
+            // Filter counts directly in JS (Case-insensitive match)
+            const teacherCount = users.filter(u => u.role && u.role.toLowerCase() === 'teacher').length;
+            const schoolCount = users.filter(u => u.role && u.role.toLowerCase() === 'school').length;
+            const parentCount = users.filter(u => u.role && u.role.toLowerCase() === 'parent').length;
 
-            // Count Active Jobs
-            const { count: jobCount } = await _supabase.from('jobs').select('*', { count: 'exact', head: true });
-            document.getElementById('activeJobs').innerText = jobCount || 0;
-
-            // Count Pending Approvals
-            const { count: pendingCount } = await _supabase.from('common_users').select('*', { count: 'exact', head: true }).eq('approval_status', 'pending');
-            document.getElementById('pendingApprovals').innerText = pendingCount || 0;
-
-            // Count Applications
-            const { count: appCount } = await _supabase.from('applications').select('*', { count: 'exact', head: true });
-            document.getElementById('totalApplications').innerText = appCount || 0;
-
-        } catch (err) {
-            console.log("Stats fetch error:", err);
+            document.getElementById('totalTeachers').innerText = teacherCount;
+            document.getElementById('totalSchools').innerText = schoolCount;
+            document.getElementById('totalParents').innerText = parentCount;
         }
+
+        // 2. Fetch Jobs Count
+        const { data: jobs, error: jobErr } = await _supabase.from('jobs').select('id');
+        if (jobs) {
+            document.getElementById('activeJobs').innerText = jobs.length;
+        }
+
+        // 3. Fetch Applications Count
+        const { data: apps, error: appErr } = await _supabase.from('applications').select('id');
+        if (apps) {
+            document.getElementById('totalApplications').innerText = apps.length;
+        }
+
+    } catch (err) {
+        console.error("Stats Function Exception:", err);
     }
+}
+
 
     function logoutAdmin() {
         localStorage.removeItem('adminLoggedIn');
