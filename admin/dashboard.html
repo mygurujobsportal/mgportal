@@ -1,10 +1,10 @@
-<!DOCTYPE html>
-<html lang="te">
+"<!DOCTYPE html>
+<html lang=""te"">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
     <title>MyGuru - Admin Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src=""https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2""></script>
     <style>
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
         body { margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; }
@@ -41,65 +41,65 @@
 </head>
 <body>
 
-<div class="wrapper">
+<div class=""wrapper"">
     <!-- Sidebar Navigation -->
-    <aside class="sidebar">
-        <div class="brand">🛡️ MyGuru Admin</div>
-        <ul class="nav-list">
-            <li class="nav-item"><a href="dashboard.html" class="nav-link active">📊 Dashboard</a></li>
-            <li class="nav-item"><a href="teachers.html" class="nav-link">👨‍🏫 Teachers & Approvals</a></li>
-            <li class="nav-item"><a href="schools.html" class="nav-link">🏫 Schools & Employers</a></li>
-            <li class="nav-item"><a href="parents.html" class="nav-link">🏡 Parents & Tuitions</a></li>
-            <li class="nav-item"><a href="jobs.html" class="nav-link">💼 Job Postings</a></li>
-            <li class="nav-item"><a href="applications.html" class="nav-link">📄 Applications Tracker</a></li>
-            <li class="nav-item"><a href="payments.html" class="nav-link">💳 Payments & Subscriptions</a></li>
-            <li class="nav-item"><a href="messages.html" class="nav-link">💬 Messages & Support</a></li>
-            <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ System Settings</a></li>
+    <aside class=""sidebar"">
+        <div class=""brand"">🛡️ MyGuru Admin</div>
+        <ul class=""nav-list"">
+            <li class=""nav-item""><a href=""dashboard.html"" class=""nav-link active"">📊 Dashboard</a></li>
+            <li class=""nav-item""><a href=""teachers.html"" class=""nav-link"">👨‍🏫 Teachers & Approvals</a></li>
+            <li class=""nav-item""><a href=""schools.html"" class=""nav-link"">🏫 Schools & Employers</a></li>
+            <li class=""nav-item""><a href=""parents.html"" class=""nav-link"">🏡 Parents & Tuitions</a></li>
+            <li class=""nav-item""><a href=""jobs.html"" class=""nav-link"">💼 Job Postings</a></li>
+            <li class=""nav-item""><a href=""applications.html"" class=""nav-link"">📄 Applications Tracker</a></li>
+            <li class=""nav-item""><a href=""payments.html"" class=""nav-link"">💳 Payments & Subscriptions</a></li>
+            <li class=""nav-item""><a href=""messages.html"" class=""nav-link"">💬 Messages & Support</a></li>
+            <li class=""nav-item""><a href=""settings.html"" class=""nav-link"">⚙️ System Settings</a></li>
         </ul>
     </aside>
 
     <!-- Main Content Area -->
-    <main class="main-content">
-        <header class="header">
+    <main class=""main-content"">
+        <header class=""header"">
             <div>
-                <h1 style="margin: 0; font-size: 24px;">Welcome Back, Admin!</h1>
-                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">MyGuru Jobs Portal Overview</p>
+                <h1 style=""margin: 0; font-size: 24px;"">Welcome Back, Admin!</h1>
+                <p style=""margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;"">MyGuru Jobs Portal Overview</p>
             </div>
-            <button class="btn-logout" onclick="logoutAdmin()">Logout</button>
+            <button class=""btn-logout"" onclick=""logoutAdmin()"">Logout</button>
         </header>
 
         <!-- Dynamic Statistics Section (Clickable Cards) -->
-        <div class="stats-grid">
-            <a href="teachers.html" class="card">
-                <div class="card-title">Total Teachers</div>
-                <div class="card-value" id="totalTeachers">--</div>
+        <div class=""stats-grid"">
+            <a href=""teachers.html"" class=""card"">
+                <div class=""card-title"">Total Teachers</div>
+                <div class=""card-value"" id=""totalTeachers"">--</div>
             </a>
-            <a href="teachers.html" class="card">
-                <div class="card-title">Pending Approvals</div>
-                <div class="card-value" id="pendingApprovals" style="color: #f59e0b;">--</div>
+            <a href=""teachers.html"" class=""card"">
+                <div class=""card-title"">Pending Approvals</div>
+                <div class=""card-value"" id=""pendingApprovals"" style=""color: #f59e0b;"">--</div>
             </a>
-            <a href="schools.html" class="card">
-                <div class="card-title">Registered Schools</div>
-                <div class="card-value" id="totalSchools" style="color: #4ade80;">--</div>
+            <a href=""schools.html"" class=""card"">
+                <div class=""card-title"">Registered Schools</div>
+                <div class=""card-value"" id=""totalSchools"" style=""color: #4ade80;"">--</div>
             </a>
-            <a href="parents.html" class="card">
-                <div class="card-title">Registered Parents</div>
-                <div class="card-value" id="totalParents" style="color: #f43f5e;">--</div>
+            <a href=""parents.html"" class=""card"">
+                <div class=""card-title"">Registered Parents</div>
+                <div class=""card-value"" id=""totalParents"" style=""color: #f43f5e;"">--</div>
             </a>
-            <a href="jobs.html" class="card">
-                <div class="card-title">Active Job Posts</div>
-                <div class="card-value" id="activeJobs" style="color: #a855f7;">--</div>
+            <a href=""jobs.html"" class=""card"">
+                <div class=""card-title"">Active Job Posts</div>
+                <div class=""card-value"" id=""activeJobs"" style=""color: #a855f7;"">--</div>
             </a>
-            <a href="applications.html" class="card">
-                <div class="card-title">Total Applications</div>
-                <div class="card-value" id="totalApplications" style="color: #38bdf8;">--</div>
+            <a href=""applications.html"" class=""card"">
+                <div class=""card-title"">Total Applications</div>
+                <div class=""card-value"" id=""totalApplications"" style=""color: #38bdf8;"">--</div>
             </a>
         </div>
 
         <!-- Quick Activity Section -->
-        <div class="content-box">
-            <h3 style="margin-top: 0; color: #f59e0b;">🚀 System Status</h3>
-            <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6;">
+        <div class=""content-box"">
+            <h3 style=""margin-top: 0; color: #f59e0b;"">🚀 System Status</h3>
+            <p style=""color: #cbd5e1; font-size: 14px; line-height: 1.6;"">
                 Admin Management Hub is fully operational. Use the navigation sidebar on the left to verify teacher credentials, manage school postings, review parent tuition requests, and oversee portal workflows.
             </p>
         </div>
@@ -107,61 +107,44 @@
 </div>
 
 <script>
-    // 1. Session Guard
+    // 1. Session Check
     if (localStorage.getItem('adminLoggedIn') !== 'true') {
         window.location.href = 'index.html';
     }
 
-    // 2. Supabase Client
+    // 2. Supabase Integration
     const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0'; // మీ సుపాబేస్ Anon Key వేయండి
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0'; // మీ Anon Key ని ఇక్కడ పేస్ట్ చేయండి
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function loadStats() {
-        console.log("Fetching statistics from Supabase...");
-
         try {
-            // Test Direct Fetch without Head Filter
-            const { data: users, error: userError } = await _supabase
-                .from('common_users')
-                .select('role, approval_status');
+            // Count Teachers
+            const { count: teacherCount } = await _supabase.from('common_users').select('*', { count: 'exact', head: true }).eq('role', 'teacher');
+            document.getElementById('totalTeachers').innerText = teacherCount || 0;
 
-            if (userError) {
-                console.error("Supabase User Fetch Error:", userError);
-                return;
-            }
+            // Count Schools
+            const { count: schoolCount } = await _supabase.from('common_users').select('*', { count: 'exact', head: true }).eq('role', 'school');
+            document.getElementById('totalSchools').innerText = schoolCount || 0;
 
-            console.log("Raw Users Data Received:", users);
+            // Count Parents
+            const { count: parentCount } = await _supabase.from('common_users').select('*', { count: 'exact', head: true }).eq('role', 'parent');
+            document.getElementById('totalParents').innerText = parentCount || 0;
 
-            if (users && users.length > 0) {
-                // Calculate counts dynamically
-                const teacherCount = users.filter(u => u.role && u.role.toLowerCase() === 'teacher').length;
-                const schoolCount = users.filter(u => u.role && u.role.toLowerCase() === 'school').length;
-                const parentCount = users.filter(u => u.role && u.role.toLowerCase() === 'parent').length;
-                const pendingCount = users.filter(u => u.approval_status && u.approval_status.toLowerCase() === 'pending').length;
+            // Count Active Jobs
+            const { count: jobCount } = await _supabase.from('jobs').select('*', { count: 'exact', head: true });
+            document.getElementById('activeJobs').innerText = jobCount || 0;
 
-                document.getElementById('totalTeachers').innerText = teacherCount;
-                document.getElementById('totalSchools').innerText = schoolCount;
-                document.getElementById('totalParents').innerText = parentCount;
-                document.getElementById('pendingApprovals').innerText = pendingCount;
-            } else {
-                console.warn("common_users table is empty or permission denied!");
-            }
+            // Count Pending Approvals
+            const { count: pendingCount } = await _supabase.from('common_users').select('*', { count: 'exact', head: true }).eq('approval_status', 'pending');
+            document.getElementById('pendingApprovals').innerText = pendingCount || 0;
 
-            // Fetch Jobs
-            const { data: jobs, error: jobError } = await _supabase.from('jobs').select('id');
-            if (jobs) {
-                document.getElementById('activeJobs').innerText = jobs.length;
-            }
-
-            // Fetch Applications
-            const { data: apps, error: appError } = await _supabase.from('applications').select('id');
-            if (apps) {
-                document.getElementById('totalApplications').innerText = apps.length;
-            }
+            // Count Applications
+            const { count: appCount } = await _supabase.from('applications').select('*', { count: 'exact', head: true });
+            document.getElementById('totalApplications').innerText = appCount || 0;
 
         } catch (err) {
-            console.error("Dashboard Execution Error:", err);
+            console.log(""Stats fetch error:"", err);
         }
     }
 
@@ -170,9 +153,7 @@
         window.location.href = 'index.html';
     }
 
-    // Run on Load
-    document.addEventListener("DOMContentLoaded", loadStats);
+    loadStats();
 </script>
-
 </body>
-</html>
+</html>"
