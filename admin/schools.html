@@ -108,7 +108,7 @@
             const { data: schools, error } = await _supabase
                 .from('common_users')
                 .select('*')
-                .eq('role', 'school');
+                .eq('role', 'School');
 
             if (error) throw error;
 
