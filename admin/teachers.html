@@ -143,36 +143,63 @@
             if (!users || users.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #94a3b8;">No registered teachers found.</td></tr>`;
                 return;
-            }
+    const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0'; // మీ Anon Key ని ఇక్కడ వేయండి
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-            // 2. Fetch Detailed Profiles from teacher_profiles using User IDs
-            const userIds = users.map(u => u.id);
-            const { data: profiles, error: profErr } = await _supabase
-                .from('teacher_profiles')
+    async function checkAdminAndFetch() {
+        if (localStorage.getItem('adminLoggedIn') !== 'true') {
+            window.location.href = 'index.html';
+            return;
+        }
+        fetchTeachers();
+    }
+
+    async function fetchTeachers() {
+        const tbody = document.getElementById('teachersTableBody');
+        try {
+            // 1. Fetch Teachers from common_users
+            const { data: users, error: userErr } = await _supabase
+                .from('common_users')
                 .select('*')
-                .in('user_id', userIds);
+                .eq('role', 'teacher');
 
-            if (profErr) {
-                console.warn("teacher_profiles fetch note:", profErr.message);
+            if (userErr) throw userErr;
+
+            if (!users || users.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #94a3b8;">No registered teachers found.</td></tr>`;
+                return;
             }
 
-            // Create a lookup map for profiles
-            const profileMap = {};
-            if (profiles) {
-                profiles.forEach(p => { profileMap[p.user_id] = p; });
+            console.log("Teachers from common_users:", users);
+
+            // 2. Safe Profile Fetching (Won't block if teacher_profiles fails)
+            let profileMap = {};
+            try {
+                const userIds = users.map(u => u.id);
+                const { data: profiles } = await _supabase
+                    .from('teacher_profiles')
+                    .select('*')
+                    .in('user_id', userIds);
+
+                if (profiles) {
+                    profiles.forEach(p => { profileMap[p.user_id] = p; });
+                }
+            } catch (pErr) {
+                console.warn("Could not fetch teacher_profiles, using common_users fallback:", pErr);
             }
 
-            // 3. Render Combined Data with Fallbacks
+            // 3. Render Table
             tbody.innerHTML = users.map(t => {
                 const prof = profileMap[t.id] || {};
                 const status = t.approval_status || 'pending';
                 const badgeClass = status === 'approved' ? 'badge-approved' : (status === 'rejected' ? 'badge-rejected' : 'badge-pending');
                 
-                // Smart Mapping: Checks common_users first, then teacher_profiles
-                const displayName = t.full_name || prof.full_name || prof.name || t.name || 'Teacher User';
-                const displayEmail = t.email || prof.email || t.email_address || 'No Email Registered';
-                const displayPhone = t.phone || prof.phone || prof.mobile || t.phone_number || 'N/A';
-                const qualification = prof.qualification || prof.highest_qualification || t.qualification || 'Zoology / Bio Science';
+                // Smart Fallbacks across all possible column names
+                const displayName = t.full_name || t.name || prof.full_name || prof.name || 'Teacher Profile';
+                const displayEmail = t.email || t.email_address || prof.email || 'No Email';
+                const displayPhone = t.phone || t.mobile || t.phone_number || prof.phone || 'N/A';
+                const qualification = prof.qualification || t.qualification || 'Zoology / Bio Science';
 
                 return `
                     <tr>
