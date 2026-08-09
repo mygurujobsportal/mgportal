@@ -69,8 +69,8 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Teacher ID / Name</th>
-                        <th>Email / Contact</th>
+                        <th>Teacher Name / ID</th>
+                        <th>Email & Mobile</th>
                         <th>Qualification</th>
                         <th>Status</th>
                         <th>Actions</th>
@@ -88,7 +88,7 @@
 
 <script>
     const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0'; // మీ Anon Key ఇక్కడ వేయండి
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0'; // మీ Anon Key ని ఇక్కడ వేయండి
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function checkAdminAndFetch() {
@@ -102,7 +102,7 @@
     async function fetchTeachers() {
         const tbody = document.getElementById('teachersTableBody');
         try {
-            // 1. Fetch Users from common_users
+            // 1. Fetch Teachers from common_users
             const { data: users, error: userErr } = await _supabase
                 .from('common_users')
                 .select('*')
@@ -115,13 +115,10 @@
                 return;
             }
 
-            // 2. Safely Fetch Profiles
+            // 2. Fetch Profiles from teacher_profiles
             let profileMap = {};
             try {
-                const { data: profiles } = await _supabase
-                    .from('teacher_profiles')
-                    .select('*');
-
+                const { data: profiles } = await _supabase.from('teacher_profiles').select('*');
                 if (profiles) {
                     profiles.forEach(p => { 
                         const key = p.user_id || p.id;
@@ -129,19 +126,26 @@
                     });
                 }
             } catch (pErr) {
-                console.warn("Profiles fetch bypassed:", pErr);
+                console.warn("Profiles fetch note:", pErr);
             }
 
             // 3. Render Table
             tbody.innerHTML = users.map(t => {
                 const prof = profileMap[t.id] || {};
-                const status = t.profile_status || 'pending';
+                const status = t.approval_status || 'pending';
                 const badgeClass = status === 'approved' ? 'badge-approved' : (status === 'rejected' ? 'badge-rejected' : 'badge-pending');
                 
+                // Detailed Fallback for Name
                 const displayName = t.full_name || t.name || prof.full_name || prof.name || 'Teacher Profile';
+                
+                // Detailed Fallback for Email
                 const displayEmail = t.email || t.email_address || prof.email || 'No Email';
-                const displayPhone = t.phone || t.mobile || t.phone_number || prof.phone || 'N/A';
-                const qualification = prof.qualification || t.qualification || 'Zoology / Bio Science';
+                
+                // Exhaustive Search for Mobile Number Across Column Variants
+                const displayPhone = t.phone || t.mobile || t.phone_number || t.contact || 
+                                     prof.phone || prof.mobile || prof.contact_number || prof.phone_number || 'No Mobile';
+
+                const qualification = prof.qualification || prof.highest_qualification || t.qualification || 'Zoology / Bio Science';
 
                 return `
                     <tr>
@@ -151,7 +155,7 @@
                         </td>
                         <td>
                             📧 ${displayEmail}<br>
-                            <small style="color:#94a3b8;">📞 ${displayPhone}</small>
+                            <small style="color:#38bdf8;">📞 ${displayPhone}</small>
                         </td>
                         <td>${qualification}</td>
                         <td><span class="badge ${badgeClass}">${status.toUpperCase()}</span></td>
@@ -173,14 +177,17 @@
         if (!confirm(`ఈ టీచర్ అకౌంట్‌ను ${newStatus.toUpperCase()} చేయాలనుకుంటున్నారా?`)) return;
 
         try {
+            // Update common_users approval_status
             const { error } = await _supabase
                 .from('common_users')
-                .update({ account_status: newStatus })
+                .update({ approval_status: newStatus })
                 .eq('id', userId);
 
             if (error) throw error;
 
-            alert(`స్టేటస్ విజయవంతంగా ${newStatus} గా నవీకరించబడింది!`);
+            alert(`స్టేటస్ విజయవంతంగా ${newStatus.toUpperCase()} గా మారింది!`);
+            
+            // Re-fetch instantly to reflect changed status on UI
             fetchTeachers();
 
         } catch (err) {
