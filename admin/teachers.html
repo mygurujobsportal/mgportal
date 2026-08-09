@@ -10,31 +10,28 @@
         body { margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; }
         
         .wrapper { display: flex; min-height: 100vh; }
-        .sidebar { width: 250px; background-color: #1e293b; padding: 20px; border-right: 1px solid #334155; }
+        .sidebar { width: 260px; background-color: #1e293b; padding: 20px; border-right: 1px solid #334155; }
         .main-content { flex: 1; padding: 30px; }
         
-        .brand { font-size: 20px; font-weight: bold; color: #f59e0b; margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
+        .brand { font-size: 20px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
         .nav-list { list-style: none; padding: 0; margin: 0; }
-        .nav-item { margin-bottom: 10px; }
-        .nav-link { display: block; padding: 12px 15px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; transition: 0.2s; }
+        .nav-item { margin-bottom: 6px; }
+        .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
         .nav-link:hover, .nav-link.active { background-color: #334155; color: #f59e0b; }
         
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #334155; }
         
-        /* Table Styling */
         .table-container { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; overflow: hidden; }
         table { width: 100%; border-collapse: collapse; text-align: left; }
         th, td { padding: 14px 18px; border-bottom: 1px solid #334155; font-size: 14px; }
         th { background-color: #0f172a; color: #94a3b8; font-weight: 600; text-transform: uppercase; font-size: 12px; }
         tr:hover { background-color: rgba(51, 65, 85, 0.4); }
         
-        /* Status Badges */
         .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-block; }
         .badge-pending { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid #f59e0b; }
         .badge-approved { background: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid #4ade80; }
         .badge-rejected { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid #ef4444; }
         
-        /* Action Buttons */
         .btn-action { padding: 6px 12px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 12px; margin-right: 5px; }
         .btn-approve { background-color: #22c55e; color: #000; }
         .btn-approve:hover { background-color: #16a34a; }
@@ -45,14 +42,18 @@
 <body>
 
 <div class="wrapper">
+    <!-- Updated 9-Item Sidebar Navigation -->
     <aside class="sidebar">
         <div class="brand">🛡️ MyGuru Admin</div>
         <ul class="nav-list">
             <li class="nav-item"><a href="dashboard.html" class="nav-link">📊 Dashboard</a></li>
             <li class="nav-item"><a href="teachers.html" class="nav-link active">👨‍🏫 Teachers & Approvals</a></li>
-            <li class="nav-item"><a href="schools.html" class="nav-link">🏫 Schools & Institutional</a></li>
+            <li class="nav-item"><a href="schools.html" class="nav-link">🏫 Schools & Employers</a></li>
+            <li class="nav-item"><a href="parents.html" class="nav-link">🏡 Parents & Tuitions</a></li>
             <li class="nav-item"><a href="jobs.html" class="nav-link">💼 Job Postings</a></li>
+            <li class="nav-item"><a href="applications.html" class="nav-link">📄 Applications Tracker</a></li>
             <li class="nav-item"><a href="payments.html" class="nav-link">💳 Subscriptions & Payments</a></li>
+            <li class="nav-item"><a href="messages.html" class="nav-link">💬 Messages & Support</a></li>
             <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ System Settings</a></li>
         </ul>
     </aside>
@@ -87,38 +88,55 @@
 </div>
 
 <script>
-    if (localStorage.getItem('adminLoggedIn') !== 'true') {
-        window.location.href = 'index.html';
-    }
-
     const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0'; // మీ Anon Key ని ఇక్కడ పేస్ట్ చేయండి
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0'; // మీ Anon Key ఉంచండి
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function checkAdminAndFetch() {
+        if (localStorage.getItem('adminLoggedIn') !== 'true') {
+            window.location.href = 'index.html';
+            return;
+        }
+        fetchTeachers();
+    }
 
     async function fetchTeachers() {
         const tbody = document.getElementById('teachersTableBody');
         try {
-            const { data: teachers, error } = await _supabase
+            // Fetch teachers from common_users
+            const { data: users, error } = await _supabase
                 .from('common_users')
                 .select('*')
                 .eq('role', 'teacher');
 
             if (error) throw error;
 
-            if (!teachers || teachers.length === 0) {
+            if (!users || users.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #94a3b8;">No registered teachers found.</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = teachers.map(t => {
+            tbody.innerHTML = users.map(t => {
                 const status = t.approval_status || 'pending';
                 const badgeClass = status === 'approved' ? 'badge-approved' : (status === 'rejected' ? 'badge-rejected' : 'badge-pending');
                 
+                // Smart fallback for Name, Email & Phone
+                const displayName = t.full_name || t.name || t.display_name || 'Teacher User';
+                const displayEmail = t.email || t.email_address || 'No Email';
+                const displayPhone = t.phone || t.mobile || t.phone_number || '';
+                const qualification = t.qualification || 'Zoology / Bio Science';
+
                 return `
                     <tr>
-                        <td><strong>${t.full_name || 'N/A'}</strong><br><small style="color:#64748b;">${t.id.substring(0,8)}...</small></td>
-                        <td>${t.email || 'N/A'}<br><small style="color:#64748b;">${t.phone || ''}</small></td>
-                        <td>${t.qualification || 'Zoology / Bio Science'}</td>
+                        <td>
+                            <strong>${displayName}</strong><br>
+                            <small style="color:#64748b; font-family: monospace;">${t.id.substring(0,8)}...</small>
+                        </td>
+                        <td>
+                            ${displayEmail}<br>
+                            <small style="color:#64748b;">${displayPhone}</small>
+                        </td>
+                        <td>${qualification}</td>
                         <td><span class="badge ${badgeClass}">${status.toUpperCase()}</span></td>
                         <td>
                             <button class="btn-action btn-approve" onclick="updateStatus('${t.id}', 'approved')">Approve</button>
@@ -135,7 +153,7 @@
     }
 
     async function updateStatus(userId, newStatus) {
-        if (!confirm(`మీరు ఈ టీచర్ అకౌంట్‌ను ${newStatus.toUpperCase()} చేయాలనుకుంటున్నారా?`)) return;
+        if (!confirm(`ఈ టీచర్ అకౌంట్‌ను ${newStatus.toUpperCase()} చేయాలనుకుంటున్నారా?`)) return;
 
         try {
             const { error } = await _supabase
@@ -146,14 +164,14 @@
             if (error) throw error;
 
             alert(`స్టేటస్ విజయవంతంగా ${newStatus} గా నవీకరించబడింది!`);
-            fetchTeachers(); // Refresh list
+            fetchTeachers();
 
         } catch (err) {
             alert("Update Failed: " + err.message);
         }
     }
 
-    fetchTeachers();
+    checkAdminAndFetch();
 </script>
 </body>
 </html>
