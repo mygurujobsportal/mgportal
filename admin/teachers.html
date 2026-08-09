@@ -42,7 +42,6 @@
 <body>
 
 <div class="wrapper">
-    <!-- Updated 9-Item Sidebar Navigation -->
     <aside class="sidebar">
         <div class="brand">🛡️ MyGuru Admin</div>
         <ul class="nav-list">
@@ -89,7 +88,7 @@
 
 <script>
     const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0'; // మీ Anon Key ఉంచండి
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0'; // మీ Anon Key ఇక్కడ వేయండి
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function checkAdminAndFetch() {
@@ -103,62 +102,7 @@
     async function fetchTeachers() {
         const tbody = document.getElementById('teachersTableBody');
         try {
-            // Fetch teachers from common_users
-            const { data: users, error } = await _supabase
-                .from('common_users')
-                .select('*')
-                .eq('role', 'teacher');
-
-            if (error) throw error;
-
-            if (!users || users.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #94a3b8;">No registered teachers found.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = users.map(t => {
-                    const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
-    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // మీ Anon Key ఉంచండి
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    async function checkAdminAndFetch() {
-        if (localStorage.getItem('adminLoggedIn') !== 'true') {
-            window.location.href = 'index.html';
-            return;
-        }
-        fetchTeachers();
-    }
-
-    async function fetchTeachers() {
-        const tbody = document.getElementById('teachersTableBody');
-        try {
-            // 1. Fetch Teachers from common_users
-            const { data: users, error: userErr } = await _supabase
-                .from('common_users')
-                .select('*')
-                .eq('role', 'teacher');
-
-            if (userErr) throw userErr;
-
-            if (!users || users.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #94a3b8;">No registered teachers found.</td></tr>`;
-                return;
-    const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0'; // మీ Anon Key ని ఇక్కడ వేయండి
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    async function checkAdminAndFetch() {
-        if (localStorage.getItem('adminLoggedIn') !== 'true') {
-            window.location.href = 'index.html';
-            return;
-        }
-        fetchTeachers();
-    }
-
-    async function fetchTeachers() {
-        const tbody = document.getElementById('teachersTableBody');
-        try {
-            // 1. Fetch Teachers from common_users
+            // 1. Fetch Users from common_users
             const { data: users, error: userErr } = await _supabase
                 .from('common_users')
                 .select('*')
@@ -171,22 +115,21 @@
                 return;
             }
 
-            console.log("Teachers from common_users:", users);
-
-            // 2. Safe Profile Fetching (Won't block if teacher_profiles fails)
+            // 2. Safely Fetch Profiles
             let profileMap = {};
             try {
-                const userIds = users.map(u => u.id);
                 const { data: profiles } = await _supabase
                     .from('teacher_profiles')
-                    .select('*')
-                    .in('user_id', userIds);
+                    .select('*');
 
                 if (profiles) {
-                    profiles.forEach(p => { profileMap[p.user_id] = p; });
+                    profiles.forEach(p => { 
+                        const key = p.user_id || p.id;
+                        if (key) profileMap[key] = p; 
+                    });
                 }
             } catch (pErr) {
-                console.warn("Could not fetch teacher_profiles, using common_users fallback:", pErr);
+                console.warn("Profiles fetch bypassed:", pErr);
             }
 
             // 3. Render Table
@@ -195,7 +138,6 @@
                 const status = t.approval_status || 'pending';
                 const badgeClass = status === 'approved' ? 'badge-approved' : (status === 'rejected' ? 'badge-rejected' : 'badge-pending');
                 
-                // Smart Fallbacks across all possible column names
                 const displayName = t.full_name || t.name || prof.full_name || prof.name || 'Teacher Profile';
                 const displayEmail = t.email || t.email_address || prof.email || 'No Email';
                 const displayPhone = t.phone || t.mobile || t.phone_number || prof.phone || 'N/A';
