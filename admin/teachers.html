@@ -132,7 +132,7 @@
             // 3. Render Table
             tbody.innerHTML = users.map(t => {
                 const prof = profileMap[t.id] || {};
-                const status = t.approval_status || 'pending';
+                const status = t.account_status || 'pending';
                 const badgeClass = status === 'approved' ? 'badge-approved' : (status === 'rejected' ? 'badge-rejected' : 'badge-pending');
                 
                 // Detailed Fallback for Name
@@ -180,7 +180,7 @@
             // Update common_users approval_status
             const { error } = await _supabase
                 .from('common_users')
-                .update({ approval_status: newStatus })
+                .update({ account_status: newStatus })
                 .eq('id', userId);
 
             if (error) throw error;
