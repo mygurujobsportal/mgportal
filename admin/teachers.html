@@ -177,31 +177,54 @@
     if (!confirm(`ఈ టీచర్ అకౌంట్‌ను ${newStatus.toUpperCase()} చేయాలనుకుంటున్నారా?`)) return;
 
     try {
-        // 1. Update Authentication Status in common_users
-        const { error: commonErr } = await _supabase
+        console.log("👉 Initiating status update for User ID:", userId, "New Status:", newStatus);
+
+        // Step 1: Update common_users table
+        const { data: commonData, error: commonErr } = await _supabase
             .from('common_users')
-            .update({ account_status: newStatus })
-            .eq('id', userId);
+            .update({ approval_status: newStatus })
+            .eq('id', userId)
+            .select();
 
-        if (commonErr) throw commonErr;
+        if (commonErr) {
+            console.error("❌ common_users update error:", commonErr);
+            throw new Error("common_users అప్‌డేట్ విఫలమైంది: " + commonErr.message);
+        }
+        console.log("✅ common_users updated successfully:", commonData);
 
-        // 2. Sync Profile Live Status in teacher_profiles
-        const { error: profileErr } = await _supabase
+        // Step 2: Try updating teacher_profiles with 'user_id'
+        let { data: profileData, error: profileErr } = await _supabase
             .from('teacher_profiles')
             .update({ profile_status: newStatus })
-            .eq('user_id', userId);
+            .eq('user_id', userId)
+            .select();
 
-        if (profileErr) {
-            console.warn("Note: teacher_profiles sync warning (check if record exists):", profileErr.message);
+        // Fallback: If user_id matching failed, try matching with 'id' column
+        if (profileErr || !profileData || profileData.length === 0) {
+            console.warn("⚠️ Retrying teacher_profiles update using 'id' column...");
+            const { data: retryData, error: retryErr } = await _supabase
+                .from('teacher_profiles')
+                .update({ profile_status: newStatus })
+                .eq('id', userId)
+                .select();
+
+            if (retryErr) {
+                console.error("❌ teacher_profiles retry error:", retryErr);
+            } else {
+                console.log("✅ teacher_profiles updated via fallback ID:", retryData);
+            }
+        } else {
+            console.log("✅ teacher_profiles updated successfully:", profileData);
         }
 
-        alert(`టీచర్ అకౌంట్ మరియు ప్రొఫైల్ స్టేటస్ విజయవంతంగా ${newStatus.toUpperCase()} గా నవీకరించబడింది!`);
+        alert(`స్టేటస్ విజయవంతంగా ${newStatus.toUpperCase()} గా అప్‌డేట్ చేయబడింది!`);
         
-        // Re-fetch to render live status
+        // Re-fetch to render immediate changes
         fetchTeachers();
 
     } catch (err) {
-        alert("Update Failed: " + err.message);
+        alert("⚠️ Update Failed: " + err.message);
+        console.error("Full Error Stack:", err);
     }
 }
     checkAdminAndFetch();
