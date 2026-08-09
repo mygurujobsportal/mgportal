@@ -174,27 +174,36 @@
     }
 
     async function updateStatus(userId, newStatus) {
-        if (!confirm(`ఈ టీచర్ అకౌంట్‌ను ${newStatus.toUpperCase()} చేయాలనుకుంటున్నారా?`)) return;
+    if (!confirm(`ఈ టీచర్ అకౌంట్‌ను ${newStatus.toUpperCase()} చేయాలనుకుంటున్నారా?`)) return;
 
-        try {
-            // Update common_users approval_status
-            const { error } = await _supabase
-                .from('common_users')
-                .update({ account_status: newStatus })
-                .eq('id', userId);
+    try {
+        // 1. Update Authentication Status in common_users
+        const { error: commonErr } = await _supabase
+            .from('common_users')
+            .update({ account_status: newStatus })
+            .eq('id', userId);
 
-            if (error) throw error;
+        if (commonErr) throw commonErr;
 
-            alert(`స్టేటస్ విజయవంతంగా ${newStatus.toUpperCase()} గా మారింది!`);
-            
-            // Re-fetch instantly to reflect changed status on UI
-            fetchTeachers();
+        // 2. Sync Profile Live Status in teacher_profiles
+        const { error: profileErr } = await _supabase
+            .from('teacher_profiles')
+            .update({ profile_status: newStatus })
+            .eq('user_id', userId);
 
-        } catch (err) {
-            alert("Update Failed: " + err.message);
+        if (profileErr) {
+            console.warn("Note: teacher_profiles sync warning (check if record exists):", profileErr.message);
         }
-    }
 
+        alert(`టీచర్ అకౌంట్ మరియు ప్రొఫైల్ స్టేటస్ విజయవంతంగా ${newStatus.toUpperCase()} గా నవీకరించబడింది!`);
+        
+        // Re-fetch to render live status
+        fetchTeachers();
+
+    } catch (err) {
+        alert("Update Failed: " + err.message);
+    }
+}
     checkAdminAndFetch();
 </script>
 </body>
