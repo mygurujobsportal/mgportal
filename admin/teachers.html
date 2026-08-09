@@ -135,7 +135,7 @@
             // 3. Render Table
             tbody.innerHTML = users.map(t => {
                 const prof = profileMap[t.id] || {};
-                const status = t.approval_status || 'pending';
+                const status = t.profile_status || 'pending';
                 const badgeClass = status === 'approved' ? 'badge-approved' : (status === 'rejected' ? 'badge-rejected' : 'badge-pending');
                 
                 const displayName = t.full_name || t.name || prof.full_name || prof.name || 'Teacher Profile';
