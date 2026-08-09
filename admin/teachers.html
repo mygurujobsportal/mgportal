@@ -117,24 +117,72 @@
             }
 
             tbody.innerHTML = users.map(t => {
+                    const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // మీ Anon Key ఉంచండి
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function checkAdminAndFetch() {
+        if (localStorage.getItem('adminLoggedIn') !== 'true') {
+            window.location.href = 'index.html';
+            return;
+        }
+        fetchTeachers();
+    }
+
+    async function fetchTeachers() {
+        const tbody = document.getElementById('teachersTableBody');
+        try {
+            // 1. Fetch Teachers from common_users
+            const { data: users, error: userErr } = await _supabase
+                .from('common_users')
+                .select('*')
+                .eq('role', 'teacher');
+
+            if (userErr) throw userErr;
+
+            if (!users || users.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #94a3b8;">No registered teachers found.</td></tr>`;
+                return;
+            }
+
+            // 2. Fetch Detailed Profiles from teacher_profiles using User IDs
+            const userIds = users.map(u => u.id);
+            const { data: profiles, error: profErr } = await _supabase
+                .from('teacher_profiles')
+                .select('*')
+                .in('user_id', userIds);
+
+            if (profErr) {
+                console.warn("teacher_profiles fetch note:", profErr.message);
+            }
+
+            // Create a lookup map for profiles
+            const profileMap = {};
+            if (profiles) {
+                profiles.forEach(p => { profileMap[p.user_id] = p; });
+            }
+
+            // 3. Render Combined Data with Fallbacks
+            tbody.innerHTML = users.map(t => {
+                const prof = profileMap[t.id] || {};
                 const status = t.approval_status || 'pending';
                 const badgeClass = status === 'approved' ? 'badge-approved' : (status === 'rejected' ? 'badge-rejected' : 'badge-pending');
                 
-                // Smart fallback for Name, Email & Phone
-                const displayName = t.full_name || t.name || t.display_name || 'Teacher User';
-                const displayEmail = t.email || t.email_address || 'No Email';
-                const displayPhone = t.phone || t.mobile || t.phone_number || '';
-                const qualification = t.qualification || 'Zoology / Bio Science';
+                // Smart Mapping: Checks common_users first, then teacher_profiles
+                const displayName = t.full_name || prof.full_name || prof.name || t.name || 'Teacher User';
+                const displayEmail = t.email || prof.email || t.email_address || 'No Email Registered';
+                const displayPhone = t.phone || prof.phone || prof.mobile || t.phone_number || 'N/A';
+                const qualification = prof.qualification || prof.highest_qualification || t.qualification || 'Zoology / Bio Science';
 
                 return `
                     <tr>
                         <td>
                             <strong>${displayName}</strong><br>
-                            <small style="color:#64748b; font-family: monospace;">${t.id.substring(0,8)}...</small>
+                            <small style="color:#f59e0b; font-family: monospace;">ID: ${t.id.substring(0,8)}...</small>
                         </td>
                         <td>
-                            ${displayEmail}<br>
-                            <small style="color:#64748b;">${displayPhone}</small>
+                            📧 ${displayEmail}<br>
+                            <small style="color:#94a3b8;">📞 ${displayPhone}</small>
                         </td>
                         <td>${qualification}</td>
                         <td><span class="badge ${badgeClass}">${status.toUpperCase()}</span></td>
