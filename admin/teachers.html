@@ -175,7 +175,7 @@
         try {
             const { error } = await _supabase
                 .from('common_users')
-                .update({ profile_status: newStatus })
+                .update({ account_status: newStatus })
                 .eq('id', userId);
 
             if (error) throw error;
