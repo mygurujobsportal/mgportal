@@ -182,7 +182,7 @@
         // Step 1: Update common_users table
         const { data: commonData, error: commonErr } = await _supabase
             .from('common_users')
-            .update({ approval_status: newStatus })
+            .update({ account_status: newStatus })
             .eq('id', userId)
             .select();
 
