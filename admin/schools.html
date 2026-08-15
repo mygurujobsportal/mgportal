@@ -186,7 +186,7 @@
             const { error: commonErr } = await _supabase
                 .from('common_users')
                 .update({ 
-                    approval_status: newStatus,
+                    account_status: newStatus,
                     account_status: newStatus 
                 })
                 .eq('id', userId);
