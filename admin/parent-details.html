@@ -9,7 +9,19 @@
     <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .details-container { max-width: 900px; margin: 20px auto; display: flex; flex-direction: column; gap: 20px; }
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; }
+        .wrapper { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background-color: #1e293b; padding: 20px; border-right: 1px solid #334155; }
+        .main-content { flex: 1; padding: 30px; }
+        .brand { font-size: 20px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        .nav-list { list-style: none; padding: 0; margin: 0; }
+        .nav-item { margin-bottom: 6px; }
+        .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .nav-link:hover, .nav-link.active { background-color: #334155; color: #f59e0b; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #334155; }
+
+        .details-container { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
         .profile-card { background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); position: relative; }
         .stamp-status { position: absolute; top: 25px; right: 25px; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
         
@@ -39,32 +51,28 @@
 </head>
 <body>
 
+<div class="wrapper">
     <!-- 👑 Master Controller Sidebar -->
-    <div class="sidebar">
-        <div style="text-align: center; padding: 10px;">
-            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 70px; height: auto; border-radius: 50%;">
-            <h2 style="color: #38bdf8; font-size: 16px; margin-top: 8px;">MyGuru Control</h2>
-        </div>
-        <a href="dashboard.html">Dashboard</a>
-        <a href="teachers.html">Teachers</a>
-        <a href="schools.html">Schools</a>
-        <a href="parents.html" class="active">Parents</a>
-        <a href="jobs.html">Jobs</a>
-        <a href="applications.html">Applications</a>
-        <a href="interview-letters.html">Interview Letters</a>
-        <a href="notifications.html">Notifications</a>
-        <a href="subscriptions.html">Subscriptions</a>
-        <a href="payments.html">Payments</a>
-        <a href="reports.html">Reports</a>
-        <a href="settings.html">Settings</a>
-        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
-    </div>
+    <aside class="sidebar">
+        <div class="brand">🛡️ MyGuru Admin</div>
+        <ul class="nav-list">
+            <li class="nav-item"><a href="dashboard.html" class="nav-link">📊 Dashboard</a></li>
+            <li class="nav-item"><a href="teachers.html" class="nav-link">👨‍🏫 Teachers & Approvals</a></li>
+            <li class="nav-item"><a href="schools.html" class="nav-link">🏫 Schools & Employers</a></li>
+            <li class="nav-item"><a href="parents.html" class="nav-link active">🏡 Parents & Tuitions</a></li>
+            <li class="nav-item"><a href="jobs.html" class="nav-link">💼 Job Postings</a></li>
+            <li class="nav-item"><a href="applications.html" class="nav-link">📄 Applications Tracker</a></li>
+            <li class="nav-item"><a href="payments.html" class="nav-link">💳 Subscriptions & Payments</a></li>
+            <li class="nav-item"><a href="messages.html" class="nav-link">💬 Messages & Support</a></li>
+            <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ System Settings</a></li>
+        </ul>
+    </aside>
 
     <!-- 💻 Command Main Content Workspace -->
-    <div class="content">
+    <main class="main-content">
         <div class="header">
-            <h3>👪 తల్లిదండ్రుల సమగ్ర ప్రొఫైల్ (Admin Workspace)</h3>
-            <a href="parents.html" class="tag" style="background:#475569; text-decoration:none;">← Back Vault</a>
+            <h3 style="margin: 0;">👪 తల్లిదండ్రుల సమగ్ర ప్రొఫైల్ (Admin Workspace)</h3>
+            <a href="parents.html" class="btn-ctrl" style="background:#475569; color:white; text-decoration:none; padding:8px 16px; font-size:13px;">← Back to Parents</a>
         </div>
 
         <div class="details-container">
@@ -76,23 +84,23 @@
                 <div class="profile-header">
                     <div class="big-avatar">👪</div>
                     <div class="header-meta">
-                        <h2 id="lblFullName">Parent Full Name</h2>
+                        <h2 id="lblFullName">Loading Parent Name...</h2>
                         <p id="lblAccountType" style="color:#94a3b8; font-size:14px; margin:0;">Account Scope: Parent | ID: --</p>
                     </div>
                 </div>
 
-                <!-- Complete 3 visibility parameters Grid (Admin Only Privileges) -->
+                <!-- Complete Info Grid -->
                 <div class="info-grid">
                     <div class="info-block">
-                        <label>📞 Private Mobile Number</label>
+                        <label>📞 Contact Mobile Number</label>
                         <p id="lblMobile">Loading...</p>
                     </div>
                     <div class="info-block">
-                        <label>📧 Private Email Address</label>
+                        <label>📧 Email Address</label>
                         <p id="lblEmail">Loading...</p>
                     </div>
                     <div class="info-block">
-                        <label>📍 District</label>
+                        <label>📍 District / Location</label>
                         <p id="lblDistrict">Loading...</p>
                     </div>
                     <div class="info-block">
@@ -116,28 +124,27 @@
             <div class="notify-box">
                 <h4 style="color:white; margin:0;">💬 Send Direct Notification to this Parent</h4>
                 <textarea id="txtAdminMessage" rows="3" style="width:100%; padding:10px; background:rgba(15,23,42,0.6); border:1px solid #334155; color:white; border-radius:6px; font-size:13px; outline:none; resize:none;" placeholder="తల్లిదండ్రులకు పంపాల్సిన అకౌంట్ అప్‌డేట్స్ లేదా సమాచారం ఇక్కడ టైప్ చేయండి..."></textarea>
-                <button class="btn-ctrl btn-ctrl-susp" style="align-self:flex-start; font-size:12px; padding:8px 16px; background:#22c55e;" onclick="dispatchDirectParentNotice()">Broadcast Notice</button>
+                <button class="btn-ctrl" style="align-self:flex-start; font-size:12px; padding:8px 16px; background:#22c55e; color:#000;" onclick="dispatchDirectParentNotice()">Broadcast Notice</button>
             </div>
 
         </div>
-    </div>
+    </main>
+</div>
 
-    <!-- Scripts Integration Node -->
-    <script src="../js/supabase.js"></script>
-    <script src="../js/auth.js"></script>
     <script>
+        const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         let targetParentId = null;
-        let currentParentStatus = 'active';
+        let currentParentStatus = 'pending';
 
         async function initParentDetailsRoom() {
-            const activeAdmin = await checkLiveUserSession('Admin');
-            if (!activeAdmin) return;
-
             const urlParams = new URLSearchParams(window.location.search);
             targetParentId = urlParams.get('id');
 
             if (!targetParentId) {
-                alert("Invalid Scope Context.");
+                alert("Invalid Scope Context. Redirecting...");
                 window.location.href = "parents.html";
                 return;
             }
@@ -147,75 +154,134 @@
 
         async function loadCompleteParentPayload() {
             try {
-                const { data: user, error } = await _supabase
+                // 1. Fetch common_users
+                const { data: user, error: uErr } = await _supabase
                     .from('common_users')
-                    .select(`
-                        id, full_name, email, phone, status,
-                        parent_profiles ( state, district, full_address )
-                    `)
+                    .select('*')
                     .eq('id', targetParentId)
                     .single();
 
-                if (error) throw error;
+                if (uErr) throw uErr;
 
-                // Bind User Account Level Metrics
-                document.getElementById('lblFullName').innerText = user.full_name;
-                document.getElementById('lblAccountType').innerText = `Account Scope: Parent | ID: #PT-${user.id.split('-')[0].toUpperCase()}`;
-                document.getElementById('lblEmail').innerText = user.email || 'N/A';
-                document.getElementById('lblMobile').innerText = user.phone || 'N/A';
-                currentParentStatus = user.status || 'active';
+                // 2. Fetch parent_profiles safely using 'id'
+                let profile = {};
+                const { data: profData } = await _supabase
+                    .from('parent_profiles')
+                    .select('*')
+                    .eq('id', targetParentId)
+                    .single();
 
-                // Manage Status Stamp Styling
+                if (profData) profile = profData;
+
+                // Bind Data
+                const fullName = profile.parent_name || profile.name || user.full_name || 'Parent User';
+                const shortId = (user.id || '').substring(0, 8).toUpperCase();
+
+                document.getElementById('lblFullName').innerText = fullName;
+                document.getElementById('lblAccountType').innerText = `Account Scope: Parent | ID: #PT-${shortId}`;
+                document.getElementById('lblEmail').innerText = user.email || profile.email || 'N/A';
+                document.getElementById('lblMobile').innerText = user.phone || user.mobile || profile.phone || profile.contact_number || 'N/A';
+                
+                currentParentStatus = user.account_status || profile.profile_status || 'pending';
+
+                // Status Badge & Button Styling
                 const stamp = document.getElementById('lblStatusStamp');
-                stamp.innerText = currentParentStatus;
+                stamp.innerText = currentParentStatus.toUpperCase();
                 
                 const suspBtn = document.getElementById('btnToggleSuspension');
-                if(currentParentStatus === 'active') {
+                if (currentParentStatus === 'approved' || currentParentStatus === 'active') {
                     stamp.style.background = '#22c55e';
+                    stamp.style.color = '#000';
                     suspBtn.innerText = "Suspend Account";
                     suspBtn.style.background = "#ea580c";
+                    suspBtn.style.color = "#fff";
+                } else if (currentParentStatus === 'pending') {
+                    stamp.style.background = '#ca8a04';
+                    stamp.style.color = '#fff';
+                    suspBtn.innerText = "Approve Account";
+                    suspBtn.style.background = "#22c55e";
+                    suspBtn.style.color = "#000";
                 } else {
                     stamp.style.background = '#dc2626';
+                    stamp.style.color = '#fff';
                     suspBtn.innerText = "Activate / Unsuspend";
                     suspBtn.style.background = "#22c55e";
+                    suspBtn.style.color = "#000";
                 }
 
-                // Profile Sections Mapping
-                const pProf = user.parent_profiles || {};
-                document.getElementById('lblState').innerText = pProf.state || 'N/A';
-                document.getElementById('lblDistrict').innerText = pProf.district || 'N/A';
-                document.getElementById('lblAddress').innerText = pProf.full_address || 'Address context empty';
+                // Profile Fields
+                document.getElementById('lblState').innerText = profile.state || 'Telangana / AP';
+                document.getElementById('lblDistrict').innerText = profile.district || profile.city || user.location || 'N/A';
+                document.getElementById('lblAddress').innerText = profile.full_address || profile.address || profile.area || 'Address context empty';
 
-            } catch (err) { console.error("Critical Parent Payload Loading Failure:", err.message); }
+            } catch (err) {
+                console.error("Critical Parent Payload Loading Failure:", err);
+                alert("Failed to load parent details: " + err.message);
+            }
         }
 
-        // 🛡️ Account Status Modification Gateway (Toggle Suspend)
+        // 🛡️ Account Status Modification Gateway (Syncs common_users & parent_profiles)
         async function toggleParentAccountState() {
-            const nextStatus = currentParentStatus === 'suspended' ? 'active' : 'suspended';
-            if(!confirm(`Confirm changing parent account state to ${nextStatus.toUpperCase()}?`)) return;
+            let nextStatus = 'approved';
+            if (currentParentStatus === 'approved' || currentParentStatus === 'active') {
+                nextStatus = 'rejected';
+            }
+
+            if (!confirm(`Confirm changing parent account state to ${nextStatus.toUpperCase()}?`)) return;
+            
             try {
-                const { error } = await _supabase.from('common_users').update({ status: nextStatus }).eq('id', targetParentId);
-                if (error) throw error;
+                // 1. Update common_users.account_status
+                const { error: uErr } = await _supabase
+                    .from('common_users')
+                    .update({ account_status: nextStatus })
+                    .eq('id', targetParentId);
+
+                if (uErr) throw uErr;
+
+                // 2. Update parent_profiles.profile_status
+                const { data: profCheck } = await _supabase
+                    .from('parent_profiles')
+                    .select('id')
+                    .eq('id', targetParentId);
+
+                if (!profCheck || profCheck.length === 0) {
+                    await _supabase
+                        .from('parent_profiles')
+                        .insert([{ id: targetParentId, profile_status: nextStatus }]);
+                } else {
+                    await _supabase
+                        .from('parent_profiles')
+                        .update({ profile_status: nextStatus })
+                        .eq('id', targetParentId);
+                }
+
                 alert(`✓ System updated: Parent account is now ${nextStatus.toUpperCase()}`);
                 await loadCompleteParentPayload();
-            } catch (err) { alert("Operational failure: " + err.message); }
+
+            } catch (err) {
+                alert("Operational failure: " + err.message);
+            }
         }
 
-        // 🗑️ Purge Account Completely
+        // 🗑️ Purge Account
         async function purgeParentAccountGate() {
-            if(!confirm("🚨 CRITICAL ALERT: Are you sure you want to delete this parent account permanently? This cannot be undone!")) return;
+            if (!confirm("🚨 CRITICAL ALERT: Are you sure you want to delete this parent account permanently?")) return;
             try {
+                await _supabase.from('parent_profiles').delete().eq('id', targetParentId);
                 const { error } = await _supabase.from('common_users').delete().eq('id', targetParentId);
                 if (error) throw error;
+
                 alert("✓ Parent account completely expunged.");
                 window.location.href = "parents.html";
-            } catch (err) { alert(err.message); }
+            } catch (err) {
+                alert("Purge failed: " + err.message);
+            }
         }
 
         // 💬 Direct Parent Notice Dispatcher
         async function dispatchDirectParentNotice() {
             const msg = document.getElementById('txtAdminMessage').value.trim();
-            if(!msg) return alert("Notice body cannot be empty.");
+            if (!msg) return alert("Notice body cannot be empty.");
             try {
                 const { error } = await _supabase.from('notifications').insert([{
                     user_id: targetParentId,
@@ -227,13 +293,10 @@
                 if (error) throw error;
                 alert("✓ Custom push notification sent to parent console.");
                 document.getElementById('txtAdminMessage').value = "";
-            } catch (err) { alert("Broadcast failed: " + err.message); }
+            } catch (err) {
+                alert("Broadcast failed: " + err.message);
+            }
         }
-
-        document.getElementById('logout-btn').addEventListener('click', async (e) => {
-            e.preventDefault();
-            await logoutSessionRouter();
-        });
 
         window.onload = initParentDetailsRoom;
     </script>
