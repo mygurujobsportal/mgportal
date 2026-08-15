@@ -488,6 +488,167 @@
 
                 alert(`🎉 Success: స్టేటస్ విజయవంతంగా ${newStatus.toUpperCase()} గా నవీకరించబడింది!`);
                 await loadParentsRepository();
+    <script>
+        const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let cachedParentsList = [];
+
+        async function initParentsVault() {
+            await loadParentsRepository();
+        }
+
+        async function loadParentsRepository() {
+            const tbody = document.getElementById('parentsMasterTbody');
+            try {
+                // 1. Fetch from common_users
+                const { data: users, error: userErr } = await _supabase
+                    .from('common_users')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (userErr) throw userErr;
+
+                const parents = users ? users.filter(u => 
+                    u.role && (
+                        u.role.toLowerCase() === 'parent' ||
+                        u.role.toLowerCase() === 'parents'
+                    )
+                ) : [];
+
+                if (parents.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:20px;">No registered parents found in repository.</td></tr>`;
+                    return;
+                }
+
+                // 2. Fetch Profiles from parent_profiles safely
+                let profileMap = {};
+                try {
+                    const { data: profiles } = await _supabase.from('parent_profiles').select('*');
+                    if (profiles) {
+                        profiles.forEach(p => {
+                            profileMap[p.id] = p;
+                        });
+                    }
+                } catch (pErr) {
+                    console.warn("parent_profiles fetch bypass:", pErr);
+                }
+
+                // 3. Map Data
+                cachedParentsList = parents.map(p => {
+                    const prof = profileMap[p.id] || {};
+                    return {
+                        ...p,
+                        profileData: prof,
+                        district: prof.district || prof.city || prof.location || p.location || 'Telangana / AP',
+                        phone: p.phone || p.mobile || prof.phone || prof.contact_number || 'N/A',
+                        status: p.account_status || prof.profile_status || 'pending'
+                    };
+                });
+
+                renderParentsTable(cachedParentsList);
+
+            } catch (err) {
+                console.error("Parents vault fetch failed:", err);
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #ef4444; padding: 20px;">Error loading data: ${err.message}</td></tr>`;
+            }
+        }
+
+        function renderParentsTable(list) {
+            const tbody = document.getElementById('parentsMasterTbody');
+            tbody.innerHTML = "";
+
+            if (!list || list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:20px;">No parent records match the active filters.</td></tr>`;
+                return;
+            }
+
+            list.forEach(p => {
+                const shortId = (p.id || '').substring(0, 8).toUpperCase();
+                const currentStatus = p.status || 'pending';
+                
+                let badgeClass = 'status-pending';
+                if (currentStatus === 'approved' || currentStatus === 'active') badgeClass = 'status-active';
+                if (currentStatus === 'rejected' || currentStatus === 'suspended') badgeClass = 'status-suspended';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><div class="parent-avatar">👪</div></td>
+                        <td><code style="color:#6366f1;">#PT-${shortId}</code></td>
+                        <td><strong>${p.full_name || p.name || 'Parent User'}</strong></td>
+                        <td>📞 ${p.phone}</td>
+                        <td>${p.district}</td>
+                        <td><span class="status-badge ${badgeClass}">${currentStatus.toUpperCase()}</span></td>
+                        <td>
+                            <div class="btn-action-zone">
+                                <a href="parent-details.html?id=${p.id}" class="btn-adm btn-adm-view">View</a>
+                                <button class="btn-adm btn-adm-appr" onclick="updateParentStatus('${p.id}', 'approved')">Approve</button>
+                                <button class="btn-adm btn-adm-susp" onclick="updateParentStatus('${p.id}', 'rejected')">Block</button>
+                                <button class="btn-adm btn-adm-del" onclick="triggerParentPurge('${p.id}')">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function filterParentsTable() {
+            const searchVal = document.getElementById('searchParentName').value.toLowerCase().trim();
+            const statusVal = document.getElementById('filterStatus').value;
+
+            const filtered = cachedParentsList.filter(p => {
+                const name = (p.full_name || p.name || '').toLowerCase();
+                const dist = (p.district || '').toLowerCase();
+                const phone = (p.phone || '').toLowerCase();
+                
+                const matchesSearch = name.includes(searchVal) || dist.includes(searchVal) || phone.includes(searchVal);
+                
+                let matchesStatus = true;
+                if (statusVal !== 'ALL') {
+                    matchesStatus = p.status === statusVal;
+                }
+
+                return matchesSearch && matchesStatus;
+            });
+
+            renderParentsTable(filtered);
+        }
+
+        async function updateParentStatus(userId, newStatus) {
+            if (!confirm(`ఈ పేరెంట్ అకౌంట్‌ను ${newStatus.toUpperCase()} చేయాలనుకుంటున్నారా?`)) return;
+
+            try {
+                // Update common_users (account_status)
+                const { error: commonErr } = await _supabase
+                    .from('common_users')
+                    .update({ account_status: newStatus })
+                    .eq('id', userId);
+
+                if (commonErr) {
+                    alert("❌ common_users Update Failed: " + commonErr.message);
+                    return;
+                }
+
+                // Update parent_profiles (profile_status using 'id')
+                const { data: profileCheck } = await _supabase
+                    .from('parent_profiles')
+                    .select('id')
+                    .eq('id', userId);
+
+                if (!profileCheck || profileCheck.length === 0) {
+                    await _supabase
+                        .from('parent_profiles')
+                        .insert([{ id: userId, profile_status: newStatus }]);
+                } else {
+                    await _supabase
+                        .from('parent_profiles')
+                        .update({ profile_status: newStatus })
+                        .eq('id', userId);
+                }
+
+                alert(`🎉 Success: స్టేటస్ విజయవంతంగా ${newStatus.toUpperCase()} గా నవీకరించబడింది!`);
+                await loadParentsRepository();
 
             } catch (err) {
                 alert("Update Failed: " + err.message);
@@ -517,5 +678,6 @@
 
         window.onload = initParentsVault;
     </script>
+
 </body>
 </html>
