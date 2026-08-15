@@ -179,48 +179,70 @@
     }
 
     async function updateStatus(userId, newStatus) {
-        if (!confirm(`ఈ స్కూల్ అకౌంట్‌ను ${newStatus.toUpperCase()} చేయాలనుకుంటున్నారా?`)) return;
+    async function updateStatus(userId, newStatus) {
+    if (!confirm(`ఈ స్కూల్ అకౌంట్‌ను ${newStatus.toUpperCase()} చేయాలనుకుంటున్నారా?`)) return;
 
-        try {
-            // Step 1: Update common_users (Syncing both approval_status & account_status columns)
-            const { error: commonErr } = await _supabase
-                .from('common_users')
-                .update({ 
-                    account_status: newStatus,
-                    account_status: newStatus 
-                })
-                .eq('id', userId);
+    try {
+        // Step 1: Update common_users
+        const { error: commonErr } = await _supabase
+            .from('common_users')
+            .update({ 
+            	account_status: newStatus,
+                account_status: newStatus 
+            })
+            .eq('id', userId);
 
-            if (commonErr) throw commonErr;
+        if (commonErr) {
+            alert("❌ common_users Update Failed: " + commonErr.message);
+            return;
+        }
 
-            // Step 2: Sync with school_profiles
-            const { error: profErr } = await _supabase
+        // Step 2: Update school_profiles (Checking common column variations)
+        // 2a. Try matching user_id with profile_status
+        let { data: p1, error: e1 } = await _supabase
+            .from('school_profiles')
+            .update({ profile_status: newStatus })
+            .eq('user_id', userId)
+            .select();
+
+        // 2b. If no rows matched or error, try approval_status column with user_id
+        if (e1 || !p1 || p1.length === 0) {
+            let { data: p2, error: e2 } = await _supabase
                 .from('school_profiles')
-                .update({ 
-                    profile_status: newStatus,
-                    account_status: newStatus 
-                })
-                .eq('user_id', userId);
+                .update({ account_status: newStatus })
+                .eq('user_id', userId)
+                .select();
 
-            if (profErr) {
-                // Fallback attempt with 'id' column
-                await _supabase
+            // 2c. If still not matched, try matching with 'id' column instead of 'user_id'
+            if (e2 || !p2 || p2.length === 0) {
+                let { data: p3, error: e3 } = await _supabase
                     .from('school_profiles')
                     .update({ 
                         profile_status: newStatus,
-                        approval_status: newStatus 
+                        account_status: newStatus 
                     })
-                    .eq('id', userId);
+                    .eq('id', userId)
+                    .select();
+
+                if (e3 || !p3 || p3.length === 0) {
+                    alert(`⚠️ Note: common_users updated to ${newStatus}!\nschool_profiles లో matching record దొరకలేదు. దయచేసి school_profiles లోని User ID/ID కాలమ్ పేరు చెక్ చేయండి.`);
+                } else {
+                    alert(`🎉 Success: Both common_users & school_profiles updated to ${newStatus.toUpperCase()}!`);
+                }
+            } else {
+                alert(`🎉 Success: Both common_users & school_profiles updated to ${newStatus.toUpperCase()}!`);
             }
-
-            alert(`🎉 స్కూల్ అకౌంట్ స్టేటస్ విజయవంతంగా ${newStatus.toUpperCase()} గా నవీకరించబడింది!`);
-            fetchSchools();
-
-        } catch (err) {
-            alert("Update Failed: " + err.message);
-            console.error("Error updating school:", err);
+        } else {
+            alert(`🎉 Success: Both common_users & school_profiles updated to ${newStatus.toUpperCase()}!`);
         }
+
+        fetchSchools();
+
+    } catch (err) {
+        alert("Update Failed: " + err.message);
+        console.error("Error updating school:", err);
     }
+}
 
     checkAdminAndFetch();
 </script>
