@@ -270,26 +270,36 @@
         renderJobsTable(filtered);
     }
 
-    async function updatePostingStatus(tableName, postingId, newStatus) {
-        if (!confirm(`ఈ పోస్టింగ్‌ను ${newStatus.toUpperCase()} చేయాలనుకుంటున్నారా?`)) return;
+        async function updatePostingStatus(tableName, postingId, newStatus) {
+        if (!confirm(`ఈ జాబ్/ట్యూషన్ స్టేటస్‌ను ${newStatus.toUpperCase()} చేయాలనుకుంటున్నారా?`)) return;
 
         try {
-            const { error } = await _supabase
+            console.log(`Updating ${tableName} ID: ${postingId} to status: ${newStatus}`);
+            
+            const { data, error } = await _supabase
                 .from(tableName)
-                .update({ admin_status: newStatus })
-                .eq('id', postingId);
+                .update({ 
+                    admin_status: newStatus,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', postingId)
+                .select();
 
-            if (error) throw error;
+            if (error) {
+                console.error("Update Error:", error);
+                throw error;
+            }
 
-            alert(`✓ స్టేటస్ విజయవంతంగా ${newStatus.toUpperCase()} గా నవీకరించబడింది!`);
-            loadAllPostings();
+            alert(`🎉 సక్సెస్: స్టేటస్ విజయవంతంగా ${newStatus.toUpperCase()} గా మారింది!`);
+            await loadAllPostings();
+
         } catch (err) {
-            alert("Update Failed: " + err.message);
+            alert("⚠️ Update Failed: " + err.message);
         }
     }
 
     async function deletePosting(tableName, postingId) {
-        if (!confirm("🚨 ఈ పోస్టింగ్‌ను శాశ్వతంగా తొలగించాలనుకుంటున్నారా? దీనిపై వచ్చిన దరఖాస్తులు కూడా ప్రభావితమవుతాయి.")) return;
+        if (!confirm("🚨 జాగ్రత్త: ఈ పోస్ట్‌ను శాశ్వతంగా డిలీట్ చేయాలనుకుంటున్నారా?")) return;
 
         try {
             const { error } = await _supabase
@@ -299,13 +309,13 @@
 
             if (error) throw error;
 
-            alert("✓ పోస్టింగ్ విజయవంతంగా తొలగించబడింది.");
-            loadAllPostings();
+            alert("✓ రికార్డ్ విజయవంతంగా తొలగించబడింది.");
+            await loadAllPostings();
+
         } catch (err) {
-            alert("Delete Failed: " + err.message);
+            alert("⚠️ Delete Failed: " + err.message);
         }
     }
-
     // Direct execution
     loadAllPostings();
 </script>
