@@ -173,7 +173,7 @@
         }
     }
 
-    function renderParentsTable(list) {
+        function renderParentsTable(list) {
         const tbody = document.getElementById('parentsMasterTbody');
         tbody.innerHTML = "";
 
@@ -194,7 +194,11 @@
                 <tr>
                     <td><div class="parent-avatar">👪</div></td>
                     <td><code style="color:#f59e0b;">#PT-${shortId}</code></td>
-                    <td><strong>${p.name}</strong></td>
+                    <td>
+                        <a href="parent-details.html?id=${p.id}" style="color: #38bdf8; text-decoration: none; font-weight: bold;">
+                            ${p.name} ↗
+                        </a>
+                    </td>
                     <td>
                         📧 ${p.email}<br>
                         <small style="color:#38bdf8; font-weight: 500;">📞 ${p.phone}</small>
@@ -203,6 +207,7 @@
                     <td><span class="status-badge ${badgeClass}">${currentStatus.toUpperCase()}</span></td>
                     <td>
                         <div class="btn-action-zone">
+                            <a href="parent-details.html?id=${p.id}" class="btn-adm" style="background-color: #3b82f6; color: #fff; text-decoration: none; display: inline-block;">View</a>
                             <button class="btn-adm btn-adm-appr" onclick="updateParentStatus('${p.id}', 'approved')">Approve</button>
                             <button class="btn-adm btn-adm-susp" onclick="updateParentStatus('${p.id}', 'rejected')">Block</button>
                         </div>
