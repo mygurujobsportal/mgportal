@@ -32,7 +32,9 @@
         .badge-approved { background: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid #4ade80; }
         .badge-rejected { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid #ef4444; }
         
-        .btn-action { padding: 6px 12px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 12px; margin-right: 5px; }
+        .btn-action { padding: 6px 12px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 12px; margin-right: 5px; text-decoration: none; display: inline-block; }
+        .btn-view { background-color: #3b82f6; color: #fff; }
+        .btn-view:hover { background-color: #2563eb; }
         .btn-approve { background-color: #22c55e; color: #000; }
         .btn-approve:hover { background-color: #16a34a; }
         .btn-reject { background-color: #ef4444; color: #fff; }
@@ -88,7 +90,7 @@
 
 <script>
     const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0'; // మీ Anon Key ని ఇక్కడ వేయండి
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function checkAdminAndFetch() {
@@ -121,7 +123,7 @@
                 const { data: profiles } = await _supabase.from('teacher_profiles').select('*');
                 if (profiles) {
                     profiles.forEach(p => { 
-                        const key = p.user_id || p.id;
+                        const key = p.id || p.user_id;
                         if (key) profileMap[key] = p; 
                     });
                 }
@@ -129,28 +131,25 @@
                 console.warn("Profiles fetch note:", pErr);
             }
 
-            // 3. Render Table
+            // 3. Render Table with teacher-details.html Link
             tbody.innerHTML = users.map(t => {
                 const prof = profileMap[t.id] || {};
-                const status = t.account_status || 'pending';
+                const status = t.account_status || prof.profile_status || 'pending';
                 const badgeClass = status === 'approved' ? 'badge-approved' : (status === 'rejected' ? 'badge-rejected' : 'badge-pending');
                 
-                // Detailed Fallback for Name
-                const displayName = t.full_name || t.name || prof.full_name || prof.name || 'Teacher Profile';
-                
-                // Detailed Fallback for Email
+                const displayName = prof.full_name || prof.name || t.full_name || t.name || 'Teacher Profile';
                 const displayEmail = t.email || t.email_address || prof.email || 'No Email';
-                
-                // Exhaustive Search for Mobile Number Across Column Variants
                 const displayPhone = t.phone || t.mobile || t.phone_number || t.contact || 
                                      prof.phone || prof.mobile || prof.contact_number || prof.phone_number || 'No Mobile';
 
-                const qualification = prof.qualification || prof.highest_qualification || t.qualification || 'Zoology / Bio Science';
+                const qualification = prof.qualification || prof.highest_qualification || prof.qualifications || t.qualification || 'Teaching Faculty';
 
                 return `
                     <tr>
                         <td>
-                            <strong>${displayName}</strong><br>
+                            <a href="teacher-details.html?id=${t.id}" style="color: #38bdf8; text-decoration: none; font-weight: bold;">
+                                ${displayName} ↗
+                            </a><br>
                             <small style="color:#f59e0b; font-family: monospace;">ID: ${t.id.substring(0,8)}...</small>
                         </td>
                         <td>
@@ -160,6 +159,7 @@
                         <td>${qualification}</td>
                         <td><span class="badge ${badgeClass}">${status.toUpperCase()}</span></td>
                         <td>
+                            <a href="teacher-details.html?id=${t.id}" class="btn-action btn-view">View</a>
                             <button class="btn-action btn-approve" onclick="updateStatus('${t.id}', 'approved')">Approve</button>
                             <button class="btn-action btn-reject" onclick="updateStatus('${t.id}', 'rejected')">Reject</button>
                         </td>
@@ -174,59 +174,43 @@
     }
 
     async function updateStatus(userId, newStatus) {
-    if (!confirm(`ఈ టీచర్ అకౌంట్‌ను ${newStatus.toUpperCase()} చేయాలనుకుంటున్నారా?`)) return;
+        if (!confirm(`ఈ టీచర్ అకౌంట్‌ను ${newStatus.toUpperCase()} చేయాలనుకుంటున్నారా?`)) return;
 
-    try {
-        console.log("👉 Initiating status update for User ID:", userId, "New Status:", newStatus);
+        try {
+            // Step 1: Update common_users
+            const { error: commonErr } = await _supabase
+                .from('common_users')
+                .update({ account_status: newStatus })
+                .eq('id', userId);
 
-        // Step 1: Update common_users table
-        const { data: commonData, error: commonErr } = await _supabase
-            .from('common_users')
-            .update({ account_status: newStatus })
-            .eq('id', userId)
-            .select();
+            if (commonErr) throw new Error("common_users update error: " + commonErr.message);
 
-        if (commonErr) {
-            console.error("❌ common_users update error:", commonErr);
-            throw new Error("common_users అప్‌డేట్ విఫలమైంది: " + commonErr.message);
-        }
-        console.log("✅ common_users updated successfully:", commonData);
-
-        // Step 2: Try updating teacher_profiles with 'user_id'
-        let { data: profileData, error: profileErr } = await _supabase
-            .from('teacher_profiles')
-            .update({ profile_status: newStatus })
-            .eq('user_id', userId)
-            .select();
-
-        // Fallback: If user_id matching failed, try matching with 'id' column
-        if (profileErr || !profileData || profileData.length === 0) {
-            console.warn("⚠️ Retrying teacher_profiles update using 'id' column...");
-            const { data: retryData, error: retryErr } = await _supabase
+            // Step 2: Update teacher_profiles using 'id'
+            const { data: profCheck } = await _supabase
                 .from('teacher_profiles')
-                .update({ profile_status: newStatus })
-                .eq('id', userId)
-                .select();
+                .select('id')
+                .eq('id', userId);
 
-            if (retryErr) {
-                console.error("❌ teacher_profiles retry error:", retryErr);
+            if (!profCheck || profCheck.length === 0) {
+                await _supabase
+                    .from('teacher_profiles')
+                    .insert([{ id: userId, profile_status: newStatus }]);
             } else {
-                console.log("✅ teacher_profiles updated via fallback ID:", retryData);
+                await _supabase
+                    .from('teacher_profiles')
+                    .update({ profile_status: newStatus })
+                    .eq('id', userId);
             }
-        } else {
-            console.log("✅ teacher_profiles updated successfully:", profileData);
+
+            alert(`స్టేటస్ విజయవంతంగా ${newStatus.toUpperCase()} గా అప్‌డేట్ చేయబడింది!`);
+            fetchTeachers();
+
+        } catch (err) {
+            alert("⚠️ Update Failed: " + err.message);
+            console.error(err);
         }
-
-        alert(`స్టేటస్ విజయవంతంగా ${newStatus.toUpperCase()} గా అప్‌డేట్ చేయబడింది!`);
-        
-        // Re-fetch to render immediate changes
-        fetchTeachers();
-
-    } catch (err) {
-        alert("⚠️ Update Failed: " + err.message);
-        console.error("Full Error Stack:", err);
     }
-}
+
     checkAdminAndFetch();
 </script>
 </body>
