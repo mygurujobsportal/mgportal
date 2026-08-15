@@ -136,6 +136,7 @@
             }
 
             // 3. Render Data
+                        // 3. Render Data with Details Link
             tbody.innerHTML = schools.map(s => {
                 const prof = profileMap[s.id] || {};
                 const status = s.account_status || prof.profile_status || 'pending';
@@ -149,7 +150,9 @@
                 return `
                     <tr>
                         <td>
-                            <strong>${schoolName}</strong><br>
+                            <a href="school-details.html?id=${s.id}" style="color: #38bdf8; text-decoration: none; font-weight: bold;">
+                                ${schoolName} ↗
+                            </a><br>
                             <small style="color:#f59e0b; font-family: monospace;">ID: ${s.id.substring(0,8)}...</small>
                         </td>
                         <td>
@@ -159,13 +162,13 @@
                         <td>${district}</td>
                         <td><span class="badge ${badgeClass}">${status.toUpperCase()}</span></td>
                         <td>
+                            <a href="school-details.html?id=${s.id}" class="btn-action" style="background-color: #3b82f6; color: #fff; text-decoration: none; display: inline-block;">View</a>
                             <button class="btn-action btn-approve" onclick="updateStatus('${s.id}', 'approved')">Approve</button>
                             <button class="btn-action btn-reject" onclick="updateStatus('${s.id}', 'rejected')">Block</button>
                         </td>
                     </tr>
                 `;
             }).join('');
-
         } catch (err) {
             console.error("Fetch Error:", err);
             tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #ef4444;">Error loading data: ${err.message}</td></tr>`;
