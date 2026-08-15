@@ -182,7 +182,7 @@
             .from('common_users')
             .update({ 
                 account_status: newStatus,
-                approval_status: newStatus 
+                account_status: newStatus 
             })
             .eq('id', userId);
 
@@ -211,7 +211,7 @@
                         user_id: userId, 
                         account_status: newStatus, 
                         profile_status: newStatus,
-                        approval_status: newStatus 
+                        account_status: newStatus 
                     }
                 ]);
 
@@ -224,7 +224,7 @@
                             id: userId, 
                             account_status: newStatus, 
                             profile_status: newStatus,
-                            approval_status: newStatus 
+                            account_status: newStatus 
                         }
                     ]);
 
@@ -245,7 +245,7 @@
             let updatePayload = {};
             if ('account_status' in profileRecord) updatePayload.account_status = newStatus;
             if ('profile_status' in profileRecord) updatePayload.profile_status = newStatus;
-            if ('approval_status' in profileRecord) updatePayload.approval_status = newStatus;
+            if ('account_status' in profileRecord) updatePayload.account_status = newStatus;
             if ('status' in profileRecord) updatePayload.status = newStatus;
 
             // If no matched status column keys were identified, pass common defaults
