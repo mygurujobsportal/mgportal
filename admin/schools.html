@@ -174,11 +174,10 @@
     }
 
     async function updateStatus(userId, newStatus) {
-    async function updateStatus(userId, newStatus) {
     if (!confirm(`ఈ స్కూల్ అకౌంట్‌ను ${newStatus.toUpperCase()} చేయాలనుకుంటున్నారా?`)) return;
 
     try {
-        // 1. common_users లో account_status మరియు approval_status అప్‌డేట్
+        // Step 1: Update common_users
         const { error: commonErr } = await _supabase
             .from('common_users')
             .update({ 
@@ -192,53 +191,87 @@
             return;
         }
 
-        // 2. school_profiles లో సాధ్యమైన అన్ని కాలమ్ కాంబినేషన్లలో అప్‌డేట్ ప్రయత్నం
-        let updateSuccess = false;
-
-        // Try 2a: user_id తో account_status & profile_status
-        const { data: d1, error: e1 } = await _supabase
+        // Step 2: Check if profile exists in school_profiles
+        const { data: existingProfiles, error: checkErr } = await _supabase
             .from('school_profiles')
-            .update({ 
-                account_status: newStatus,
-                profile_status: newStatus,
-                approval_status: newStatus 
-            })
-            .eq('user_id', userId)
-            .select();
+            .select('*')
+            .or(`user_id.eq.${userId},id.eq.${userId}`);
 
-        if (!e1 && d1 && d1.length > 0) {
-            updateSuccess = true;
-        } else {
-            // Try 2b: id తో fallback update
-            const { data: d2, error: e2 } = await _supabase
-                .from('school_profiles')
-                .update({ 
-                    account_status: newStatus,
-                    profile_status: newStatus,
-                    approval_status: newStatus 
-                })
-                .eq('id', userId)
-                .select();
-
-            if (!e2 && d2 && d2.length > 0) {
-                updateSuccess = true;
-            }
+        if (checkErr) {
+            alert("⚠️ school_profiles Read Error (RLS check needed): " + checkErr.message);
+            return;
         }
 
-        if (updateSuccess) {
-            alert(`🎉 Success: common_users మరియు school_profiles రెండింటిలోనూ స్టేటస్ ${newStatus.toUpperCase()} గా మారింది!`);
+        if (!existingProfiles || existingProfiles.length === 0) {
+            // Record doesn't exist -> Insert/Upsert new profile row
+            const { error: insertErr } = await _supabase
+                .from('school_profiles')
+                .insert([
+                    { 
+                        user_id: userId, 
+                        account_status: newStatus, 
+                        profile_status: newStatus,
+                        approval_status: newStatus 
+                    }
+                ]);
+
+            if (insertErr) {
+                // Retry insert with 'id' column as primary key
+                const { error: insertIdErr } = await _supabase
+                    .from('school_profiles')
+                    .insert([
+                        { 
+                            id: userId, 
+                            account_status: newStatus, 
+                            profile_status: newStatus,
+                            approval_status: newStatus 
+                        }
+                    ]);
+
+                if (insertIdErr) {
+                    alert("⚠️ school_profiles లో రికార్డు లేదు, ఇన్సర్ట్ ఫెయిల్ అయింది:\n" + insertIdErr.message);
+                } else {
+                    alert(`✅ common_users అప్‌డేట్ అయింది మరియు school_profiles లో కొత్త రికార్డు ${newStatus.toUpperCase()} తో క్రియేట్ అయింది!`);
+                }
+            } else {
+                alert(`✅ common_users అప్‌డేట్ అయింది మరియు school_profiles లో కొత్త రికార్డు ${newStatus.toUpperCase()} తో క్రియేట్ అయింది!`);
+            }
         } else {
-            alert(`⚠️ common_users లో ${newStatus} కి మారింది, కానీ school_profiles లో ఆ User ID రికార్డు మ్యాచ్ అవ్వలేదు (టేబుల్‌లో రికార్డు ఉందో లేదో తనిఖీ చేయండి).`);
+            // Record exists -> Update dynamically based on available columns
+            const profileRecord = existingProfiles[0];
+            const targetKey = profileRecord.user_id ? 'user_id' : 'id';
+            const targetVal = profileRecord.user_id || profileRecord.id;
+
+            let updatePayload = {};
+            if ('account_status' in profileRecord) updatePayload.account_status = newStatus;
+            if ('profile_status' in profileRecord) updatePayload.profile_status = newStatus;
+            if ('approval_status' in profileRecord) updatePayload.approval_status = newStatus;
+            if ('status' in profileRecord) updatePayload.status = newStatus;
+
+            // If no matched status column keys were identified, pass common defaults
+            if (Object.keys(updatePayload).length === 0) {
+                updatePayload = { account_status: newStatus, profile_status: newStatus };
+            }
+
+            const { error: updateProfErr } = await _supabase
+                .from('school_profiles')
+                .update(updatePayload)
+                .eq(targetKey, targetVal);
+
+            if (updateProfErr) {
+                alert("❌ school_profiles Update Error: " + updateProfErr.message);
+            } else {
+                alert(`🎉 పర్ఫెక్ట్! common_users & school_profiles రెండింటిలోనూ స్టేటస్ ${newStatus.toUpperCase()} గా మారింది!`);
+            }
         }
 
         fetchSchools();
 
     } catch (err) {
-        alert("System Error: " + err.message);
-        console.error(err);
+        alert("Unexpected System Error: " + err.message);
+        console.error("Full update error:", err);
     }
 }
-
     checkAdminAndFetch();
 </script>
 </body>
