@@ -70,8 +70,8 @@
                 <thead>
                     <tr>
                         <th>School / Institution</th>
-                        <th>Email / Contact</th>
-                        <th>Location</th>
+                        <th>Email & Contact</th>
+                        <th>Location & District</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -88,44 +88,81 @@
 
 <script>
     const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0'; // మీ Supabase Anon Key ని ఇక్కడ పేస్ట్ చేయండి
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function checkAdminAndFetch() {
-        // 1. Check Admin Flag
         if (localStorage.getItem('adminLoggedIn') !== 'true') {
             window.location.href = 'index.html';
             return;
         }
-
-        // 2. Fetch Schools
         fetchSchools();
     }
 
     async function fetchSchools() {
         const tbody = document.getElementById('schoolsTableBody');
         try {
-            const { data: schools, error } = await _supabase
+            // 1. Fetch school users from common_users
+            const { data: users, error: userErr } = await _supabase
                 .from('common_users')
-                .select('*')
-                .eq('role', 'School');
+                .select('*');
 
-            if (error) throw error;
+            if (userErr) throw userErr;
 
-            if (!schools || schools.length === 0) {
+            const schools = users ? users.filter(u => 
+                u.role && (
+                    u.role.toLowerCase() === 'school' || 
+                    u.role.toLowerCase() === 'employer' || 
+                    u.role.toLowerCase() === 'institution'
+                )
+            ) : [];
+
+            if (schools.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #94a3b8;">No registered schools found.</td></tr>`;
                 return;
             }
 
+            // 2. Fetch Profiles from school_profiles
+            let profileMap = {};
+            try {
+                const { data: profiles } = await _supabase.from('school_profiles').select('*');
+                if (profiles) {
+                    profiles.forEach(p => {
+                        const key = p.user_id || p.id;
+                        if (key) profileMap[key] = p;
+                    });
+                }
+            } catch (pErr) {
+                console.warn("school_profiles fetch note:", pErr);
+            }
+
+            // 3. Render Combined Data
             tbody.innerHTML = schools.map(s => {
-                const status = s.approval_status || 'pending';
+                const prof = profileMap[s.id] || {};
+                const status = s.approval_status || s.account_status || prof.approval_status || 'pending';
                 const badgeClass = status === 'approved' ? 'badge-approved' : (status === 'rejected' ? 'badge-rejected' : 'badge-pending');
                 
+                // Name Fallbacks
+                const schoolName = prof.school_name || prof.institution_name || s.full_name || s.name || 'School / College';
+                
+                // Contact Details Fallbacks
+                const email = s.email || prof.email || prof.contact_email || 'No Email';
+                const phone = s.phone || s.mobile || prof.phone || prof.contact_number || prof.mobile || 'N/A';
+                
+                // Location Details Fallbacks
+                const district = prof.district || prof.city || s.location || 'Telangana / AP';
+
                 return `
                     <tr>
-                        <td><strong>${s.full_name || 'School / College'}</strong><br><small style="color:#64748b;">${s.id.substring(0,8)}...</small></td>
-                        <td>${s.email || 'N/A'}<br><small style="color:#64748b;">${s.phone || ''}</small></td>
-                        <td>${s.location || 'Telangana / AP'}</td>
+                        <td>
+                            <strong>${schoolName}</strong><br>
+                            <small style="color:#f59e0b; font-family: monospace;">ID: ${s.id.substring(0,8)}...</small>
+                        </td>
+                        <td>
+                            📧 ${email}<br>
+                            <small style="color:#38bdf8;">📞 ${phone}</small>
+                        </td>
+                        <td>${district}</td>
                         <td><span class="badge ${badgeClass}">${status.toUpperCase()}</span></td>
                         <td>
                             <button class="btn-action btn-approve" onclick="updateStatus('${s.id}', 'approved')">Approve</button>
@@ -145,18 +182,43 @@
         if (!confirm(`ఈ స్కూల్ అకౌంట్‌ను ${newStatus.toUpperCase()} చేయాలనుకుంటున్నారా?`)) return;
 
         try {
-            const { error } = await _supabase
+            // Step 1: Update common_users (Syncing both approval_status & account_status columns)
+            const { error: commonErr } = await _supabase
                 .from('common_users')
-                .update({ account_status: newStatus })
+                .update({ 
+                    approval_status: newStatus,
+                    account_status: newStatus 
+                })
                 .eq('id', userId);
 
-            if (error) throw error;
+            if (commonErr) throw commonErr;
 
-            alert(`స్టేటస్ విజయవంతంగా ${newStatus} గా నవీకరించబడింది!`);
+            // Step 2: Sync with school_profiles
+            const { error: profErr } = await _supabase
+                .from('school_profiles')
+                .update({ 
+                    profile_status: newStatus,
+                    approval_status: newStatus 
+                })
+                .eq('user_id', userId);
+
+            if (profErr) {
+                // Fallback attempt with 'id' column
+                await _supabase
+                    .from('school_profiles')
+                    .update({ 
+                        profile_status: newStatus,
+                        approval_status: newStatus 
+                    })
+                    .eq('id', userId);
+            }
+
+            alert(`🎉 స్కూల్ అకౌంట్ స్టేటస్ విజయవంతంగా ${newStatus.toUpperCase()} గా నవీకరించబడింది!`);
             fetchSchools();
 
         } catch (err) {
             alert("Update Failed: " + err.message);
+            console.error("Error updating school:", err);
         }
     }
 
