@@ -198,7 +198,7 @@
                 .from('school_profiles')
                 .update({ 
                     profile_status: newStatus,
-                    approval_status: newStatus 
+                    account_status: newStatus 
                 })
                 .eq('user_id', userId);
 
