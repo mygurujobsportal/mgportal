@@ -102,7 +102,7 @@
     async function fetchSchools() {
         const tbody = document.getElementById('schoolsTableBody');
         try {
-            // 1. Fetch school users from common_users
+            // 1. Fetch from common_users
             const { data: users, error: userErr } = await _supabase
                 .from('common_users')
                 .select('*');
@@ -128,28 +128,23 @@
                 const { data: profiles } = await _supabase.from('school_profiles').select('*');
                 if (profiles) {
                     profiles.forEach(p => {
-                        const key = p.user_id || p.id;
+                        const key = p.user_id || p.id || p.school_id;
                         if (key) profileMap[key] = p;
                     });
                 }
             } catch (pErr) {
-                console.warn("school_profiles fetch note:", pErr);
+                console.warn("school_profiles fetch warning:", pErr);
             }
 
             // 3. Render Combined Data
             tbody.innerHTML = schools.map(s => {
                 const prof = profileMap[s.id] || {};
-                const status = s.approval_status || s.account_status || prof.approval_status || 'pending';
+                const status = s.account_status || s.approval_status || prof.account_status || prof.profile_status || 'pending';
                 const badgeClass = status === 'approved' ? 'badge-approved' : (status === 'rejected' ? 'badge-rejected' : 'badge-pending');
                 
-                // Name Fallbacks
                 const schoolName = prof.school_name || prof.institution_name || s.full_name || s.name || 'School / College';
-                
-                // Contact Details Fallbacks
                 const email = s.email || prof.email || prof.contact_email || 'No Email';
                 const phone = s.phone || s.mobile || prof.phone || prof.contact_number || prof.mobile || 'N/A';
-                
-                // Location Details Fallbacks
                 const district = prof.district || prof.city || s.location || 'Telangana / AP';
 
                 return `
@@ -179,70 +174,47 @@
     }
 
     async function updateStatus(userId, newStatus) {
-    async function updateStatus(userId, newStatus) {
-    if (!confirm(`ఈ స్కూల్ అకౌంట్‌ను ${newStatus.toUpperCase()} చేయాలనుకుంటున్నారా?`)) return;
+        if (!confirm(`ఈ స్కూల్ అకౌంట్‌ను ${newStatus.toUpperCase()} చేయాలనుకుంటున్నారా?`)) return;
 
-    try {
-        // Step 1: Update common_users
-        const { error: commonErr } = await _supabase
-            .from('common_users')
-            .update({ 
-            	account_status: newStatus,
-                account_status: newStatus 
-            })
-            .eq('id', userId);
-
-        if (commonErr) {
-            alert("❌ common_users Update Failed: " + commonErr.message);
-            return;
-        }
-
-        // Step 2: Update school_profiles (Checking common column variations)
-        // 2a. Try matching user_id with profile_status
-        let { data: p1, error: e1 } = await _supabase
-            .from('school_profiles')
-            .update({ profile_status: newStatus })
-            .eq('user_id', userId)
-            .select();
-
-        // 2b. If no rows matched or error, try approval_status column with user_id
-        if (e1 || !p1 || p1.length === 0) {
-            let { data: p2, error: e2 } = await _supabase
-                .from('school_profiles')
+        try {
+            // 1. Update common_users.account_status
+            const { error: commonErr } = await _supabase
+                .from('common_users')
                 .update({ account_status: newStatus })
-                .eq('user_id', userId)
-                .select();
+                .eq('id', userId);
 
-            // 2c. If still not matched, try matching with 'id' column instead of 'user_id'
-            if (e2 || !p2 || p2.length === 0) {
-                let { data: p3, error: e3 } = await _supabase
+            if (commonErr) {
+                alert("❌ common_users Update Failed: " + commonErr.message);
+                return;
+            }
+
+            // 2. Multi-column Fallback for school_profiles
+            let { error: profErr } = await _supabase
+                .from('school_profiles')
+                .update({ 
+                    account_status: newStatus,
+                    profile_status: newStatus 
+                })
+                .eq('user_id', userId);
+
+            if (profErr) {
+                await _supabase
                     .from('school_profiles')
                     .update({ 
-                        profile_status: newStatus,
-                        account_status: newStatus 
+                        account_status: newStatus,
+                        profile_status: newStatus 
                     })
-                    .eq('id', userId)
-                    .select();
-
-                if (e3 || !p3 || p3.length === 0) {
-                    alert(`⚠️ Note: common_users updated to ${newStatus}!\nschool_profiles లో matching record దొరకలేదు. దయచేసి school_profiles లోని User ID/ID కాలమ్ పేరు చెక్ చేయండి.`);
-                } else {
-                    alert(`🎉 Success: Both common_users & school_profiles updated to ${newStatus.toUpperCase()}!`);
-                }
-            } else {
-                alert(`🎉 Success: Both common_users & school_profiles updated to ${newStatus.toUpperCase()}!`);
+                    .eq('id', userId);
             }
-        } else {
-            alert(`🎉 Success: Both common_users & school_profiles updated to ${newStatus.toUpperCase()}!`);
+
+            alert(`🎉 స్కూల్ అకౌంట్ స్టేటస్ విజయవంతంగా ${newStatus.toUpperCase()} గా మారింది!`);
+            fetchSchools();
+
+        } catch (err) {
+            alert("Update Failed: " + err.message);
+            console.error("Error updating school:", err);
         }
-
-        fetchSchools();
-
-    } catch (err) {
-        alert("Update Failed: " + err.message);
-        console.error("Error updating school:", err);
     }
-}
 
     checkAdminAndFetch();
 </script>
