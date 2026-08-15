@@ -206,18 +206,15 @@
             return `
                 <tr>
                     <td>
-                        <a href="job-details.html?id=${j.id}" style="color: #38bdf8; text-decoration: none; font-weight: bold;">
-                            ${j.title} ↗
-                        </a><br>
+                        <strong style="color: #f8fafc;">${j.title}</strong><br>
                         <small style="color:#f59e0b; font-family: monospace;">ID: #JOB-${shortId}</small>
                     </td>
-                    <td><strong>${j.poster}</strong></td>
+                    <td>${j.poster}</td>
                     <td>📍 ${j.district}</td>
                     <td><span style="color:#38bdf8; font-weight:bold;">${j.subject}</span></td>
                     <td><span class="status-badge ${statusClass}">${j.status.toUpperCase()}</span></td>
                     <td>
                         <div class="btn-action-zone">
-                            <a href="job-details.html?id=${j.id}" class="btn-adm btn-adm-view">View</a>
                             <button class="btn-adm btn-adm-verify" onclick="updateJobState('${j.id}', 'active')">Approve</button>
                             <button class="btn-adm btn-adm-close" onclick="updateJobState('${j.id}', 'closed')">Close</button>
                             <button class="btn-adm btn-adm-del" onclick="triggerJobDeletion('${j.id}')">Delete</button>
@@ -295,7 +292,7 @@
         }
     }
 
-    // Execute immediately upon load
+    // Direct execution on page load
     loadJobsRepository();
 </script>
 </body>
