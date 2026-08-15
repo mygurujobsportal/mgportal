@@ -9,7 +9,19 @@
     <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .details-container { max-width: 900px; margin: 20px auto; display: flex; flex-direction: column; gap: 20px; }
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; }
+        .wrapper { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background-color: #1e293b; padding: 20px; border-right: 1px solid #334155; }
+        .main-content { flex: 1; padding: 30px; }
+        .brand { font-size: 20px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        .nav-list { list-style: none; padding: 0; margin: 0; }
+        .nav-item { margin-bottom: 6px; }
+        .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .nav-link:hover, .nav-link.active { background-color: #334155; color: #f59e0b; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #334155; }
+
+        .details-container { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
         .profile-card { background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); position: relative; }
         .stamp-status { position: absolute; top: 25px; right: 25px; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
         
@@ -32,7 +44,7 @@
         
         /* Buttons */
         .btn-ctrl { padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-ctrl-appr { background: #22c55e; color: white; }
+        .btn-ctrl-appr { background: #22c55e; color: #000; }
         .btn-ctrl-rejl { background: #ca8a04; color: white; }
         .btn-ctrl-susp { background: #ea580c; color: white; }
         .btn-ctrl-del { background: #dc2626; color: white; }
@@ -44,32 +56,28 @@
 </head>
 <body>
 
-    <!-- 👑 Master Controller Sidebar -->
-    <div class="sidebar">
-        <div style="text-align: center; padding: 10px;">
-            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 70px; height: auto; border-radius: 50%;">
-            <h2 style="color: #38bdf8; font-size: 16px; margin-top: 8px;">MyGuru Control</h2>
-        </div>
-        <a href="dashboard.html">Dashboard</a>
-        <a href="teachers.html">Teachers</a>
-        <a href="schools.html" class="active">Schools</a>
-        <a href="parents.html">Parents</a>
-        <a href="jobs.html">Jobs</a>
-        <a href="applications.html">Applications</a>
-        <a href="interview-letters.html">Interview Letters</a>
-        <a href="notifications.html">Notifications</a>
-        <a href="subscriptions.html">Subscriptions</a>
-        <a href="payments.html">Payments</a>
-        <a href="reports.html">Reports</a>
-        <a href="settings.html">Settings</a>
-        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
-    </div>
+<div class="wrapper">
+    <!-- 👑 Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="brand">🛡️ MyGuru Admin</div>
+        <ul class="nav-list">
+            <li class="nav-item"><a href="dashboard.html" class="nav-link">📊 Dashboard</a></li>
+            <li class="nav-item"><a href="teachers.html" class="nav-link">👨‍🏫 Teachers & Approvals</a></li>
+            <li class="nav-item"><a href="schools.html" class="nav-link active">🏫 Schools & Employers</a></li>
+            <li class="nav-item"><a href="parents.html" class="nav-link">🏡 Parents & Tuitions</a></li>
+            <li class="nav-item"><a href="jobs.html" class="nav-link">💼 Job Postings</a></li>
+            <li class="nav-item"><a href="applications.html" class="nav-link">📄 Applications Tracker</a></li>
+            <li class="nav-item"><a href="payments.html" class="nav-link">💳 Subscriptions & Payments</a></li>
+            <li class="nav-item"><a href="messages.html" class="nav-link">💬 Messages & Support</a></li>
+            <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ System Settings</a></li>
+        </ul>
+    </aside>
 
     <!-- 💻 Command Main Content Workspace -->
-    <div class="content">
+    <main class="main-content">
         <div class="header">
-            <h3>🏫 పాఠశాల సమగ్ర ప్రొఫైల్ (Admin Visibility Screen)</h3>
-            <a href="schools.html" class="tag" style="background:#475569; text-decoration:none;">← Back Portal</a>
+            <h3 style="margin: 0;">🏫 పాఠశాల సమగ్ర ప్రొఫైల్ (Admin Visibility Screen)</h3>
+            <a href="schools.html" class="btn-ctrl" style="background:#475569; color:white; text-decoration:none; padding:8px 16px; font-size:13px;">← Back to Schools</a>
         </div>
 
         <div class="details-container">
@@ -81,15 +89,15 @@
                 <div class="profile-header">
                     <div class="big-avatar">🏢</div>
                     <div class="header-meta">
-                        <h2 id="lblInstitutionName">Institution Campus Name</h2>
+                        <h2 id="lblInstitutionName">Loading Institution Name...</h2>
                         <p id="lblAccountType" style="color:#94a3b8; font-size:14px; margin:0;">Account Scope: School / Employer | ID: --</p>
                     </div>
                 </div>
 
-                <!-- Complete 360 Visibility Info Grid (Admin Only Privileges) -->
+                <!-- Complete 360 Visibility Info Grid -->
                 <div class="info-grid">
                     <div class="info-block">
-                        <label>📞 Campus Mobile / Landline</label>
+                        <label>📞 Campus Mobile / Phone</label>
                         <p id="lblMobile">Loading...</p>
                     </div>
                     <div class="info-block">
@@ -128,9 +136,9 @@
 
                 <!-- Administrative Control Hub Buttons -->
                 <div class="action-hub">
-                    <button class="btn-ctrl btn-ctrl-appr" onclick="changeSchoolStatusGate('active')">Verify & Approve School</button>
+                    <button class="btn-ctrl btn-ctrl-appr" onclick="changeSchoolStatusGate('approved')">Verify & Approve School</button>
                     <button class="btn-ctrl btn-ctrl-rejl" onclick="changeSchoolStatusGate('pending')">Reset to Pending</button>
-                    <button class="btn-ctrl btn-ctrl-susp" onclick="changeSchoolStatusGate('suspended')">Suspend Workspace</button>
+                    <button class="btn-ctrl btn-ctrl-susp" onclick="changeSchoolStatusGate('rejected')">Suspend Workspace</button>
                     <button class="btn-ctrl btn-ctrl-del" onclick="purgeSchoolAccountGate()">Delete Permanently</button>
                 </div>
             </div>
@@ -138,28 +146,27 @@
             <!-- MASTER BLOCK 2: Direct Intercom Notification Broadcast -->
             <div class="notify-box">
                 <h4 style="color:white; margin:0;">💬 Send Direct Notification to this School Workspace</h4>
-                <textarea id="txtAdminMessage" rows="3" style="width:100%; padding:10px; background:rgba(15,23,42,0.6); border:1px solid #334155; color:white; border-radius:6px; font-size:13px; outline:none; resize:none;" placeholder="పాఠశాల యాజమాన్యానికి పంపాల్సిన సమాచారం లేదా డాక్యుమెంట్ రీ-అప్‌లోడ్ అలర్ట్ ఇక్కడ టైప్ చేయండి..."></textarea>
+                <textarea id="txtAdminMessage" rows="3" style="width:100%; padding:10px; background:rgba(15,23,42,0.6); border:1px solid #334155; color:white; border-radius:6px; font-size:13px; outline:none; resize:none;" placeholder="పాఠశాల యాజమాన్యానికి పంపాల్సిన సమాచారం లేదా డాక్యుమెంట్ అలర్ట్ ఇక్కడ టైప్ చేయండి..."></textarea>
                 <button class="btn-ctrl btn-ctrl-appr" style="align-self:flex-start; font-size:12px; padding:8px 16px;" onclick="dispatchDirectSchoolNotice()">Broadcast Notice</button>
             </div>
 
         </div>
-    </div>
+    </main>
+</div>
 
-    <!-- Scripts Integration Area -->
-    <script src="../js/supabase.js"></script>
-    <script src="../js/auth.js"></script>
     <script>
+        const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         let targetSchoolId = null;
 
         async function initSchoolDetailsRoom() {
-            const activeAdmin = await checkLiveUserSession('Admin');
-            if (!activeAdmin) return;
-
             const urlParams = new URLSearchParams(window.location.search);
             targetSchoolId = urlParams.get('id');
 
             if (!targetSchoolId) {
-                alert("Invalid Scope Context.");
+                alert("Invalid Scope Context. Redirecting...");
                 window.location.href = "schools.html";
                 return;
             }
@@ -169,69 +176,114 @@
 
         async function loadCompleteSchoolPayload() {
             try {
-                // Admin Shield Join Query - Full Visibility Fetch
-                const { data: user, error } = await _supabase
+                // 1. Fetch User Record from common_users
+                const { data: user, error: uErr } = await _supabase
                     .from('common_users')
-                    .select(`
-                        id, full_name, email, phone, status, subscription,
-                        employer_profiles ( institution_name, principal_name, board, state, district, full_address, website_url, document_url )
-                    `)
+                    .select('*')
                     .eq('id', targetSchoolId)
                     .single();
 
-                if (error) throw error;
+                if (uErr) throw uErr;
 
-                // Bind User Account Level Metrics
-                document.getElementById('lblInstitutionName').innerText = user.employer_profiles ? user.employer_profiles.institution_name : user.full_name;
-                document.getElementById('lblAccountType').innerText = `Account Scope: School / Employer | ID: #SCH-${user.id.split('-')[0].toUpperCase()}`;
-                document.getElementById('lblEmail').innerText = user.email || 'N/A';
-                document.getElementById('lblMobile').innerText = user.phone || 'N/A';
+                // 2. Fetch Profile Record from school_profiles using 'id'
+                let profile = {};
+                const { data: profData } = await _supabase
+                    .from('school_profiles')
+                    .select('*')
+                    .eq('id', targetSchoolId)
+                    .single();
+
+                if (profData) profile = profData;
+
+                // Bind User & Profile Level Metrics
+                const schoolName = profile.school_name || profile.institution_name || user.full_name || 'School / College';
+                const shortId = (user.id || '').substring(0, 8).toUpperCase();
+                
+                document.getElementById('lblInstitutionName').innerText = schoolName;
+                document.getElementById('lblAccountType').innerText = `Account Scope: School / Employer | ID: #SCH-${shortId}`;
+                document.getElementById('lblEmail').innerText = user.email || profile.email || 'N/A';
+                document.getElementById('lblMobile').innerText = user.phone || user.mobile || profile.phone || profile.contact_number || 'N/A';
 
                 // Manage Status Stamp Styling
+                const status = user.account_status || profile.profile_status || 'pending';
                 const stamp = document.getElementById('lblStatusStamp');
-                stamp.innerText = user.status || 'pending';
-                if(user.status === 'active') stamp.style.background = '#22c55e';
-                if(user.status === 'pending') stamp.style.background = '#ca8a04';
-                if(user.status === 'suspended') stamp.style.background = '#dc2626';
+                stamp.innerText = status.toUpperCase();
+                if(status === 'approved') { stamp.style.background = '#22c55e'; stamp.style.color = '#000'; }
+                else if(status === 'pending') { stamp.style.background = '#ca8a04'; stamp.style.color = '#fff'; }
+                else { stamp.style.background = '#dc2626'; stamp.style.color = '#fff'; }
 
-                // Profile Section Mapping
-                const eProf = user.employer_profiles || {};
-                document.getElementById('lblPrincipal').innerText = eProf.principal_name || 'N/A';
-                document.getElementById('lblBoard').innerText = eProf.board || 'N/A';
-                document.getElementById('lblState').innerText = eProf.state || 'N/A';
-                document.getElementById('lblDistrict').innerText = eProf.district || 'N/A';
-                document.getElementById('lblWebsite').innerText = eProf.website_url || 'N/A';
-                document.getElementById('lblAddress').innerText = eProf.full_address || 'Campus address context empty';
+                // Profile Fields
+                document.getElementById('lblPrincipal').innerText = profile.principal_name || profile.contact_person || 'N/A';
+                document.getElementById('lblBoard').innerText = profile.board || profile.affiliation_board || 'State / CBSE / ICSE';
+                document.getElementById('lblState').innerText = profile.state || 'Telangana';
+                document.getElementById('lblDistrict').innerText = profile.district || profile.city || user.location || 'N/A';
+                document.getElementById('lblWebsite').innerText = profile.website_url || profile.website || 'N/A';
+                document.getElementById('lblAddress').innerText = profile.address || profile.full_address || 'Campus address not updated';
 
                 // Government Registration Docs Handler
                 const docBox = document.getElementById('boxDocuments');
-                if(eProf.document_url) {
-                    docBox.innerHTML = `<a href="${eProf.document_url}" target="_blank" class="doc-link">📄 View Uploaded Registration/License Certificate</a>`;
-                } else { docBox.innerHTML = `<span style="color:#ef4444; font-size:13px; font-weight:bold;">⚠️ Verification Certificates Not Uploaded</span>`; }
+                const docUrl = profile.document_url || profile.certificate_url || profile.reg_doc;
+                if(docUrl) {
+                    docBox.innerHTML = `<a href="${docUrl}" target="_blank" class="doc-link">📄 View Uploaded Registration/License Certificate</a>`;
+                } else { 
+                    docBox.innerHTML = `<span style="color:#f59e0b; font-size:13px; font-weight:bold;">⚠️ Verification Certificates Not Uploaded</span>`; 
+                }
 
-            } catch (err) { console.error("Critical School Payload Loading Failure:", err.message); }
+            } catch (err) { 
+                console.error("Critical School Payload Loading Failure:", err);
+                alert("Error loading school details: " + err.message);
+            }
         }
 
-        // 🛡️ Account Status Modification Gateway
+        // 🛡️ Account Status Modification Gateway (Syncs common_users & school_profiles)
         async function changeSchoolStatusGate(nextStatus) {
-            if(!confirm(`Confirm changing school workspace operational state to ${nextStatus.toUpperCase()}?`)) return;
+            if(!confirm(`Confirm changing school operational state to ${nextStatus.toUpperCase()}?`)) return;
             try {
-                const { error } = await _supabase.from('common_users').update({ status: nextStatus }).eq('id', targetSchoolId);
-                if (error) throw error;
-                alert(`✓ System updated: School workspace status is now ${nextStatus.toUpperCase()}`);
+                // 1. Update common_users.account_status
+                const { error: err1 } = await _supabase
+                    .from('common_users')
+                    .update({ account_status: nextStatus })
+                    .eq('id', targetSchoolId);
+                if (err1) throw err1;
+
+                // 2. Update school_profiles.profile_status
+                const { data: profCheck } = await _supabase
+                    .from('school_profiles')
+                    .select('id')
+                    .eq('id', targetSchoolId);
+
+                if (!profCheck || profCheck.length === 0) {
+                    await _supabase
+                        .from('school_profiles')
+                        .insert([{ id: targetSchoolId, profile_status: nextStatus }]);
+                } else {
+                    await _supabase
+                        .from('school_profiles')
+                        .update({ profile_status: nextStatus })
+                        .eq('id', targetSchoolId);
+                }
+
+                alert(`✓ System updated: School status is now ${nextStatus.toUpperCase()}`);
                 await loadCompleteSchoolPayload();
-            } catch (err) { alert("Operational failure: " + err.message); }
+
+            } catch (err) { 
+                alert("Operational failure: " + err.message); 
+            }
         }
 
         // 🗑️ Purge Account Completely
         async function purgeSchoolAccountGate() {
             if(!confirm("🚨 CRITICAL ALERT: Are you sure you want to delete this school account permanently? All posted jobs and tracking nodes will be wiped!")) return;
             try {
+                await _supabase.from('school_profiles').delete().eq('id', targetSchoolId);
                 const { error } = await _supabase.from('common_users').delete().eq('id', targetSchoolId);
                 if (error) throw error;
+
                 alert("✓ School workspace completely purged.");
                 window.location.href = "schools.html";
-            } catch (err) { alert(err.message); }
+            } catch (err) { 
+                alert("Purge failed: " + err.message); 
+            }
         }
 
         // 💬 Direct School Notice Dispatcher
@@ -249,13 +301,10 @@
                 if (error) throw error;
                 alert("✓ Custom push notification sent to school workspace console.");
                 document.getElementById('txtAdminMessage').value = "";
-            } catch (err) { alert("Broadcast failed: " + err.message); }
+            } catch (err) { 
+                alert("Broadcast failed: " + err.message); 
+            }
         }
-
-        document.getElementById('logout-btn').addEventListener('click', async (e) => {
-            e.preventDefault();
-            await logoutSessionRouter();
-        });
 
         window.onload = initSchoolDetailsRoom;
     </script>
