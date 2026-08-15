@@ -174,47 +174,70 @@
     }
 
     async function updateStatus(userId, newStatus) {
-        if (!confirm(`ఈ స్కూల్ అకౌంట్‌ను ${newStatus.toUpperCase()} చేయాలనుకుంటున్నారా?`)) return;
+    async function updateStatus(userId, newStatus) {
+    if (!confirm(`ఈ స్కూల్ అకౌంట్‌ను ${newStatus.toUpperCase()} చేయాలనుకుంటున్నారా?`)) return;
 
-        try {
-            // 1. Update common_users.account_status
-            const { error: commonErr } = await _supabase
-                .from('common_users')
-                .update({ account_status: newStatus })
-                .eq('id', userId);
+    try {
+        // 1. common_users లో account_status మరియు approval_status అప్‌డేట్
+        const { error: commonErr } = await _supabase
+            .from('common_users')
+            .update({ 
+                account_status: newStatus,
+                approval_status: newStatus 
+            })
+            .eq('id', userId);
 
-            if (commonErr) {
-                alert("❌ common_users Update Failed: " + commonErr.message);
-                return;
-            }
+        if (commonErr) {
+            alert("❌ common_users Update Failed: " + commonErr.message);
+            return;
+        }
 
-            // 2. Multi-column Fallback for school_profiles
-            let { error: profErr } = await _supabase
+        // 2. school_profiles లో సాధ్యమైన అన్ని కాలమ్ కాంబినేషన్లలో అప్‌డేట్ ప్రయత్నం
+        let updateSuccess = false;
+
+        // Try 2a: user_id తో account_status & profile_status
+        const { data: d1, error: e1 } = await _supabase
+            .from('school_profiles')
+            .update({ 
+                account_status: newStatus,
+                profile_status: newStatus,
+                approval_status: newStatus 
+            })
+            .eq('user_id', userId)
+            .select();
+
+        if (!e1 && d1 && d1.length > 0) {
+            updateSuccess = true;
+        } else {
+            // Try 2b: id తో fallback update
+            const { data: d2, error: e2 } = await _supabase
                 .from('school_profiles')
                 .update({ 
                     account_status: newStatus,
-                    profile_status: newStatus 
+                    profile_status: newStatus,
+                    approval_status: newStatus 
                 })
-                .eq('user_id', userId);
+                .eq('id', userId)
+                .select();
 
-            if (profErr) {
-                await _supabase
-                    .from('school_profiles')
-                    .update({ 
-                        account_status: newStatus,
-                        profile_status: newStatus 
-                    })
-                    .eq('id', userId);
+            if (!e2 && d2 && d2.length > 0) {
+                updateSuccess = true;
             }
-
-            alert(`🎉 స్కూల్ అకౌంట్ స్టేటస్ విజయవంతంగా ${newStatus.toUpperCase()} గా మారింది!`);
-            fetchSchools();
-
-        } catch (err) {
-            alert("Update Failed: " + err.message);
-            console.error("Error updating school:", err);
         }
+
+        if (updateSuccess) {
+            alert(`🎉 Success: common_users మరియు school_profiles రెండింటిలోనూ స్టేటస్ ${newStatus.toUpperCase()} గా మారింది!`);
+        } else {
+            alert(`⚠️ common_users లో ${newStatus} కి మారింది, కానీ school_profiles లో ఆ User ID రికార్డు మ్యాచ్ అవ్వలేదు (టేబుల్‌లో రికార్డు ఉందో లేదో తనిఖీ చేయండి).`);
+        }
+
+        fetchSchools();
+
+    } catch (err) {
+        alert("System Error: " + err.message);
+        console.error(err);
     }
+}
 
     checkAdminAndFetch();
 </script>
