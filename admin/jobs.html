@@ -9,7 +9,19 @@
     <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .vault-container { background: #1e293b; border: 1px solid #334155; padding: 25px; border-radius: 14px; margin-top: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; }
+        .wrapper { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background-color: #1e293b; padding: 20px; border-right: 1px solid #334155; }
+        .main-content { flex: 1; padding: 30px; }
+        .brand { font-size: 20px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        .nav-list { list-style: none; padding: 0; margin: 0; }
+        .nav-item { margin-bottom: 6px; }
+        .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .nav-link:hover, .nav-link.active { background-color: #334155; color: #f59e0b; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #334155; }
+
+        .vault-container { background: #1e293b; border: 1px solid #334155; padding: 25px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
         .filter-bar { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
         .input-search, .select-ctrl { padding: 9px 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: white; border-radius: 6px; font-size: 13px; outline: none; }
         .input-search { flex-grow: 1; min-width: 200px; }
@@ -22,57 +34,56 @@
         /* Action Buttons */
         .btn-action-zone { display: flex; gap: 6px; }
         .btn-adm { padding: 6px 12px; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; text-decoration: none; text-align: center; }
-        .btn-adm-view { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; }
-        .btn-adm-verify { background: #22c55e; color: white; }
+        .btn-adm-view { background: #3b82f6; color: white; }
+        .btn-adm-verify { background: #22c55e; color: #000; }
+        .btn-adm-close { background: #ca8a04; color: white; }
         .btn-adm-del { background: #dc2626; color: white; }
         .btn-adm:hover { transform: translateY(-1px); opacity: 0.9; }
 
         /* Status Badges */
         .status-badge { padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-        .status-active { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
-        .status-pending { background: rgba(234, 179, 8, 0.15); color: #eab308; }
-        .status-rejected { background: rgba(220, 38, 38, 0.15); color: #ef4444; }
+        .status-active { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid #22c55e; }
+        .status-pending { background: rgba(234, 179, 8, 0.15); color: #eab308; border: 1px solid #eab308; }
+        .status-rejected { background: rgba(220, 38, 38, 0.15); color: #ef4444; border: 1px solid #ef4444; }
     </style>
 </head>
 <body>
 
+<div class="wrapper">
     <!-- 👑 Master Controller Sidebar -->
-    <div class="sidebar">
-        <div style="text-align: center; padding: 10px;">
-            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 70px; height: auto; border-radius: 50%;">
-            <h2 style="color: #38bdf8; font-size: 16px; margin-top: 8px;">MyGuru Control</h2>
-        </div>
-        <a href="dashboard.html">Dashboard</a>
-        <a href="teachers.html">Teachers</a>
-        <a href="schools.html">Schools</a>
-        <a href="parents.html">Parents</a>
-        <a href="jobs.html" class="active">Jobs</a>
-        <a href="applications.html">Applications</a>
-        <a href="interview-letters.html">Interview Letters</a>
-        <a href="notifications.html">Notifications</a>
-        <a href="subscriptions.html">Subscriptions</a>
-        <a href="payments.html">Payments</a>
-        <a href="reports.html">Reports</a>
-        <a href="settings.html">Settings</a>
-        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
-    </div>
+    <aside class="sidebar">
+        <div class="brand">🛡️ MyGuru Admin</div>
+        <ul class="nav-list">
+            <li class="nav-item"><a href="dashboard.html" class="nav-link">📊 Dashboard</a></li>
+            <li class="nav-item"><a href="teachers.html" class="nav-link">👨‍🏫 Teachers & Approvals</a></li>
+            <li class="nav-item"><a href="schools.html" class="nav-link">🏫 Schools & Employers</a></li>
+            <li class="nav-item"><a href="parents.html" class="nav-link">🏡 Parents & Tuitions</a></li>
+            <li class="nav-item"><a href="jobs.html" class="nav-link active">💼 Job Postings</a></li>
+            <li class="nav-item"><a href="applications.html" class="nav-link">📄 Applications Tracker</a></li>
+            <li class="nav-item"><a href="payments.html" class="nav-link">💳 Subscriptions & Payments</a></li>
+            <li class="nav-item"><a href="messages.html" class="nav-link">💬 Messages & Support</a></li>
+            <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ System Settings</a></li>
+        </ul>
+    </aside>
 
     <!-- 💻 Command Workspace Main Content -->
-    <div class="content">
+    <main class="main-content">
         <div class="header">
-            <h3>Jobs Vault (మొత్తం ఉద్యోగాల రిజిస్టర్)</h3>
-            <span class="tag" style="background: #f43f5e;">Live Postings Control</span>
+            <div>
+                <h2 style="margin: 0; font-size: 24px;">Jobs Vault (మొత్తం ఉద్యోగాల రిజిస్టర్)</h2>
+                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">Review and manage school teaching vacancies and parent home tuition requirements.</p>
+            </div>
         </div>
 
         <div class="vault-container">
             <!-- 🔍 Filter Controls -->
             <div class="filter-bar">
-                <input type="text" id="searchJobQuery" class="input-search" placeholder="🔍 Search by Job Title, School Name, Subject or District..." oninput="filterJobsTable()">
+                <input type="text" id="searchJobQuery" class="input-search" placeholder="🔍 Search by Job Title, School / Poster, Subject or District..." oninput="filterJobsTable()">
                 <select id="filterStatus" class="select-ctrl" onchange="filterJobsTable()">
                     <option value="ALL">All Statuses</option>
                     <option value="active">Live / Approved</option>
                     <option value="pending">Pending Validation</option>
-                    <option value="rejected">Rejected / Hidden</option>
+                    <option value="closed">Closed / Rejected</option>
                 </select>
             </div>
 
@@ -80,8 +91,8 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Job Title</th>
-                        <th>Partner School</th>
+                        <th>Job Title / Role</th>
+                        <th>Institution / Poster</th>
                         <th>District Location</th>
                         <th>Subject Focus</th>
                         <th>Status</th>
@@ -95,136 +106,197 @@
                 </tbody>
             </table>
         </div>
-    </div>
+    </main>
+</div>
 
-    <!-- Scripts Integration Node -->
-    <script src="../js/supabase.js"></script>
-    <script src="../js/auth.js"></script>
-    <script>
-        let cachedJobsList = [];
+<script>
+    const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        async function initJobsVault() {
-            // Master Session Gate Guard
-            const activeAdmin = await checkLiveUserSession('Admin');
-            if (!activeAdmin) return;
+    let cachedJobsList = [];
 
-            await loadJobsRepository();
-        }
+    async function loadJobsRepository() {
+        const tbody = document.getElementById('jobsMasterTbody');
+        try {
+            // 1. Fetch from 'jobs' table (or 'job_posts' fallback)
+            let jobsData = [];
+            const { data: jobs, error: jobErr } = await _supabase
+                .from('jobs')
+                .select('*')
+                .order('created_at', { ascending: false });
 
-        async function loadJobsRepository() {
-            try {
-                // Relational Join: jobs మరియు employer_profiles (school meta data) లింకింగ్
-                const { data: jobs, error } = await _supabase
-                    .from('jobs')
-                    .select(`
-                        job_id,
-                        job_title,
-                        subject,
-                        status,
-                        created_at,
-                        employer_profiles ( institution_name, district )
-                    `)
-                    .order('created_at', { ascending: false });
-
-                if (error) throw error;
-
-                cachedJobsList = jobs || [];
-                renderJobsTable(cachedJobsList);
-
-            } catch (err) {
-                console.error("Jobs database sync crash:", err.message);
+            if (jobErr) {
+                const alt = await _supabase.from('job_posts').select('*').order('created_at', { ascending: false });
+                if (alt.error) throw jobErr;
+                jobsData = alt.data || [];
+            } else {
+                jobsData = jobs || [];
             }
-        }
 
-        function renderJobsTable(list) {
-            const tbody = document.getElementById('jobsMasterTbody');
-            tbody.innerHTML = "";
-
-            if (list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:20px;">No job vacancies match the specified pipeline filters.</td></tr>`;
+            if (jobsData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:20px;">No job vacancies found in database.</td></tr>`;
                 return;
             }
 
-            list.forEach(j => {
-                const school = j.employer_profiles || { institution_name: 'Partner School', district: 'N/A' };
-                
-                let statusClass = 'status-pending';
-                if(j.status === 'active') statusClass = 'status-active';
-                if(j.status === 'rejected') statusClass = 'status-rejected';
+            // 2. Fetch Schools and Users safely for poster names
+            let posterMap = {};
+            try {
+                const { data: schools } = await _supabase.from('school_profiles').select('*');
+                if (schools) {
+                    schools.forEach(s => {
+                        const key = s.id || s.user_id;
+                        if (key) posterMap[key] = s.school_name || s.institution_name;
+                    });
+                }
+                const { data: users } = await _supabase.from('common_users').select('id, full_name');
+                if (users) {
+                    users.forEach(u => {
+                        if (!posterMap[u.id]) posterMap[u.id] = u.full_name;
+                    });
+                }
+            } catch (pErr) {
+                console.warn("Poster metadata note:", pErr);
+            }
 
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${j.job_title}</strong></td>
-                        <td>${school.institution_name}</td>
-                        <td>${school.district}</td>
-                        <td><span style="color:#38bdf8; font-weight:bold;">${j.subject}</span></td>
-                        <td><span class="status-badge ${statusClass}">${j.status || 'pending'}</span></td>
-                        <td>
-                            <div class="btn-action-zone">
-                                <a href="job-details.html?id=${j.job_id}" class="btn-adm btn-adm-view">View</a>
-                                <button class="btn-adm btn-adm-verify" onclick="quickPublishJob('${j.job_id}')">Approve</button>
-                                <button class="btn-adm btn-adm-del" onclick="triggerJobDeletion('${j.job_id}')">Delete</button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
+            // 3. Map Data cleanly
+            cachedJobsList = jobsData.map(j => {
+                const realId = j.id || j.job_id;
+                const posterId = j.employer_id || j.user_id || j.created_by;
+                const posterName = j.institution_name || j.company_name || posterMap[posterId] || 'School / Parent';
+                const title = j.title || j.job_title || j.role || 'Teaching Vacancy';
+                const subject = j.subject || j.subjects || 'General';
+                const district = j.district || j.location || j.city || 'Telangana / AP';
+                const status = (j.status || j.job_status || 'pending').toLowerCase();
 
-        // 🔍 Search and Live Status Filter
-        function filterJobsTable() {
-            const searchVal = document.getElementById('searchJobQuery').value.toLowerCase().trim();
-            const statusVal = document.getElementById('filterStatus').value;
-
-            const filtered = cachedJobsList.filter(j => {
-                const school = j.employer_profiles || {};
-                const sName = school.institution_name ? school.institution_name.toLowerCase() : '';
-                
-                const queryMatch = j.job_title.toLowerCase().includes(searchVal) || 
-                                   j.subject.toLowerCase().includes(searchVal) ||
-                                   sName.includes(searchVal) ||
-                                   (school.district && school.district.toLowerCase().includes(searchVal));
-                
-                const statusMatch = (statusVal === 'ALL') || (j.status === statusVal || (statusVal === 'pending' && !j.status));
-
-                return queryMatch && statusMatch;
+                return {
+                    id: realId,
+                    title: title,
+                    poster: posterName,
+                    subject: subject,
+                    district: district,
+                    status: status
+                };
             });
 
-            renderJobsTable(filtered);
+            renderJobsTable(cachedJobsList);
+
+        } catch (err) {
+            console.error("Jobs database sync crash:", err);
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #ef4444; padding: 20px;">Error loading jobs: ${err.message}</td></tr>`;
+        }
+    }
+
+    function renderJobsTable(list) {
+        const tbody = document.getElementById('jobsMasterTbody');
+        tbody.innerHTML = "";
+
+        if (!list || list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:20px;">No job vacancies match the specified pipeline filters.</td></tr>`;
+            return;
         }
 
-        // ⚡ Quick Approve & Publish Engine
-        async function quickPublishJob(jobId) {
-            if(!confirm("Approve this job opening and make it live for all matched teachers?")) return;
-            try {
-                const { error } = await _supabase
-                    .from('jobs')
-                    .update({ status: 'active' })
-                    .eq('job_id', jobId);
+        tbody.innerHTML = list.map(j => {
+            let statusClass = 'status-pending';
+            if (j.status === 'active' || j.status === 'approved') statusClass = 'status-active';
+            if (j.status === 'rejected' || j.status === 'closed') statusClass = 'status-rejected';
 
-                if (error) throw error;
-                alert("✓ Job approved and injected into live teacher feeds successfully!");
-                await loadJobsRepository();
-            } catch (err) { alert("Action failed: " + err.message); }
-        }
+            const shortId = (j.id || '').substring(0, 8).toUpperCase();
 
-        // 🗑️ Delete Job Post
-        async function triggerJobDeletion(jobId) {
-            if(!confirm("🚨 WARNING: Delete this job opening permanently? All pending applications for this job will be orphaned.")) return;
-            try {
-                const { error } = await _supabase.from('jobs').delete().eq('job_id', jobId);
-                if (error) throw error;
-                alert("✓ Job post removed from systems.");
-                await loadJobsRepository();
-            } catch (err) { alert("Deletion failure: " + err.message); }
-        }
+            return `
+                <tr>
+                    <td>
+                        <a href="job-details.html?id=${j.id}" style="color: #38bdf8; text-decoration: none; font-weight: bold;">
+                            ${j.title} ↗
+                        </a><br>
+                        <small style="color:#f59e0b; font-family: monospace;">ID: #JOB-${shortId}</small>
+                    </td>
+                    <td><strong>${j.poster}</strong></td>
+                    <td>📍 ${j.district}</td>
+                    <td><span style="color:#38bdf8; font-weight:bold;">${j.subject}</span></td>
+                    <td><span class="status-badge ${statusClass}">${j.status.toUpperCase()}</span></td>
+                    <td>
+                        <div class="btn-action-zone">
+                            <a href="job-details.html?id=${j.id}" class="btn-adm btn-adm-view">View</a>
+                            <button class="btn-adm btn-adm-verify" onclick="updateJobState('${j.id}', 'active')">Approve</button>
+                            <button class="btn-adm btn-adm-close" onclick="updateJobState('${j.id}', 'closed')">Close</button>
+                            <button class="btn-adm btn-adm-del" onclick="triggerJobDeletion('${j.id}')">Delete</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
 
-        document.getElementById('logout-btn').addEventListener('click', async (e) => {
-            e.preventDefault();
-            await logoutSessionRouter();
+    function filterJobsTable() {
+        const searchVal = document.getElementById('searchJobQuery').value.toLowerCase().trim();
+        const statusVal = document.getElementById('filterStatus').value;
+
+        const filtered = cachedJobsList.filter(j => {
+            const queryMatch = j.title.toLowerCase().includes(searchVal) || 
+                               j.subject.toLowerCase().includes(searchVal) ||
+                               j.poster.toLowerCase().includes(searchVal) ||
+                               j.district.toLowerCase().includes(searchVal);
+            
+            let statusMatch = true;
+            if (statusVal !== 'ALL') {
+                statusMatch = j.status === statusVal;
+            }
+
+            return queryMatch && statusMatch;
         });
 
-        window.onload = initJobsVault;
-    </script>
+        renderJobsTable(filtered);
+    }
+
+    async function updateJobState(jobId, nextStatus) {
+        if (!confirm(`ఈ జాబ్ పోస్ట్ స్టేటస్‌ను ${nextStatus.toUpperCase()} చేయాలనుకుంటున్నారా?`)) return;
+
+        try {
+            let { error } = await _supabase
+                .from('jobs')
+                .update({ status: nextStatus })
+                .or(`id.eq.${jobId},job_id.eq.${jobId}`);
+
+            if (error) {
+                await _supabase
+                    .from('job_posts')
+                    .update({ status: nextStatus })
+                    .or(`id.eq.${jobId},job_id.eq.${jobId}`);
+            }
+
+            alert(`✓ జాబ్ స్టేటస్ విజయవంతంగా ${nextStatus.toUpperCase()} గా మార్చబడింది!`);
+            loadJobsRepository();
+        } catch (err) {
+            alert("Action failed: " + err.message);
+        }
+    }
+
+    async function triggerJobDeletion(jobId) {
+        if (!confirm("🚨 WARNING: Are you sure you want to permanently delete this job opening?")) return;
+
+        try {
+            let { error } = await _supabase
+                .from('jobs')
+                .delete()
+                .or(`id.eq.${jobId},job_id.eq.${jobId}`);
+
+            if (error) {
+                await _supabase
+                    .from('job_posts')
+                    .delete()
+                    .or(`id.eq.${jobId},job_id.eq.${jobId}`);
+            }
+
+            alert("✓ Job opening permanently removed.");
+            loadJobsRepository();
+        } catch (err) {
+            alert("Deletion failure: " + err.message);
+        }
+    }
+
+    // Execute immediately upon load
+    loadJobsRepository();
+</script>
 </body>
 </html>
