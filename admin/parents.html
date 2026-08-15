@@ -84,7 +84,7 @@
                         <th>Avatar</th>
                         <th>Parent ID</th>
                         <th>Full Name</th>
-                        <th>Contact / Phone</th>
+                        <th>Contact Details</th>
                         <th>Location / District</th>
                         <th>Status</th>
                         <th>Actions</th>
@@ -138,100 +138,23 @@
                 const { data: profiles } = await _supabase.from('parent_profiles').select('*');
                 if (profiles) {
                     profiles.forEach(p => {
-                        profileMap[p.id] = p;
+                        const key = p.id || p.user_id;
+                        if (key) profileMap[key] = p;
                     });
                 }
             } catch (pErr) {
                 console.warn("Profiles note:", pErr);
             }
 
-            // 3. Combine Data
-            cachedParentsList = parents.map(p => {
-                const prof = profileMap[p.id] || {};
-                return {
-                    id: p.id,
-                    name: prof.parent_name || prof.name || p.full_name || p.name || 'Parent User',
-                    phone: p.phone || p.mobile || prof.phone || prof.contact_number || 'N/A',
-                    district: prof.district || prof.city || p.location || 'Telangana / AP',
-                    status: p.account_status || prof.profile_status || 'pending'
-                };
-            });
-
-            renderParentsTable(cachedParentsList);
-
-        } catch (err) {
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #ef4444; padding: 20px;">System Exception: ${err.message}</td></tr>`;
-        }
-    }
-
-    function renderParentsTable(list) {
-        const tbody = document.getElementById('parentsMasterTbody');
-        tbody.innerHTML = "";
-
-        if (!list || list.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:20px;">No parent records match your filter.</td></tr>`;
-            return;
-        }
-
-        tbody.innerHTML = list.map(p => {
-            const shortId = (p.id || '').substring(0, 8).toUpperCase();
-            const currentStatus = p.status || 'pending';
-            
-            let badgeClass = 'status-pending';
-            if (currentStatus === 'approved') badgeClass = 'status-active';
-            if (currentStatus === 'rejected') badgeClass = 'status-suspended';
-    async function loadParentsRepository() {
-        const tbody = document.getElementById('parentsMasterTbody');
-        try {
-            // 1. Fetch Users
-            const { data: users, error: userErr } = await _supabase
-                .from('common_users')
-                .select('*');
-
-            if (userErr) {
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #ef4444; padding: 20px;">common_users error: ${userErr.message}</td></tr>`;
-                return;
-            }
-
-            const parents = users ? users.filter(u => 
-                u.role && (
-                    u.role.toLowerCase() === 'parent' ||
-                    u.role.toLowerCase() === 'parents'
-                )
-            ) : [];
-
-            if (parents.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:20px;">No registered parents found in common_users.</td></tr>`;
-                return;
-            }
-
-            // 2. Fetch parent_profiles
-            let profileMap = {};
-            try {
-                const { data: profiles } = await _supabase.from('parent_profiles').select('*');
-                if (profiles) {
-                    profiles.forEach(p => {
-                        profileMap[p.id] = p;
-                    });
-                }
-            } catch (pErr) {
-                console.warn("Profiles note:", pErr);
-            }
-
-            // 3. Combine Data with Exhaustive Contact Fallbacks
+            // 3. Combine Data & Extract Contacts
             cachedParentsList = parents.map(p => {
                 const prof = profileMap[p.id] || {};
                 
-                // Detailed Phone Lookup across common_users & parent_profiles
-                const phone = p.phone || p.mobile || p.phone_number || p.contact || p.contact_number ||
-                              prof.phone || prof.mobile || prof.contact_number || prof.phone_number || 
-                              prof.parent_phone || prof.whatsapp_number || 'N/A';
-                
-                // Detailed Email Lookup
+                const phone = p.phone || p.mobile || p.phone_number || p.contact || 
+                              prof.phone || prof.mobile || prof.contact_number || prof.phone_number || prof.parent_phone || 'N/A';
+                              
                 const email = p.email || p.email_address || prof.email || prof.contact_email || 'No Email';
-                
-                // Location / District Lookup
-                const district = prof.district || prof.city || prof.location || prof.area || p.location || 'Telangana / AP';
+                const district = prof.district || prof.city || prof.location || p.location || 'Telangana / AP';
 
                 return {
                     id: p.id,
@@ -288,5 +211,70 @@
             `;
         }).join('');
     }
+
+    function filterParentsTable() {
+        const searchVal = document.getElementById('searchParentName').value.toLowerCase().trim();
+        const statusVal = document.getElementById('filterStatus').value;
+
+        const filtered = cachedParentsList.filter(p => {
+            const nameMatch = p.name.toLowerCase().includes(searchVal) || 
+                              p.district.toLowerCase().includes(searchVal) || 
+                              p.phone.toLowerCase().includes(searchVal) ||
+                              p.email.toLowerCase().includes(searchVal);
+            
+            let statusMatch = true;
+            if (statusVal !== 'ALL') {
+                statusMatch = p.status === statusVal;
+            }
+
+            return nameMatch && statusMatch;
+        });
+
+        renderParentsTable(filtered);
+    }
+
+    async function updateParentStatus(userId, newStatus) {
+        if (!confirm(`ఈ పేరెంట్ అకౌంట్‌ను ${newStatus.toUpperCase()} చేయాలనుకుంటున్నారా?`)) return;
+
+        try {
+            // 1. Update common_users.account_status
+            const { error: commonErr } = await _supabase
+                .from('common_users')
+                .update({ account_status: newStatus })
+                .eq('id', userId);
+
+            if (commonErr) {
+                alert("❌ common_users Update Failed: " + commonErr.message);
+                return;
+            }
+
+            // 2. Update/Insert parent_profiles.profile_status
+            const { data: profileCheck } = await _supabase
+                .from('parent_profiles')
+                .select('id')
+                .eq('id', userId);
+
+            if (!profileCheck || profileCheck.length === 0) {
+                await _supabase
+                    .from('parent_profiles')
+                    .insert([{ id: userId, profile_status: newStatus }]);
+            } else {
+                await _supabase
+                    .from('parent_profiles')
+                    .update({ profile_status: newStatus })
+                    .eq('id', userId);
+            }
+
+            alert(`🎉 Success: స్టేటస్ విజయవంతంగా ${newStatus.toUpperCase()} గా మారింది!`);
+            loadParentsRepository();
+
+        } catch (err) {
+            alert("Update Failed: " + err.message);
+        }
+    }
+
+    // Execute immediately upon load
+    loadParentsRepository();
+</script>
 </body>
 </html>
