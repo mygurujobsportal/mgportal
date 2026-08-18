@@ -3,69 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyGuru Admin - Payment Ledger</title>
-    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
-    <link rel="stylesheet" href="../css/style.css">
+    <title>MyGuru Admin - Financial & Payment Ledger</title>
     <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .ledger-container { background: #1e293b; border: 1px solid #334155; padding: 25px; border-radius: 14px; margin-top: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        .filter-bar { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
-        .input-search, .select-ctrl { padding: 9px 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: white; border-radius: 6px; font-size: 13px; outline: none; }
-        .input-search { flex-grow: 1; min-width: 200px; }
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; }
+        .wrapper { display: flex; min-height: 100vh; }
         
-        /* Data Table Style */
+        /* Sidebar */
+        .sidebar { width: 260px; background-color: #1e293b; padding: 20px; border-right: 1px solid #334155; }
+        .brand { font-size: 20px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        .nav-list { list-style: none; padding: 0; margin: 0; }
+        .nav-item { margin-bottom: 6px; }
+        .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .nav-link:hover, .nav-link.active { background-color: #334155; color: #f59e0b; }
+        
+        /* Main Workspace */
+        .main-content { flex: 1; padding: 30px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #334155; }
+
+        /* KPI Metrics */
+        .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .kpi-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 15px; text-align: center; }
+        .kpi-num { font-size: 22px; font-weight: bold; margin-top: 4px; }
+        .kpi-lbl { font-size: 12px; color: #94a3b8; text-transform: uppercase; }
+
+        .vault-container { background: #1e293b; border: 1px solid #334155; padding: 25px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .filter-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+        .input-search, .select-ctrl { padding: 9px 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: white; border-radius: 6px; font-size: 13px; outline: none; }
+        .input-search { flex-grow: 1; min-width: 240px; }
+        
+        /* Table Layout */
         .data-table { width: 100%; border-collapse: collapse; text-align: left; }
         .data-table th { color: #38bdf8; font-size: 12px; text-transform: uppercase; padding: 12px 10px; border-bottom: 2px solid #334155; }
-        .data-table td { padding: 12px 10px; font-size: 14px; border-bottom: 1px solid #334155; color: #cbd5e1; vertical-align: middle; }
+        .data-table td { padding: 12px 10px; font-size: 13px; border-bottom: 1px solid #334155; color: #cbd5e1; vertical-align: middle; }
         
-        /* Status Badges */
+        /* Action Buttons */
+        .btn-action-zone { display: flex; gap: 4px; flex-wrap: wrap; }
+        .btn-adm { padding: 5px 8px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; text-decoration: none; display: inline-block; }
+        .btn-adm-appr { background: #22c55e; color: #000; }
+        .btn-adm-rej { background: #ef4444; color: #fff; }
+        .btn-adm:hover { opacity: 0.9; }
+
+        /* Badges */
         .status-badge { padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-        .pay-success { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
-        .pay-pending { background: rgba(234, 179, 8, 0.15); color: #eab308; }
-        .pay-failed { background: rgba(220, 38, 38, 0.15); color: #ef4444; }
+        .pay-success { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid #22c55e; }
+        .pay-pending { background: rgba(234, 179, 8, 0.15); color: #eab308; border: 1px solid #eab308; }
+        .pay-failed { background: rgba(220, 38, 38, 0.15); color: #ef4444; border: 1px solid #ef4444; }
         
-        .amt-tag { color: #22c55e; font-weight: bold; font-family: monospace; }
+        .amt-tag { color: #22c55e; font-weight: bold; font-family: monospace; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <!-- 👑 Master Controller Sidebar -->
-    <div class="sidebar">
-        <div style="text-align: center; padding: 10px;">
-            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 70px; height: auto; border-radius: 50%;">
-            <h2 style="color: #38bdf8; font-size: 16px; margin-top: 8px;">MyGuru Control</h2>
-        </div>
-        <a href="dashboard.html">Dashboard</a>
-        <a href="teachers.html">Teachers</a>
-        <a href="schools.html">Schools</a>
-        <a href="parents.html">Parents</a>
-        <a href="jobs.html">Jobs</a>
-        <a href="applications.html">Applications</a>
-        <a href="interview-letters.html">Interview Letters</a>
-        <a href="notifications.html">Notifications</a>
-        <a href="messages.html">Messages</a>
-        <a href="subscriptions.html">Subscriptions</a>
-        <a href="payments.html" class="active">Payments</a>
-        <a href="reports.html">Reports</a>
-        <a href="settings.html">Settings</a>
-        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
-    </div>
+<div class="wrapper">
+    <!-- 👑 Sidebar -->
+    <aside class="sidebar">
+        <div class="brand">🛡️ MyGuru Admin</div>
+        <ul class="nav-list">
+            <li class="nav-item"><a href="dashboard.html" class="nav-link">📊 Dashboard</a></li>
+            <li class="nav-item"><a href="teachers.html" class="nav-link">👨‍🏫 Teachers & Approvals</a></li>
+            <li class="nav-item"><a href="schools.html" class="nav-link">🏫 Schools & Employers</a></li>
+            <li class="nav-item"><a href="parents.html" class="nav-link">🏡 Parents & Tuitions</a></li>
+            <li class="nav-item"><a href="jobs.html" class="nav-link">💼 Job Postings</a></li>
+            <li class="nav-item"><a href="applications.html" class="nav-link">📄 Applications Pipeline</a></li>
+            <li class="nav-item"><a href="interview-letters.html" class="nav-link">✉️ Interview Letters</a></li>
+            <li class="nav-item"><a href="subscriptions.html" class="nav-link">📋 Subscriptions</a></li>
+            <li class="nav-item"><a href="payments.html" class="nav-link active">💳 Payments Ledger</a></li>
+            <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ System Settings</a></li>
+        </ul>
+    </aside>
 
-    <!-- 💻 Command Workspace Main Content -->
-    <div class="content">
+    <!-- 💻 Main Workspace -->
+    <main class="main-content">
         <div class="header">
-            <h3>Payment Ledger Audit (ఆర్థిక లావాదేవీల నిఘా ప్యానెల్)</h3>
-            <span class="tag" style="background: #22c55e;">Gateway Node Online</span>
+            <div>
+                <h2 style="margin: 0; font-size: 24px;">Financial & Payment Ledger (ఆర్థిక లావాదేవీల ప్యానెల్)</h2>
+                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">Audit incoming transaction streams, subscription purchases, and manage manual payment verifications.</p>
+            </div>
         </div>
 
-        <div class="ledger-container">
+        <!-- 📊 KPI Metrics Row -->
+        <div class="kpi-row">
+            <div class="kpi-card"><div class="kpi-lbl">Total Gross Revenue</div><div id="kpiRevenue" class="kpi-num" style="color:#22c55e;">₹ 0</div></div>
+            <div class="kpi-card"><div class="kpi-lbl">Total Transactions</div><div id="kpiTotalTx" class="kpi-num" style="color:#38bdf8;">0</div></div>
+            <div class="kpi-card"><div class="kpi-lbl">Verified Successful</div><div id="kpiSuccess" class="kpi-num" style="color:#22c55e;">0</div></div>
+            <div class="kpi-card"><div class="kpi-lbl">Pending Verification</div><div id="kpiPending" class="kpi-num" style="color:#f59e0b;">0</div></div>
+        </div>
+
+        <div class="vault-container">
             <!-- 🔍 Filter Controls -->
             <div class="filter-bar">
-                <input type="text" id="searchPayQuery" class="input-search" placeholder="🔍 Search by Transaction ID or User Name..." oninput="filterPaymentsTable()">
+                <input type="text" id="searchPayQuery" class="input-search" placeholder="🔍 Search by Transaction ID, User / School Name..." oninput="filterPaymentsTable()">
                 <select id="filterStatus" class="select-ctrl" onchange="filterPaymentsTable()">
-                    <option value="ALL">All Gateway States</option>
-                    <option value="success">Success Only</option>
+                    <option value="ALL">All Payment States</option>
+                    <option value="success">Success / Verified</option>
                     <option value="pending">Pending Gateway Verification</option>
                     <option value="failed">Failed / Declined</option>
                 </select>
@@ -76,108 +109,195 @@
                 <thead>
                     <tr>
                         <th>Transaction ID</th>
-                        <th>User Profile</th>
-                        <th>Amount</th>
-                        <th>Gateway Status</th>
+                        <th>User Profile / Entity</th>
+                        <th>Amount Paid</th>
+                        <th>Payment Status</th>
                         <th>Transaction Date</th>
+                        <th>Admin Audit Control</th>
                     </tr>
                 </thead>
                 <tbody id="payMasterTbody">
                     <tr>
-                        <td colspan="5" style="text-align: center; color: #94a3b8; padding: 30px;">Loading global transactional streams...</td>
+                        <td colspan="6" style="text-align: center; color: #94a3b8; padding: 30px;">Loading global transactional streams...</td>
                     </tr>
                 </tbody>
             </table>
         </div>
-    </div>
+    </main>
+</div>
 
-    <!-- Scripts Integration Node -->
-    <script src="../js/supabase.js"></script>
-    <script src="../js/auth.js"></script>
-    <script>
-        let cachedPaymentsList = [];
+<script>
+    const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        async function initPaymentLedger() {
-            // Master Role Shield Guard
-            const activeAdmin = await checkLiveUserSession('Admin');
-            if (!activeAdmin) return;
+    let cachedPaymentsList = [];
 
-            await loadPaymentsRepository();
-        }
+    async function loadPaymentsRepository() {
+        const tbody = document.getElementById('payMasterTbody');
+        try {
+            console.log("👉 Fetching payments ledger stream...");
 
-        async function loadPaymentsRepository() {
-            try {
-                // `payments` టేబుల్ మరియు `common_users` నుండి రిలేషనల్ డేటా లాగడం
-                const { data: payments, error } = await _supabase
-                    .from('payments')
-                    .select(`
-                        id, transaction_id, amount, status, created_at,
-                        common_users ( full_name )
-                    `)
-                    .order('created_at', { ascending: false });
+            // 1. Fetch Users, Schools and Teachers maps in parallel
+            const [uRes, sRes, tRes] = await Promise.allSettled([
+                _supabase.from('common_users').select('id, full_name, phone, role'),
+                _supabase.from('school_profiles').select('id, user_id, school_name, institution_name'),
+                _supabase.from('teacher_profiles').select('id, user_id, full_name')
+            ]);
 
-                if (error) throw error;
+            let userMap = {};
+            if (uRes.status === 'fulfilled' && uRes.value.data) {
+                uRes.value.data.forEach(u => { userMap[u.id] = u.full_name; });
+            }
+            if (sRes.status === 'fulfilled' && sRes.value.data) {
+                sRes.value.data.forEach(s => { 
+                    const name = s.school_name || s.institution_name;
+                    if (s.id) userMap[s.id] = name;
+                    if (s.user_id) userMap[s.user_id] = name;
+                });
+            }
+            if (tRes.status === 'fulfilled' && tRes.value.data) {
+                tRes.value.data.forEach(t => { 
+                    if (t.id && !userMap[t.id]) userMap[t.id] = t.full_name;
+                    if (t.user_id && !userMap[t.user_id]) userMap[t.user_id] = t.full_name;
+                });
+            }
 
-                cachedPaymentsList = payments || [];
-                renderPaymentsTable(cachedPaymentsList);
+            // 2. Fetch Payments Data
+            const { data: payments, error } = await _supabase
+                .from('payments')
+                .select('*')
+                .order('created_at', { ascending: false });
 
-            } catch (err) { console.error("Payment ledger sync failure:", err.message); }
-        }
+            if (error) throw error;
 
-        function renderPaymentsTable(list) {
-            const tbody = document.getElementById('payMasterTbody');
-            tbody.innerHTML = "";
-
-            if (list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8; padding:20px;">No transaction logs match the designated viewport criteria.</td></tr>`;
+            if (!payments || payments.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:30px;">No transaction logs found in database.</td></tr>`;
+                updateKPIs([]);
                 return;
             }
 
-            list.forEach(p => {
-                const clientName = p.common_users ? p.common_users.full_name : 'Platform Workspace';
-                const dateStr = new Date(p.created_at).toLocaleString('en-IN');
-                const txId = p.transaction_id ? p.transaction_id.toUpperCase() : `TXN-${p.id.split('-')[0].toUpperCase()}`;
-                
-                let statusClass = 'pay-pending';
-                if(p.status === 'success') statusClass = 'pay-success';
-                if(p.status === 'failed') statusClass = 'pay-failed';
+            // 3. Process & Map cleanly
+            cachedPaymentsList = payments.map(p => {
+                const payerId = p.user_id || p.school_id || p.teacher_id || p.id;
+                const clientName = userMap[payerId] || p.payer_name || 'Platform Workspace';
+                const txId = p.transaction_id ? p.transaction_id.toUpperCase() : `TXN-${(p.id || '').substring(0,8).toUpperCase()}`;
+                const status = (p.status || 'success').toLowerCase();
+                const amount = parseFloat(p.amount || 0);
 
-                tbody.innerHTML += `
-                    <tr>
-                        <td><code style="color:#38bdf8; font-weight:bold;">#${txId}</code></td>
-                        <td><strong>${clientName}</strong></td>
-                        <td><span class="amt-tag">₹ ${p.amount}</span></td>
-                        <td><span class="status-badge ${statusClass}">${p.status || 'success'}</span></td>
-                        <td>${dateStr}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        // 🔍 Client-side Dynamic Live Filter Matrix
-        function filterPaymentsTable() {
-            const searchVal = document.getElementById('searchPayQuery').value.toLowerCase().trim();
-            const statusVal = document.getElementById('filterStatus').value;
-
-            const filtered = cachedPaymentsList.filter(p => {
-                const clientName = p.common_users ? p.common_users.full_name.toLowerCase() : '';
-                const txIdStr = p.transaction_id ? p.transaction_id.toLowerCase() : '';
-                
-                const textMatch = clientName.includes(searchVal) || txIdStr.includes(searchVal);
-                const statusMatch = (statusVal === 'ALL') || (p.status === statusVal);
-
-                return textMatch && statusMatch;
+                return {
+                    id: p.id,
+                    txId: txId,
+                    clientName: clientName,
+                    amount: amount,
+                    status: status,
+                    created_at: p.created_at ? new Date(p.created_at).toLocaleString('en-IN') : 'Recent'
+                };
             });
 
-            renderPaymentsTable(filtered);
-        }
+            updateKPIs(cachedPaymentsList);
+            renderPaymentsTable(cachedPaymentsList);
 
-        document.getElementById('logout-btn').addEventListener('click', async (e) => {
-            e.preventDefault();
-            await logoutSessionRouter();
+        } catch (err) {
+            console.error("Payment ledger sync failure:", err);
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #ef4444; padding: 20px;">Error loading transactions: ${err.message}</td></tr>`;
+        }
+    }
+
+    function updateKPIs(list) {
+        let totalRevenue = 0;
+        let successCount = 0;
+        let pendingCount = 0;
+
+        list.forEach(p => {
+            if (p.status === 'success' || p.status === 'completed') {
+                totalRevenue += p.amount;
+                successCount++;
+            } else if (p.status === 'pending') {
+                pendingCount++;
+            }
         });
 
-        window.onload = initPaymentLedger;
-    </script>
+        document.getElementById('kpiRevenue').innerText = `₹ ${totalRevenue.toLocaleString('en-IN')}`;
+        document.getElementById('kpiTotalTx').innerText = list.length;
+        document.getElementById('kpiSuccess').innerText = successCount;
+        document.getElementById('kpiPending').innerText = pendingCount;
+    }
+
+    function renderPaymentsTable(list) {
+        const tbody = document.getElementById('payMasterTbody');
+        tbody.innerHTML = "";
+
+        if (!list || list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:20px;">No transaction logs match the designated viewport criteria.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = list.map(p => {
+            let statusClass = 'pay-pending';
+            if (p.status === 'success' || p.status === 'completed') statusClass = 'pay-success';
+            if (p.status === 'failed' || p.status === 'declined') statusClass = 'pay-failed';
+
+            // Manual verification buttons for pending transactions
+            let actionHtml = '';
+            if (p.status === 'pending') {
+                actionHtml = `
+                    <button class="btn-adm btn-adm-appr" onclick="updatePaymentState('${p.id}', 'success')">Verify ✓</button>
+                    <button class="btn-adm btn-adm-rej" onclick="updatePaymentState('${p.id}', 'failed')">Decline ✕</button>
+                `;
+            } else {
+                actionHtml = `<span style="color:#64748b; font-size:11px;">Audited</span>`;
+            }
+
+            return `
+                <tr>
+                    <td><code style="color:#38bdf8; font-weight:bold;">#${p.txId}</code></td>
+                    <td><strong>${p.clientName}</strong></td>
+                    <td><span class="amt-tag">₹ ${p.amount.toLocaleString('en-IN')}</span></td>
+                    <td><span class="status-badge ${statusClass}">${p.status.toUpperCase()}</span></td>
+                    <td>📅 ${p.created_at}</td>
+                    <td><div class="btn-action-zone">${actionHtml}</div></td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function filterPaymentsTable() {
+        const searchVal = document.getElementById('searchPayQuery').value.toLowerCase().trim();
+        const statusVal = document.getElementById('filterStatus').value;
+
+        const filtered = cachedPaymentsList.filter(p => {
+            const textMatch = p.clientName.toLowerCase().includes(searchVal) || 
+                               p.txId.toLowerCase().includes(searchVal);
+            
+            const statusMatch = (statusVal === 'ALL') || (p.status === statusVal);
+
+            return textMatch && statusMatch;
+        });
+
+        renderPaymentsTable(filtered);
+    }
+
+    async function updatePaymentState(paymentId, nextStatus) {
+        if (!confirm(`ఈ లావాదేవీని ${nextStatus.toUpperCase()} చేయాలనుకుంటున్నారా?`)) return;
+
+        try {
+            const { error } = await _supabase
+                .from('payments')
+                .update({ status: nextStatus })
+                .eq('id', paymentId);
+
+            if (error) throw error;
+
+            alert(`✓ లావాదేవీ విజయవంతంగా ${nextStatus.toUpperCase()} గా అప్‌డేట్ చేయబడింది!`);
+            loadPaymentsRepository();
+        } catch (err) {
+            alert("Action failed: " + err.message);
+        }
+    }
+
+    // Direct Execution on Load
+    loadPaymentsRepository();
+</script>
 </body>
 </html>
