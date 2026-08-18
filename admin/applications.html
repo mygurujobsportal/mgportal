@@ -93,7 +93,7 @@
         <div class="header">
             <div>
                 <h2 style="margin: 0; font-size: 24px;">Applications Pipeline & ATS Control</h2>
-                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">Monitor end-to-end teacher applications, verify selections, and dispatch interview letters.</p>
+                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">Monitor teacher applications, verify selections, and dispatch interview letters.</p>
             </div>
         </div>
 
@@ -127,6 +127,7 @@
                     <option value="pending">Pending</option>
                     <option value="shortlisted">Shortlisted</option>
                     <option value="selected">Selected</option>
+                    <option value="demo_requested">Demo Requested</option>
                     <option value="rejected">Rejected</option>
                 </select>
             </div>
@@ -162,7 +163,7 @@
     </main>
 </div>
 
-<!-- 👁️ Application Detail & Timeline Modal -->
+<!-- 👁️ Application Detail Modal -->
 <div id="modalAppDetail" class="modal-overlay">
     <div class="modal-card">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155; padding-bottom:12px; margin-bottom:15px;">
@@ -183,44 +184,15 @@
     async function loadApplicationsRepository() {
         const tbody = document.getElementById('appsMasterTbody');
         try {
-            // 1. Fetch Metadata Maps
-            let teacherMap = {};
-            try {
-                const { data: tList } = await _supabase.from('teacher_profiles').select('id, full_name, qualification, experience, phone, district');
-                if (tList) tList.forEach(t => { teacherMap[t.id] = t; });
-            } catch (e) { console.warn(e); }
+            console.log("👉 Fetching job_applications...");
 
-            let schoolJobsMap = {};
-            try {
-                const { data: sJobs } = await _supabase.from('school_jobs').select('id, job_title, subject, school_id, salary, district');
-                if (sJobs) sJobs.forEach(j => { schoolJobsMap[j.id] = j; });
-            } catch (e) { console.warn(e); }
-
-            let tuitionJobsMap = {};
-            try {
-                const { data: tJobs } = await _supabase.from('parent_tuitions').select('id, tuition_title, subject, parent_id, salary, district');
-                if (tJobs) tJobs.forEach(t => { tuitionJobsMap[t.id] = t; });
-            } catch (e) { console.warn(e); }
-
-            let schoolNamesMap = {};
-            try {
-                const { data: sProfiles } = await _supabase.from('school_profiles').select('id, school_name, institution_name');
-                if (sProfiles) sProfiles.forEach(s => { schoolNamesMap[s.id] = s.school_name || s.institution_name; });
-            } catch (e) { console.warn(e); }
-
-            let parentNamesMap = {};
-            try {
-                const { data: pProfiles } = await _supabase.from('parent_profiles').select('id, parent_name, name');
-                if (pProfiles) pProfiles.forEach(p => { parentNamesMap[p.id] = p.parent_name || p.name; });
-            } catch (e) { console.warn(e); }
-
-            // 2. Fetch Applications
-            const { data: apps, error } = await _supabase
+            // 1. Fetch Job Applications First
+            const { data: apps, error: appErr } = await _supabase
                 .from('job_applications')
                 .select('*')
                 .order('applied_at', { ascending: false });
 
-            if (error) throw error;
+            if (appErr) throw appErr;
 
             if (!apps || apps.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:30px;">No applications currently in pipeline.</td></tr>`;
@@ -228,98 +200,70 @@
                 return;
             }
 
-            // 3. Process records cleanly
-            cachedAppsList = apps.map(a => {
-                const teacher = teacherMap[a.teacher_id] || { full_name: 'Teacher Applicant', qualification: 'N/A', experience: 0, phone: 'N/A', district: 'N/A' };
-                const isSchool = (a.application_type === 'school') || !!a.school_job_id;
-                
-                let jobTitle = 'Vacancy Position';
-                let posterName = 'Target Employer';
-                let district = 'Telangana / AP';
-                let salary = 'N/A';
+            // 2. Fetch Metadata safely in Parallel
+            const [teachersRes, usersRes, schoolJobsRes, tuitionsRes, schoolProfilesRes, parentProfilesRes] = await Promise.allSettled([
+                _supabase.from('teacher_profiles').select('*'),
+                _supabase.from('common_users').select('id, full_name, phone'),
+                _supabase.from('school_jobs').select('*'),
+                _supabase.from('parent_tuitions').select('*'),
+                _supabase.from('school_profiles').select('*'),
+                _supabase.from('parent_profiles').select('*')
+            ]);
 
-                if (isSchool) {
-                    const sJob = schoolJobsMap[a.school_job_id] || {};
-                    jobTitle = sJob.job_title ? `${sJob.job_title} (${sJob.subject || ''})` : 'School Vacancy';
-                    posterName = schoolNamesMap[sJob.school_id] || 'Partner School';
-    async function loadApplicationsRepository() {
-        const tbody = document.getElementById('appsMasterTbody');
-        try {
-            // 1. Fetch Teacher Profiles & Users for full names
+            // Build Teacher Map
             let teacherMap = {};
-            try {
-                const { data: tList } = await _supabase.from('teacher_profiles').select('*');
-                if (tList) {
-                    tList.forEach(t => { 
-                        teacherMap[t.id] = {
-                            full_name: t.full_name || t.name,
-                            qualification: t.qualification || t.qualifications || 'Faculty',
-                            phone: t.phone || t.mobile || 'N/A',
-                            district: t.district || 'Telangana'
-                        }; 
-                    });
-                }
-                const { data: uList } = await _supabase.from('common_users').select('id, full_name, phone');
-                if (uList) {
-                    uList.forEach(u => {
-                        if (!teacherMap[u.id] || !teacherMap[u.id].full_name) {
-                            teacherMap[u.id] = {
-                                full_name: u.full_name,
-                                qualification: 'Faculty',
-                                phone: u.phone || 'N/A',
-                                district: 'Telangana'
-                            };
-                        }
-                    });
-                }
-            } catch (e) { console.warn("Teacher map warning:", e); }
-
-            // 2. Fetch School Jobs & Tuitions
-            let schoolJobsMap = {};
-            try {
-                const { data: sJobs } = await _supabase.from('school_jobs').select('*');
-                if (sJobs) sJobs.forEach(j => { schoolJobsMap[j.id] = j; });
-            } catch (e) { console.warn(e); }
-
-            let tuitionJobsMap = {};
-            try {
-                const { data: tJobs } = await _supabase.from('parent_tuitions').select('*');
-                if (tJobs) tJobs.forEach(t => { tuitionJobsMap[t.id] = t; });
-            } catch (e) { console.warn(e); }
-
-            // 3. Fetch School Profiles & Parent Profiles
-            let schoolNamesMap = {};
-            try {
-                const { data: sProfiles } = await _supabase.from('school_profiles').select('*');
-                if (sProfiles) sProfiles.forEach(s => { schoolNamesMap[s.id] = s.school_name || s.institution_name; });
-            } catch (e) { console.warn(e); }
-
-            let parentNamesMap = {};
-            try {
-                const { data: pProfiles } = await _supabase.from('parent_profiles').select('*');
-                if (pProfiles) pProfiles.forEach(p => { parentNamesMap[p.id] = p.parent_name || p.name; });
-            } catch (e) { console.warn(e); }
-
-            // 4. Fetch Applications
-            const { data: apps, error } = await _supabase
-                .from('job_applications')
-                .select('*')
-                .order('applied_at', { ascending: false });
-
-            if (error) throw error;
-
-            if (!apps || apps.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:30px;">No applications currently in pipeline.</td></tr>`;
-                updateKPIs([]);
-                return;
+            if (teachersRes.status === 'fulfilled' && teachersRes.value.data) {
+                teachersRes.value.data.forEach(t => {
+                    teacherMap[t.id] = {
+                        full_name: t.full_name || t.name,
+                        qualification: t.qualification || t.qualifications || 'Faculty',
+                        phone: t.phone || t.mobile || 'N/A',
+                        district: t.district || 'Telangana'
+                    };
+                });
+            }
+            if (usersRes.status === 'fulfilled' && usersRes.value.data) {
+                usersRes.value.data.forEach(u => {
+                    if (!teacherMap[u.id] || !teacherMap[u.id].full_name) {
+                        teacherMap[u.id] = {
+                            full_name: u.full_name || 'Teacher Applicant',
+                            qualification: 'Faculty',
+                            phone: u.phone || 'N/A',
+                            district: 'Telangana'
+                        };
+                    }
+                });
             }
 
+            // Build School Jobs & Tuitions Map
+            let schoolJobsMap = {};
+            if (schoolJobsRes.status === 'fulfilled' && schoolJobsRes.value.data) {
+                schoolJobsRes.value.data.forEach(j => { schoolJobsMap[j.id] = j; });
+            }
+
+            let tuitionJobsMap = {};
+            if (tuitionsRes.status === 'fulfilled' && tuitionsRes.value.data) {
+                tuitionsRes.value.data.forEach(t => { tuitionJobsMap[t.id] = t; });
+            }
+
+            // Build Names Map
+            let schoolNamesMap = {};
+            if (schoolProfilesRes.status === 'fulfilled' && schoolProfilesRes.value.data) {
+                schoolProfilesRes.value.data.forEach(s => { schoolNamesMap[s.id] = s.school_name || s.institution_name; });
+            }
+
+            let parentNamesMap = {};
+            if (parentProfilesRes.status === 'fulfilled' && parentProfilesRes.value.data) {
+                parentProfilesRes.value.data.forEach(p => { parentNamesMap[p.id] = p.parent_name || p.name; });
+            }
+
+            // 3. Map Data Cleanly
             cachedAppsList = apps.map(a => {
                 const teacher = teacherMap[a.teacher_id] || { full_name: 'Teacher Applicant', qualification: 'Faculty', phone: 'N/A', district: 'Telangana' };
                 const isSchool = (a.application_type === 'school') || !!a.school_job_id;
                 
                 let jobTitle = 'Vacancy Position';
-                let posterName = 'Partner Institution';
+                let posterName = 'Target Employer';
                 let district = 'Telangana';
                 let salary = 'N/A';
 
@@ -342,7 +286,7 @@
                     shortId: (a.id || '').substring(0, 8).toUpperCase(),
                     type: isSchool ? 'school' : 'tuition',
                     teacher_id: a.teacher_id,
-                    teacher_name: teacher.full_name || 'Teacher Applicant',
+                    teacher_name: teacher.full_name,
                     teacher_qual: teacher.qualification,
                     teacher_phone: teacher.phone,
                     teacher_dist: teacher.district,
@@ -363,11 +307,10 @@
             renderApplicationsTable(cachedAppsList);
 
         } catch (err) {
-            console.error("Pipeline fetch error:", err);
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #ef4444; padding: 20px;">Error: ${err.message}</td></tr>`;
+            console.error("Pipeline fetch crash:", err);
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #ef4444; padding: 20px;">Error loading applications: ${err.message}</td></tr>`;
         }
     }
-
 
     function updateKPIs(list) {
         document.getElementById('kpiTotal').innerText = list.length;
@@ -392,8 +335,10 @@
             
             let adminBadgeClass = `st-${a.admin_status}`;
             let empBadgeClass = `st-${a.employer_status}`;
+            if (a.employer_status === 'demo_requested') {
+                empBadgeClass = 'st-shortlisted';
+            }
 
-            // If selected by employer, provide Interview Letter button
             const letterBtn = (a.employer_status === 'selected' && a.admin_status === 'approved') 
                 ? `<a href="interview-letters.html?app_id=${a.id}" class="btn-adm btn-adm-letter">✉️ Letter</a>` 
                 : '';
@@ -483,7 +428,6 @@
         } catch (err) { alert("Flag failed: " + err.message); }
     }
 
-    // Modal Details View
     function openAppModal(appId) {
         const app = cachedAppsList.find(a => a.id === appId);
         if (!app) return;
@@ -518,7 +462,6 @@
         document.getElementById('modalAppDetail').style.display = 'none';
     }
 
-    // Bulk Actions Engine
     function toggleSelectAll(master) {
         document.querySelectorAll('.chkApp').forEach(chk => chk.checked = master.checked);
     }
@@ -541,7 +484,7 @@
         } catch (err) { alert("Bulk action failed: " + err.message); }
     }
 
-    // Direct execution
+    // Direct initialization
     loadApplicationsRepository();
 </script>
 </body>
