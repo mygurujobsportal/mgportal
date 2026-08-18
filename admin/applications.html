@@ -242,7 +242,92 @@
                     const sJob = schoolJobsMap[a.school_job_id] || {};
                     jobTitle = sJob.job_title ? `${sJob.job_title} (${sJob.subject || ''})` : 'School Vacancy';
                     posterName = schoolNamesMap[sJob.school_id] || 'Partner School';
-                    district = sJob.district || 'Telangana';
+    async function loadApplicationsRepository() {
+        const tbody = document.getElementById('appsMasterTbody');
+        try {
+            // 1. Fetch Teacher Profiles & Users for full names
+            let teacherMap = {};
+            try {
+                const { data: tList } = await _supabase.from('teacher_profiles').select('*');
+                if (tList) {
+                    tList.forEach(t => { 
+                        teacherMap[t.id] = {
+                            full_name: t.full_name || t.name,
+                            qualification: t.qualification || t.qualifications || 'Faculty',
+                            phone: t.phone || t.mobile || 'N/A',
+                            district: t.district || 'Telangana'
+                        }; 
+                    });
+                }
+                const { data: uList } = await _supabase.from('common_users').select('id, full_name, phone');
+                if (uList) {
+                    uList.forEach(u => {
+                        if (!teacherMap[u.id] || !teacherMap[u.id].full_name) {
+                            teacherMap[u.id] = {
+                                full_name: u.full_name,
+                                qualification: 'Faculty',
+                                phone: u.phone || 'N/A',
+                                district: 'Telangana'
+                            };
+                        }
+                    });
+                }
+            } catch (e) { console.warn("Teacher map warning:", e); }
+
+            // 2. Fetch School Jobs & Tuitions
+            let schoolJobsMap = {};
+            try {
+                const { data: sJobs } = await _supabase.from('school_jobs').select('*');
+                if (sJobs) sJobs.forEach(j => { schoolJobsMap[j.id] = j; });
+            } catch (e) { console.warn(e); }
+
+            let tuitionJobsMap = {};
+            try {
+                const { data: tJobs } = await _supabase.from('parent_tuitions').select('*');
+                if (tJobs) tJobs.forEach(t => { tuitionJobsMap[t.id] = t; });
+            } catch (e) { console.warn(e); }
+
+            // 3. Fetch School Profiles & Parent Profiles
+            let schoolNamesMap = {};
+            try {
+                const { data: sProfiles } = await _supabase.from('school_profiles').select('*');
+                if (sProfiles) sProfiles.forEach(s => { schoolNamesMap[s.id] = s.school_name || s.institution_name; });
+            } catch (e) { console.warn(e); }
+
+            let parentNamesMap = {};
+            try {
+                const { data: pProfiles } = await _supabase.from('parent_profiles').select('*');
+                if (pProfiles) pProfiles.forEach(p => { parentNamesMap[p.id] = p.parent_name || p.name; });
+            } catch (e) { console.warn(e); }
+
+            // 4. Fetch Applications
+            const { data: apps, error } = await _supabase
+                .from('job_applications')
+                .select('*')
+                .order('applied_at', { ascending: false });
+
+            if (error) throw error;
+
+            if (!apps || apps.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:30px;">No applications currently in pipeline.</td></tr>`;
+                updateKPIs([]);
+                return;
+            }
+
+            cachedAppsList = apps.map(a => {
+                const teacher = teacherMap[a.teacher_id] || { full_name: 'Teacher Applicant', qualification: 'Faculty', phone: 'N/A', district: 'Telangana' };
+                const isSchool = (a.application_type === 'school') || !!a.school_job_id;
+                
+                let jobTitle = 'Vacancy Position';
+                let posterName = 'Partner Institution';
+                let district = 'Telangana';
+                let salary = 'N/A';
+
+                if (isSchool) {
+                    const sJob = schoolJobsMap[a.school_job_id] || {};
+                    jobTitle = sJob.job_title ? `${sJob.job_title} (${sJob.subject || ''})` : 'School Vacancy';
+                    posterName = schoolNamesMap[sJob.school_id] || 'Partner School';
+                    district = sJob.district || sJob.location || 'Telangana';
                     salary = sJob.salary || 'Standard';
                 } else {
                     const tJob = tuitionJobsMap[a.tuition_id] || {};
@@ -257,7 +342,7 @@
                     shortId: (a.id || '').substring(0, 8).toUpperCase(),
                     type: isSchool ? 'school' : 'tuition',
                     teacher_id: a.teacher_id,
-                    teacher_name: teacher.full_name,
+                    teacher_name: teacher.full_name || 'Teacher Applicant',
                     teacher_qual: teacher.qualification,
                     teacher_phone: teacher.phone,
                     teacher_dist: teacher.district,
@@ -282,6 +367,7 @@
             tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #ef4444; padding: 20px;">Error: ${err.message}</td></tr>`;
         }
     }
+
 
     function updateKPIs(list) {
         document.getElementById('kpiTotal').innerText = list.length;
