@@ -4,14 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyGuru Admin - Interview Letters & Dispatch Control</title>
-    <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
         body { margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; }
         .wrapper { display: flex; min-height: 100vh; }
         
-        /* Sidebar */
         .sidebar { width: 260px; background-color: #1e293b; padding: 20px; border-right: 1px solid #334155; }
         .brand { font-size: 20px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
         .nav-list { list-style: none; padding: 0; margin: 0; }
@@ -19,11 +17,9 @@
         .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
         .nav-link:hover, .nav-link.active { background-color: #334155; color: #f59e0b; }
         
-        /* Workspace */
         .main-content { flex: 1; padding: 30px; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #334155; }
 
-        /* KPI Metrics */
         .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .kpi-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 15px; text-align: center; }
         .kpi-num { font-size: 22px; font-weight: bold; margin-top: 4px; }
@@ -34,33 +30,26 @@
         .input-search, .select-ctrl, .input-form { padding: 9px 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: white; border-radius: 6px; font-size: 13px; outline: none; }
         .input-search { flex-grow: 1; min-width: 240px; }
         
-        /* Data Table */
         .data-table { width: 100%; border-collapse: collapse; text-align: left; }
         .data-table th { color: #38bdf8; font-size: 12px; text-transform: uppercase; padding: 12px 10px; border-bottom: 2px solid #334155; }
         .data-table td { padding: 12px 10px; font-size: 13px; border-bottom: 1px solid #334155; color: #cbd5e1; vertical-align: middle; }
         
-        /* Action Buttons */
         .btn-action-zone { display: flex; gap: 4px; flex-wrap: wrap; }
         .btn-adm { padding: 5px 10px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; text-decoration: none; display: inline-block; }
         .btn-adm-create { background: #3b82f6; color: #fff; }
         .btn-adm-preview { background: #8b5cf6; color: #fff; }
         .btn-adm-dispatch { background: #22c55e; color: #000; }
-        .btn-adm-cancel { background: #ef4444; color: #fff; }
         .btn-adm:hover { opacity: 0.9; }
 
-        /* Badges */
         .status-badge { padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
         .st-pending_request { background: rgba(234, 179, 8, 0.15); color: #eab308; border: 1px solid #eab308; }
-        .st-draft { background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid #94a3b8; }
+        .st-draft, .st-pending_admin_approval { background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid #94a3b8; }
         .st-approved { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid #38bdf8; }
-        .st-dispatched { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid #22c55e; }
-        .st-cancelled { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; }
+        .st-dispatched, .st-sent { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid #22c55e; }
 
-        /* Modal Overlays */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 1000; align-items: center; justify-content: center; }
         .modal-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; max-width: 650px; width: 90%; max-height: 90vh; overflow-y: auto; padding: 25px; }
         
-        /* Official Letter Paper Styling */
         .letter-sheet { background: #ffffff; color: #0f172a; padding: 35px; border-radius: 8px; font-family: Georgia, serif; line-height: 1.6; box-shadow: 0 5px 25px rgba(0,0,0,0.5); }
         .letter-header { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 20px; }
         .letter-grid { display: grid; grid-template-columns: 140px 1fr; gap: 8px; margin: 15px 0; font-size: 14px; }
@@ -69,7 +58,6 @@
 <body>
 
 <div class="wrapper">
-    <!-- 👑 Sidebar -->
     <aside class="sidebar">
         <div class="brand">🛡️ MyGuru Admin</div>
         <ul class="nav-list">
@@ -85,7 +73,6 @@
         </ul>
     </aside>
 
-    <!-- 💻 Command Workspace -->
     <main class="main-content">
         <div class="header">
             <div>
@@ -94,7 +81,6 @@
             </div>
         </div>
 
-        <!-- 📊 KPI Row -->
         <div class="kpi-row">
             <div class="kpi-card"><div class="kpi-lbl">Pending Requests</div><div id="kpiRequests" class="kpi-num" style="color:#f59e0b;">0</div></div>
             <div class="kpi-card"><div class="kpi-lbl">Draft Letters</div><div id="kpiDrafts" class="kpi-num" style="color:#94a3b8;">0</div></div>
@@ -103,7 +89,6 @@
         </div>
 
         <div class="vault-container">
-            <!-- 🔍 Filter Controls -->
             <div class="filter-bar">
                 <input type="text" id="searchLetterQuery" class="input-search" placeholder="🔍 Search Teacher, Position, Institution, App ID..." oninput="filterLettersTable()">
                 <select id="filterStatus" class="select-ctrl" onchange="filterLettersTable()">
@@ -112,11 +97,9 @@
                     <option value="draft">Drafts</option>
                     <option value="approved">Approved (Ready)</option>
                     <option value="dispatched">Dispatched</option>
-                    <option value="cancelled">Cancelled</option>
                 </select>
             </div>
 
-            <!-- 📊 Master Table -->
             <table class="data-table">
                 <thead>
                     <tr>
@@ -138,11 +121,11 @@
     </main>
 </div>
 
-<!-- 📝 Modal 1: Create / Edit Interview Letter -->
+<!-- Modal 1: Create / Edit Interview Letter -->
 <div id="modalLetterForm" class="modal-overlay">
     <div class="modal-card">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155; padding-bottom:12px; margin-bottom:15px;">
-            <h3 id="formModalTitle" style="margin:0; color:#38bdf8;">Generate Official Interview Letter</h3>
+            <h3 style="margin:0; color:#38bdf8;">Generate Official Interview Letter</h3>
             <button onclick="closeModal('modalLetterForm')" style="background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer;">✖</button>
         </div>
         
@@ -150,6 +133,8 @@
             <input type="hidden" id="fldAppId">
             <input type="hidden" id="fldLetterId">
             <input type="hidden" id="fldTeacherId">
+            <input type="hidden" id="fldSchoolId">
+            <input type="hidden" id="fldJobId">
 
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
                 <div>
@@ -198,7 +183,7 @@
             </div>
 
             <div style="margin-bottom:15px;">
-                <label style="font-size:11px; color:#94a3b8; font-weight:bold;">CANDIDATE INSTRUCTIONS (CUSTOMIZABLE)</label>
+                <label style="font-size:11px; color:#94a3b8; font-weight:bold;">CANDIDATE INSTRUCTIONS</label>
                 <textarea id="fldInstructions" class="input-form" rows="4" style="width:100%; resize:none;">• Please report 15 minutes before scheduled time.
 • Carry original academic and experience certificates with one xerox set.
 • Bring one passport-size photograph.
@@ -214,7 +199,7 @@
     </div>
 </div>
 
-<!-- 👁️ Modal 2: Official Letter Preview -->
+<!-- Modal 2: Official Letter Preview -->
 <div id="modalLetterPreview" class="modal-overlay">
     <div class="modal-card" style="max-width:700px; background:#0f172a;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -242,9 +227,6 @@
     async function loadInterviewLettersModule() {
         const tbody = document.getElementById('lettersMasterTbody');
         try {
-            console.log("👉 Loading interview letters repository...");
-
-            // 1. Fetch metadata in parallel
             const [tRes, uRes, sRes, sjRes, tjRes] = await Promise.allSettled([
                 _supabase.from('teacher_profiles').select('*'),
                 _supabase.from('common_users').select('id, full_name'),
@@ -290,7 +272,6 @@
                 tjRes.value.data.forEach(t => { tuitionJobsMap[t.id] = t; });
             }
 
-            // 2. Fetch Applications
             const { data: apps, error: aErr } = await _supabase
                 .from('job_applications')
                 .select('*')
@@ -298,7 +279,6 @@
 
             if (aErr) throw aErr;
 
-            // 3. Fetch Existing Interview Letters
             const { data: letters } = await _supabase
                 .from('interview_letters')
                 .select('*')
@@ -312,7 +292,6 @@
                 });
             }
 
-            // 4. Merge Pipeline Nodes
             let mergedList = [];
 
             if (apps) {
@@ -323,25 +302,40 @@
                     let jobTitle = 'Vacancy Position';
                     let posterName = 'Partner Institution';
                     let venueDef = 'Telangana';
+                    let targetJobId = a.school_job_id || a.tuition_id;
+                    let targetSchoolId = null;
 
                     if (isSchool) {
                         const sJob = schoolJobsMap[a.school_job_id] || {};
                         jobTitle = sJob.job_title ? `${sJob.job_title} (${sJob.subject || ''})` : 'School Vacancy';
+                        targetSchoolId = sJob.school_id;
                         posterName = schoolsMap[sJob.school_id] || sJob.location || 'Partner School';
                         venueDef = sJob.location || sJob.district || 'Mulugu, Telangana';
                     } else {
                         const tJob = tuitionJobsMap[a.tuition_id] || {};
                         jobTitle = tJob.tuition_title ? `${tJob.tuition_title} (${tJob.subject || ''})` : 'Home Tuition';
+                        targetSchoolId = tJob.parent_id;
                         posterName = 'Parent / Guardian';
                         venueDef = tJob.address || tJob.district || 'Location';
                     }
 
                     const existingLetter = letterByAppId[a.id];
 
+                    let parsedMeta = {};
+                    if (existingLetter && existingLetter.message) {
+                        try {
+                            parsedMeta = JSON.parse(existingLetter.message);
+                        } catch(e) {
+                            parsedMeta = { instructions: existingLetter.message };
+                        }
+                    }
+
                     const item = {
                         app_id: a.id,
                         shortAppId: (a.id || '').substring(0, 8).toUpperCase(),
                         teacher_id: a.teacher_id,
+                        school_id: targetSchoolId,
+                        job_id: targetJobId,
                         teacher_name: teacher.full_name || 'Teacher Applicant',
                         teacher_qual: teacher.qualification,
                         job_title: jobTitle,
@@ -349,14 +343,14 @@
                         venue_default: venueDef,
                         employer_status: (a.employer_status || 'demo_requested').toLowerCase(),
                         letter_id: existingLetter ? existingLetter.id : null,
-                        letter_status: existingLetter ? existingLetter.status : 'pending_request',
-                        interview_date: existingLetter ? existingLetter.interview_date : null,
-                        interview_time: existingLetter ? existingLetter.interview_time : null,
-                        interview_mode: existingLetter ? existingLetter.interview_mode : 'School Venue',
-                        venue_name: existingLetter ? existingLetter.venue_name : posterName,
-                        venue_address: existingLetter ? existingLetter.venue_address : venueDef,
-                        online_link: existingLetter ? existingLetter.online_link : '',
-                        instructions: existingLetter ? existingLetter.instructions : ''
+                        letter_status: existingLetter ? (existingLetter.status || 'draft') : 'pending_request',
+                        interview_date: parsedMeta.interview_date || null,
+                        interview_time: parsedMeta.interview_time || '10:30 AM',
+                        interview_mode: parsedMeta.interview_mode || 'School Venue',
+                        venue_name: parsedMeta.venue_name || posterName,
+                        venue_address: parsedMeta.venue_address || venueDef,
+                        online_link: parsedMeta.online_link || '',
+                        instructions: parsedMeta.instructions || ''
                     };
 
                     appMetaLookup[a.id] = item;
@@ -376,9 +370,9 @@
 
     function updateKPIs(list) {
         document.getElementById('kpiRequests').innerText = list.filter(l => l.letter_status === 'pending_request').length;
-        document.getElementById('kpiDrafts').innerText = list.filter(l => l.letter_status === 'draft').length;
+        document.getElementById('kpiDrafts').innerText = list.filter(l => l.letter_status === 'draft' || l.letter_status === 'pending_admin_approval').length;
         document.getElementById('kpiApproved').innerText = list.filter(l => l.letter_status === 'approved').length;
-        document.getElementById('kpiDispatched').innerText = list.filter(l => l.letter_status === 'dispatched').length;
+        document.getElementById('kpiDispatched').innerText = list.filter(l => l.letter_status === 'dispatched' || l.letter_status === 'sent').length;
     }
 
     function renderLettersTable(list) {
@@ -402,7 +396,7 @@
             let opsHtml = '';
             if (!hasLetter || item.letter_status === 'pending_request') {
                 opsHtml = `<button class="btn-adm btn-adm-create" onclick="openCreateLetterModal('${item.app_id}')">✍️ Create Letter</button>`;
-            } else if (item.letter_status === 'draft') {
+            } else if (item.letter_status === 'draft' || item.letter_status === 'pending_admin_approval') {
                 opsHtml = `
                     <button class="btn-adm btn-adm-create" onclick="openCreateLetterModal('${item.app_id}')">✏️ Edit</button>
                     <button class="btn-adm btn-adm-preview" onclick="openPreviewModal('${item.app_id}')">👁️ Preview</button>
@@ -412,7 +406,7 @@
                     <button class="btn-adm btn-adm-preview" onclick="openPreviewModal('${item.app_id}')">👁️ Preview</button>
                     <button class="btn-adm btn-adm-dispatch" onclick="dispatchLetter('${item.letter_id}', '${item.app_id}')">🚀 Dispatch</button>
                 `;
-            } else if (item.letter_status === 'dispatched') {
+            } else if (item.letter_status === 'dispatched' || item.letter_status === 'sent') {
                 opsHtml = `
                     <button class="btn-adm btn-adm-preview" onclick="openPreviewModal('${item.app_id}')">📄 View Letter</button>
                     <span style="color:#22c55e; font-size:11px; font-weight:bold; margin-left:5px;">✓ Dispatched</span>
@@ -464,7 +458,10 @@
 
         document.getElementById('fldAppId').value = appId;
         document.getElementById('fldLetterId').value = item.letter_id || '';
-        document.getElementById('fldTeacherId').value = item.teacher_id;
+        document.getElementById('fldTeacherId').value = item.teacher_id || '';
+        document.getElementById('fldSchoolId').value = item.school_id || '';
+        document.getElementById('fldJobId').value = item.job_id || '';
+        
         document.getElementById('lblFormTeacher').value = `${item.teacher_name} (${item.teacher_qual})`;
         document.getElementById('lblFormPoster').value = `${item.poster_name} - ${item.job_title}`;
         
@@ -501,43 +498,40 @@
         const letterId = document.getElementById('fldLetterId').value;
         const item = appMetaLookup[appId];
 
-        // Compatible Payload for job_application_id and application_id
-        const payload = {
-            job_application_id: appId,
-            application_id: appId,
-            teacher_id: item.teacher_id,
+        const metaPayload = {
             interview_date: document.getElementById('fldDate').value,
             interview_time: document.getElementById('fldTime').value,
             interview_mode: document.getElementById('fldMode').value,
             venue_name: document.getElementById('fldVenueName').value,
             venue_address: document.getElementById('fldVenueAddress').value,
             online_link: document.getElementById('fldOnlineLink').value,
-            instructions: document.getElementById('fldInstructions').value,
-            status: submitter,
-            updated_at: new Date().toISOString()
+            instructions: document.getElementById('fldInstructions').value
         };
 
-        if (submitter === 'approved') {
-            payload.approved_at = new Date().toISOString();
-        }
+        const dbPayload = {
+            job_application_id: appId,
+            teacher_id: item.teacher_id,
+            school_id: item.school_id,
+            job_id: item.job_id,
+            letter_type: 'interview_invitation',
+            message: JSON.stringify(metaPayload),
+            status: submitter
+        };
 
         try {
             if (letterId) {
-                // Try update using fallback keys
-                let { error } = await _supabase.from('interview_letters').update(payload).eq('id', letterId);
-                if (error) {
-                    delete payload.application_id;
-                    const alt = await _supabase.from('interview_letters').update(payload).eq('id', letterId);
-                    if (alt.error) throw alt.error;
-                }
+                const { error } = await _supabase
+                    .from('interview_letters')
+                    .update(dbPayload)
+                    .eq('id', letterId);
+
+                if (error) throw error;
             } else {
-                payload.created_at = new Date().toISOString();
-                let { error } = await _supabase.from('interview_letters').insert([payload]);
-                if (error) {
-                    delete payload.application_id;
-                    const alt = await _supabase.from('interview_letters').insert([payload]);
-                    if (alt.error) throw alt.error;
-                }
+                const { error } = await _supabase
+                    .from('interview_letters')
+                    .insert([dbPayload]);
+
+                if (error) throw error;
             }
 
             alert(`✓ Interview letter saved successfully as ${submitter.toUpperCase()}!`);
@@ -618,20 +612,14 @@
         try {
             const { error: lErr } = await _supabase
                 .from('interview_letters')
-                .update({ 
-                    status: 'dispatched', 
-                    dispatched_at: new Date().toISOString() 
-                })
+                .update({ status: 'dispatched' })
                 .eq('id', letterId);
 
             if (lErr) throw lErr;
 
             await _supabase
                 .from('job_applications')
-                .update({ 
-                    application_status: 'interview_scheduled',
-                    updated_at: new Date().toISOString() 
-                })
+                .update({ application_status: 'interview_scheduled' })
                 .eq('id', appId);
 
             alert("🎉 ఇంటర్వ్యూ లెటర్ విజయవంతంగా ఉపాధ్యాయుని పోర్టల్‌కు డిస్పాచ్ చేయబడింది!");
