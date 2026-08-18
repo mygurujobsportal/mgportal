@@ -150,8 +150,6 @@
             <input type="hidden" id="fldAppId">
             <input type="hidden" id="fldLetterId">
             <input type="hidden" id="fldTeacherId">
-            <input type="hidden" id="fldEmployerId">
-            <input type="hidden" id="fldJobId">
 
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
                 <div>
@@ -246,22 +244,40 @@
         try {
             console.log("👉 Loading interview letters repository...");
 
-            // 1. Fetch metadata (Teachers, Schools, Jobs)
-            const [tRes, sRes, sjRes, tjRes] = await Promise.allSettled([
-                _supabase.from('teacher_profiles').select('id, full_name, qualification'),
-                _supabase.from('school_profiles').select('id, school_name, institution_name'),
-                _supabase.from('school_jobs').select('id, job_title, subject, school_id, location, district'),
-                _supabase.from('parent_tuitions').select('id, tuition_title, subject, parent_id, address, district')
+            // 1. Fetch metadata in parallel
+            const [tRes, uRes, sRes, sjRes, tjRes] = await Promise.allSettled([
+                _supabase.from('teacher_profiles').select('*'),
+                _supabase.from('common_users').select('id, full_name'),
+                _supabase.from('school_profiles').select('*'),
+                _supabase.from('school_jobs').select('*'),
+                _supabase.from('parent_tuitions').select('*')
             ]);
 
             let teachersMap = {};
             if (tRes.status === 'fulfilled' && tRes.value.data) {
-                tRes.value.data.forEach(t => { teachersMap[t.id] = t; });
+                tRes.value.data.forEach(t => { 
+                    teachersMap[t.id] = {
+                        full_name: t.full_name || t.name,
+                        qualification: t.qualification || t.qualifications || 'MSc BEd'
+                    }; 
+                });
+            }
+            if (uRes.status === 'fulfilled' && uRes.value.data) {
+                uRes.value.data.forEach(u => {
+                    if (!teachersMap[u.id] || !teachersMap[u.id].full_name) {
+                        teachersMap[u.id] = {
+                            full_name: u.full_name || 'Teacher Applicant',
+                            qualification: 'Faculty'
+                        };
+                    }
+                });
             }
 
             let schoolsMap = {};
             if (sRes.status === 'fulfilled' && sRes.value.data) {
-                sRes.value.data.forEach(s => { schoolsMap[s.id] = s.school_name || s.institution_name; });
+                sRes.value.data.forEach(s => { 
+                    schoolsMap[s.id] = s.school_name || s.institution_name; 
+                });
             }
 
             let schoolJobsMap = {};
@@ -274,21 +290,26 @@
                 tjRes.value.data.forEach(t => { tuitionJobsMap[t.id] = t; });
             }
 
-            // 2. Fetch Applications with interview requests or selections
-            const { data: apps } = await _supabase
+            // 2. Fetch Applications
+            const { data: apps, error: aErr } = await _supabase
                 .from('job_applications')
                 .select('*')
                 .or('employer_status.eq.demo_requested,employer_status.eq.interview_requested,employer_status.eq.selected,employer_status.eq.shortlisted');
 
+            if (aErr) throw aErr;
+
             // 3. Fetch Existing Interview Letters
-            const { data: letters, error: lErr } = await _supabase
+            const { data: letters } = await _supabase
                 .from('interview_letters')
                 .select('*')
                 .order('created_at', { ascending: false });
 
             let letterByAppId = {};
             if (letters) {
-                letters.forEach(l => { letterByAppId[l.application_id] = l; });
+                letters.forEach(l => { 
+                    const appIdKey = l.job_application_id || l.application_id;
+                    if (appIdKey) letterByAppId[appIdKey] = l; 
+                });
             }
 
             // 4. Merge Pipeline Nodes
@@ -300,14 +321,14 @@
                     const isSchool = !!a.school_job_id || a.application_type === 'school';
                     
                     let jobTitle = 'Vacancy Position';
-                    let posterName = 'Target Employer';
+                    let posterName = 'Partner Institution';
                     let venueDef = 'Telangana';
 
                     if (isSchool) {
                         const sJob = schoolJobsMap[a.school_job_id] || {};
                         jobTitle = sJob.job_title ? `${sJob.job_title} (${sJob.subject || ''})` : 'School Vacancy';
-                        posterName = schoolsMap[sJob.school_id] || 'Partner School';
-                        venueDef = sJob.location || sJob.district || 'Campus';
+                        posterName = schoolsMap[sJob.school_id] || sJob.location || 'Partner School';
+                        venueDef = sJob.location || sJob.district || 'Mulugu, Telangana';
                     } else {
                         const tJob = tuitionJobsMap[a.tuition_id] || {};
                         jobTitle = tJob.tuition_title ? `${tJob.tuition_title} (${tJob.subject || ''})` : 'Home Tuition';
@@ -321,12 +342,12 @@
                         app_id: a.id,
                         shortAppId: (a.id || '').substring(0, 8).toUpperCase(),
                         teacher_id: a.teacher_id,
-                        teacher_name: teacher.full_name,
+                        teacher_name: teacher.full_name || 'Teacher Applicant',
                         teacher_qual: teacher.qualification,
                         job_title: jobTitle,
                         poster_name: posterName,
                         venue_default: venueDef,
-                        employer_status: (a.employer_status || '').toLowerCase(),
+                        employer_status: (a.employer_status || 'demo_requested').toLowerCase(),
                         letter_id: existingLetter ? existingLetter.id : null,
                         letter_status: existingLetter ? existingLetter.status : 'pending_request',
                         interview_date: existingLetter ? existingLetter.interview_date : null,
@@ -365,7 +386,7 @@
         tbody.innerHTML = "";
 
         if (!list || list.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:30px;">No interview requests currently pending in pipeline.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:30px;">No interview requests currently in pipeline.</td></tr>`;
             return;
         }
 
@@ -378,7 +399,6 @@
                 ? `📅 ${new Date(item.interview_date).toLocaleDateString('en-IN')}<br><small style="color:#38bdf8;">⏰ ${item.interview_time || ''} (${item.interview_mode})</small>`
                 : `<span style="color:#94a3b8;">Not Scheduled</span>`;
 
-            // Action Buttons based on lifecycle
             let opsHtml = '';
             if (!hasLetter || item.letter_status === 'pending_request') {
                 opsHtml = `<button class="btn-adm btn-adm-create" onclick="openCreateLetterModal('${item.app_id}')">✍️ Create Letter</button>`;
@@ -395,7 +415,7 @@
             } else if (item.letter_status === 'dispatched') {
                 opsHtml = `
                     <button class="btn-adm btn-adm-preview" onclick="openPreviewModal('${item.app_id}')">📄 View Letter</button>
-                    <span style="color:#22c55e; font-size:11px; font-weight:bold;">✓ Dispatched</span>
+                    <span style="color:#22c55e; font-size:11px; font-weight:bold; margin-left:5px;">✓ Dispatched</span>
                 `;
             }
 
@@ -438,7 +458,6 @@
         renderLettersTable(filtered);
     }
 
-    // Modal Operations
     function openCreateLetterModal(appId) {
         const item = appMetaLookup[appId];
         if (!item) return;
@@ -449,7 +468,7 @@
         document.getElementById('lblFormTeacher').value = `${item.teacher_name} (${item.teacher_qual})`;
         document.getElementById('lblFormPoster').value = `${item.poster_name} - ${item.job_title}`;
         
-        document.getElementById('fldDate').value = item.interview_date || '';
+        document.getElementById('fldDate').value = item.interview_date || '2026-08-20';
         document.getElementById('fldTime').value = item.interview_time || '10:30 AM';
         document.getElementById('fldMode').value = item.interview_mode || 'School Venue';
         document.getElementById('fldVenueName').value = item.venue_name || item.poster_name;
@@ -477,12 +496,14 @@
 
     async function saveInterviewLetter(e) {
         e.preventDefault();
-        const submitter = e.submitter.value; // 'draft' or 'approved'
+        const submitter = e.submitter.value;
         const appId = document.getElementById('fldAppId').value;
         const letterId = document.getElementById('fldLetterId').value;
         const item = appMetaLookup[appId];
 
+        // Compatible Payload for job_application_id and application_id
         const payload = {
+            job_application_id: appId,
             application_id: appId,
             teacher_id: item.teacher_id,
             interview_date: document.getElementById('fldDate').value,
@@ -502,12 +523,21 @@
 
         try {
             if (letterId) {
-                const { error } = await _supabase.from('interview_letters').update(payload).eq('id', letterId);
-                if (error) throw error;
+                // Try update using fallback keys
+                let { error } = await _supabase.from('interview_letters').update(payload).eq('id', letterId);
+                if (error) {
+                    delete payload.application_id;
+                    const alt = await _supabase.from('interview_letters').update(payload).eq('id', letterId);
+                    if (alt.error) throw alt.error;
+                }
             } else {
                 payload.created_at = new Date().toISOString();
-                const { error } = await _supabase.from('interview_letters').insert([payload]);
-                if (error) throw error;
+                let { error } = await _supabase.from('interview_letters').insert([payload]);
+                if (error) {
+                    delete payload.application_id;
+                    const alt = await _supabase.from('interview_letters').insert([payload]);
+                    if (alt.error) throw alt.error;
+                }
             }
 
             alert(`✓ Interview letter saved successfully as ${submitter.toUpperCase()}!`);
@@ -586,7 +616,6 @@
         if (!confirm("ఈ ఇంటర్వ్యూ లెటర్‌ను ఉపాధ్యాయునికి అధికారికంగా డిస్పాచ్ చేయాలనుకుంటున్నారా?")) return;
 
         try {
-            // 1. Update interview_letters status
             const { error: lErr } = await _supabase
                 .from('interview_letters')
                 .update({ 
@@ -597,7 +626,6 @@
 
             if (lErr) throw lErr;
 
-            // 2. Update job_applications application_status
             await _supabase
                 .from('job_applications')
                 .update({ 
@@ -619,7 +647,6 @@
         document.getElementById(modalId).style.display = 'none';
     }
 
-    // Direct Execution
     loadInterviewLettersModule();
 </script>
 </body>
