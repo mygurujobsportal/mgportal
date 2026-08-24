@@ -11,7 +11,7 @@
         h2 { color: #f59e0b; text-align: center; margin-top: 0; font-size: 20px; }
         input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff; box-sizing: border-box; outline: none; }
         button { width: 100%; padding: 12px; background: #f59e0b; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; margin-top: 10px; color: #000; font-size: 15px; }
-        .error { color: #fca5a5; background: rgba(239,68,68,0.1); padding: 10px; border-radius: 6px; font-size: 13px; display: none; margin-bottom: 10px; border: 1px solid #ef4444; }
+        .error { color: #fca5a5; background: rgba(239,68,68,0.15); padding: 12px; border-radius: 6px; font-size: 13px; display: none; margin-bottom: 12px; border: 1px solid #ef4444; line-height: 1.4; }
     </style>
 </head>
 <body>
@@ -28,7 +28,7 @@
 
 <script>
     const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0'; // మీ Anon Key ని ఇక్కడ ఉంచండి
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0'; // మీ సుపాబేస్ Anon Key ఉంచండి
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
@@ -52,25 +52,34 @@
 
             if (authError) throw authError;
 
-            // 2. Fetch User Role from common_users
+            // 2. Fetch Role
             const { data: userData, error: userError } = await _supabase
                 .from('common_users')
                 .select('role')
                 .eq('id', authData.user.id)
-                .single();
+                .maybeSingle();
 
-            // 3. Strict Admin Role Check
-            if (userError || !userData || userData.role !== 'admin') {
-                // Logout the non-admin user immediately
+            // Strict Role Match (admin కాకపోతే లేదా తప్పు రోల్ ఉంటే)
+            const userRole = userData ? String(userData.role).toLowerCase() : '';
+
+            if (userError || userRole !== 'admin') {
+                // Instantly clear localStorage and Sign Out from Supabase
+                localStorage.removeItem('adminLoggedIn');
                 await _supabase.auth.signOut();
-                throw new Error("⚠️ యాక్సెస్ నిరాకరించబడింది! ఇది కేవలం అడ్మిన్లకు మాత్రమే. టీచర్లు/స్కూళ్లు మెయిన్ పోర్టల్ నుండి లాగిన్ అవ్వండి.");
+
+                throw new Error("❌ Access Denied! This portal is restricted to Admins only. Teachers & Schools must login from the main portal.");
             }
 
-            // 4. Set Session & Redirect to Admin Dashboard
+            // 3. Success: Set Admin Flag & Redirect
             localStorage.setItem('adminLoggedIn', 'true');
             window.location.href = 'dashboard.html';
 
         } catch (err) {
+            console.error("Login Check Error:", err);
+            
+            // Clean up session completely on error
+            localStorage.removeItem('adminLoggedIn');
+            
             errorBox.innerText = err.message || 'లాగిన్ విఫలమైంది!';
             errorBox.style.display = 'block';
             loginBtn.innerText = 'Authorize & Access';
