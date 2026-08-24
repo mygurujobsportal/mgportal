@@ -142,7 +142,6 @@
             letter-spacing: 0.2px;
         }
 
-        /* Inputs & Floating States */
         .form-group {
             text-align: left;
             margin-bottom: 18px;
@@ -156,10 +155,6 @@
             text-transform: uppercase;
             margin-bottom: 7px;
             letter-spacing: 0.6px;
-        }
-
-        .input-wrapper {
-            position: relative;
         }
 
         .input-ctrl {
@@ -195,7 +190,6 @@
             color: white;
         }
 
-        /* Ripple Action Button */
         .btn-submit {
             position: relative;
             width: 100%;
@@ -220,17 +214,12 @@
             background: linear-gradient(135deg, #3b82f6, #8b5cf6);
         }
 
-        .btn-submit:active {
-            transform: translateY(0);
-        }
-
         .btn-submit:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
 
-        /* Footer Links */
         .link-footer {
             margin-top: 24px;
             font-size: 13px;
@@ -249,7 +238,6 @@
             text-decoration: underline;
         }
 
-        /* Fast Status Toast */
         #loginToast {
             display: none;
             position: fixed;
@@ -274,7 +262,6 @@
 </head>
 <body>
 
-    <!-- Ambient Floating Orbs -->
     <div class="ambient-blob-1"></div>
     <div class="ambient-blob-2"></div>
     <div class="ambient-blob-3"></div>
@@ -291,15 +278,15 @@
             <div class="form-group">
                 <label for="ddlRoleSelector">Account Classification</label>
                 <select id="ddlRoleSelector" class="input-ctrl">
-                    <option value="teachers_reg">👨‍🏫 Professional Core Teacher</option>
-                    <option value="schools_reg">🏢 Institutional School / Employer</option>
-                    <option value="parents_reg">🏡 Home Tuition Parent</option>
+                    <option value="teacher">👨‍🏫 Professional Core Teacher</option>
+                    <option value="school">🏢 Institutional School / Employer</option>
+                    <option value="parent">🏡 Home Tuition Parent</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="txtMobile">Registered Mobile ID</label>
-                <input type="tel" id="txtMobile" class="input-ctrl" placeholder="e.g., 7981131685" maxlength="10" autocomplete="tel" required>
+                <label for="txtMobile">Registered Mobile / Email ID</label>
+                <input type="text" id="txtMobile" class="input-ctrl" placeholder="e.g., 7981131685 or email" autocomplete="username" required>
             </div>
 
             <div class="form-group">
@@ -315,7 +302,6 @@
         </div>
     </div>
 
-    <!-- Notification Toast -->
     <div id="loginToast"></div>
 
     <script>
@@ -332,25 +318,13 @@
             setTimeout(() => { toast.style.display = 'none'; }, 4000);
         }
 
-        function routeUserToDashboard(roleLabel) {
-            if (roleLabel === 'Admin') {
-                window.location.href = 'admin/dashboard.html';
-            } else if (roleLabel === 'Employer' || roleLabel === 'School') {
-                window.location.href = 'school/dashboard.html';
-            } else if (roleLabel === 'Parent') {
-                window.location.href = 'parent/dashboard.html';
-            } else {
-                window.location.href = 'teacher/dashboard.html';
-            }
-        }
-
         async function executeSecureLoginGate() {
-            const table = document.getElementById('ddlRoleSelector').value;
-            const mobile = document.getElementById('txtMobile').value.trim();
+            const selectedRole = document.getElementById('ddlRoleSelector').value;
+            const identifier = document.getElementById('txtMobile').value.trim();
             const password = document.getElementById('txtPassword').value;
             const btn = document.getElementById('btnAuth');
 
-            if (!mobile || !password) {
+            if (!identifier || !password) {
                 showToast("⚠️ Please fill all authentication matrix nodes!", true);
                 return;
             }
@@ -358,46 +332,28 @@
             btn.disabled = true;
             btn.innerText = "Authenticating Node...";
 
-            // 1. Master Bypass for Admin Workspace
-            if (mobile === "7981131685" && password === "Vishnu@MyGuru" && table === "teachers_reg") {
-                const adminSession = { mobile: mobile, name: "Master Admin Vishnu", roleType: "Admin" };
+            // 1. Master Bypass for Admin Desk
+            if (identifier === "7981131685" && password === "Vishnu@MyGuru") {
+                const adminSession = { mobile: identifier, name: "Master Admin Vishnu", roleType: "Admin" };
                 localStorage.setItem('myguru_user', JSON.stringify(adminSession));
                 localStorage.setItem('adminLoggedIn', 'true');
                 showToast("✓ Master Handshake Verified! Loading Workspace...");
-                setTimeout(() => { routeUserToDashboard("Admin"); }, 600);
+                setTimeout(() => { window.location.href = 'admin/dashboard.html'; }, 600);
                 return;
             }
 
             try {
-                // 2. Primary lookup from legacy role tables
-                let userData = null;
-                let userRole = "Teacher";
-
-                const { data, error } = await _supabase
-                    .from(table)
-                    .select('*')
-                    .eq('mobile', mobile)
-                    .maybeSingle();
-
-                if (!error && data) {
-                    userData = data;
-                    if (table === "schools_reg") userRole = "Employer";
-                    if (table === "parents_reg") userRole = "Parent";
+                // 2. Authenticate from unified `common_users`
+                let query = _supabase.from('common_users').select('*');
+                if (identifier.includes('@')) {
+                    query = query.eq('email', identifier);
                 } else {
-                    // Fallback lookup from unified common_users
-                    const { data: uData } = await _supabase
-                        .from('common_users')
-                        .select('*')
-                        .eq('phone', mobile)
-                        .maybeSingle();
-
-                    if (uData) {
-                        userData = uData;
-                        userRole = uData.role === 'school' ? 'Employer' : (uData.role === 'parent' ? 'Parent' : 'Teacher');
-                    }
+                    query = query.or(`phone.eq.${identifier},mobile.eq.${identifier}`);
                 }
 
-                if (!userData) {
+                const { data: user, error: userErr } = await query.maybeSingle();
+
+                if (userErr || !user) {
                     showToast("❌ Account not indexed in our central directory!", true);
                     btn.disabled = false;
                     btn.innerText = "Authenticate & Open";
@@ -405,7 +361,7 @@
                 }
 
                 // Password Verification
-                const storedPass = userData.password || userData.passkey;
+                const storedPass = user.password || user.passkey;
                 if (storedPass && storedPass !== password) {
                     showToast("❌ Passkey metric signature mismatch!", true);
                     btn.disabled = false;
@@ -413,11 +369,38 @@
                     return;
                 }
 
-                const userPacket = { ...userData, roleTable: table, roleType: userRole };
+                // Match Role
+                const actualRole = (user.role || user.user_type || selectedRole).toLowerCase();
+                const userPacket = { ...user, roleType: actualRole };
                 localStorage.setItem('myguru_user', JSON.stringify(userPacket));
-                
-                showToast("✓ Authentication Handshake Successful!");
-                setTimeout(() => { routeUserToDashboard(userRole); }, 700);
+
+                showToast("✓ Credentials Verified! Checking Profile Status...");
+
+                // 3. Profile Completion Check
+                if (actualRole.includes('teacher')) {
+                    const { data: tProf } = await _supabase.from('teacher_profiles').select('*').eq('id', user.id).maybeSingle();
+                    if (!tProf || !tProf.qualifications || tProf.profile_status === 'incomplete') {
+                        setTimeout(() => { window.location.href = 'teacher/profile.html?setup=true'; }, 700);
+                    } else {
+                        setTimeout(() => { window.location.href = 'teacher/dashboard.html'; }, 700);
+                    }
+                } else if (actualRole.includes('school')) {
+                    const { data: sProf } = await _supabase.from('school_profiles').select('*').eq('id', user.id).maybeSingle();
+                    if (!sProf || !sProf.school_name || sProf.profile_status === 'incomplete') {
+                        setTimeout(() => { window.location.href = 'school/profile.html?setup=true'; }, 700);
+                    } else {
+                        setTimeout(() => { window.location.href = 'school/dashboard.html'; }, 700);
+                    }
+                } else if (actualRole.includes('parent')) {
+                    const { data: pProf } = await _supabase.from('parent_profiles').select('*').eq('id', user.id).maybeSingle();
+                    if (!pProf || !pProf.parent_name || pProf.profile_status === 'incomplete') {
+                        setTimeout(() => { window.location.href = 'parent/profile.html?setup=true'; }, 700);
+                    } else {
+                        setTimeout(() => { window.location.href = 'parent/dashboard.html'; }, 700);
+                    }
+                } else {
+                    setTimeout(() => { window.location.href = 'admin/dashboard.html'; }, 700);
+                }
 
             } catch (err) {
                 showToast("Outage: " + err.message, true);
