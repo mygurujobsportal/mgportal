@@ -1,75 +1,82 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru - Admin Access Gate</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background: #0f172a; color: #fff; font-family: system-ui, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: #1e293b; padding: 30px; border-radius: 12px; width: 340px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); border: 1px solid #334155; }
+        h2 { color: #f59e0b; text-align: center; margin-top: 0; font-size: 20px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff; box-sizing: border-box; outline: none; }
+        button { width: 100%; padding: 12px; background: #f59e0b; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; margin-top: 10px; color: #000; font-size: 15px; }
+        .error { color: #fca5a5; background: rgba(239,68,68,0.1); padding: 10px; border-radius: 6px; font-size: 13px; display: none; margin-bottom: 10px; border: 1px solid #ef4444; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>🛡️ MyGuru Admin Gate</h2>
+    <div id="errorBox" class="error"></div>
+    <form id="adminLoginForm">
+        <input type="email" id="email" placeholder="Admin Email" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button type="submit" id="loginBtn">Authorize & Access</button>
+    </form>
+</div>
+
 <script>
     const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0'; // మీ Anon Key ఉంచండి
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0'; // మీ Anon Key ని ఇక్కడ ఉంచండి
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // 🔒 STRICT LIVE ROLE CHECK (ఈ ఫంక్షన్ non-admin ని స్పాట్‌లోనే నెట్టేస్తుంది)
-    async function verifyAdminRole() {
-        // 1. LocalStorage Check
-        if (localStorage.getItem('adminLoggedIn') !== 'true') {
-            window.location.href = 'index.html';
-            return;
-        }
-
-        // 2. Active Session Check
-        const { data: { session } } = await _supabase.auth.getSession();
+    document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
         
-        if (!session) {
-            localStorage.removeItem('adminLoggedIn');
-            window.location.href = 'index.html';
-            return;
-        }
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const errorBox = document.getElementById('errorBox');
+        const loginBtn = document.getElementById('loginBtn');
 
-        // 3. Database Role Check
-        const { data: user, error } = await _supabase
-            .from('common_users')
-            .select('role')
-            .eq('id', session.user.id)
-            .maybeSingle();
+        errorBox.style.display = 'none';
+        loginBtn.innerText = 'Verifying...';
+        loginBtn.disabled = true;
 
-        // Admin కాకపోతే వెంటనే Logout చేసి index.html కి పంపడం
-        if (error || !user || String(user.role).toLowerCase() !== 'admin') {
-            alert("⚠️ యాక్సెస్ నిరాకరించబడింది! మీరు అడ్మిన్ కాదు.");
-            localStorage.removeItem('adminLoggedIn');
-            await _supabase.auth.signOut();
-                window.location.href = 'index.html';
-        } else {
-            // Admin కాబట్టి Stats లోడ్ చేయడం
-            loadStats();
-        }
-    }
-
-    async function loadStats() {
         try {
-            const { count: teacherCount } = await _supabase.from('common_users').select('*', { count: 'exact', head: true }).eq('role', 'teacher');
-            document.getElementById('totalTeachers').innerText = teacherCount !== null ? teacherCount : 0;
+            // 1. Supabase Auth Check
+            const { data: authData, error: authError } = await _supabase.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
 
-            const { count: schoolCount } = await _supabase.from('common_users').select('*', { count: 'exact', head: true }).eq('role', 'school');
-            document.getElementById('totalSchools').innerText = schoolCount !== null ? schoolCount : 0;
+            if (authError) throw authError;
 
-            const { count: parentCount } = await _supabase.from('common_users').select('*', { count: 'exact', head: true }).eq('role', 'parent');
-            document.getElementById('totalParents').innerText = parentCount !== null ? parentCount : 0;
+            // 2. Fetch User Role from common_users
+            const { data: userData, error: userError } = await _supabase
+                .from('common_users')
+                .select('role')
+                .eq('id', authData.user.id)
+                .single();
 
-            const { count: jobCount } = await _supabase.from('jobs').select('*', { count: 'exact', head: true });
-            document.getElementById('activeJobs').innerText = jobCount !== null ? jobCount : 0;
+            // 3. Strict Admin Role Check
+            if (userError || !userData || userData.role !== 'admin') {
+                // Logout the non-admin user immediately
+                await _supabase.auth.signOut();
+                throw new Error("⚠️ యాక్సెస్ నిరాకరించబడింది! ఇది కేవలం అడ్మిన్లకు మాత్రమే. టీచర్లు/స్కూళ్లు మెయిన్ పోర్టల్ నుండి లాగిన్ అవ్వండి.");
+            }
 
-            const { count: pendingCount } = await _supabase.from('common_users').select('*', { count: 'exact', head: true }).eq('approval_status', 'pending');
-            document.getElementById('pendingApprovals').innerText = pendingCount !== null ? pendingCount : 0;
-
-            const { count: appCount } = await _supabase.from('applications').select('*', { count: 'exact', head: true });
-            document.getElementById('totalApplications').innerText = appCount !== null ? appCount : 0;
+            // 4. Set Session & Redirect to Admin Dashboard
+            localStorage.setItem('adminLoggedIn', 'true');
+            window.location.href = 'dashboard.html';
 
         } catch (err) {
-            console.log("Stats fetch error:", err);
+            errorBox.innerText = err.message || 'లాగిన్ విఫలమైంది!';
+            errorBox.style.display = 'block';
+            loginBtn.innerText = 'Authorize & Access';
+            loginBtn.disabled = false;
         }
-    }
-
-    async function logoutAdmin() {
-        localStorage.removeItem('adminLoggedIn');
-        await _supabase.auth.signOut();
-        window.location.href = 'index.html';
-    }
-
-    // Run Security Check On Page Load
-    verifyAdminRole();
+    });
 </script>
+</body>
+</html>
