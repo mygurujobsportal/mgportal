@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyGuru Terminal - Secure Portal Access</title>
+    <title>MyGuru - Multi-Portal Gateway</title>
     <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -100,7 +100,7 @@
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* Glowing Logo Container */
+        /* Logo Box */
         .logo-box {
             position: relative;
             display: inline-block;
@@ -142,6 +142,7 @@
             letter-spacing: 0.2px;
         }
 
+        /* Form Controls */
         .form-group {
             text-align: left;
             margin-bottom: 18px;
@@ -190,6 +191,7 @@
             color: white;
         }
 
+        /* Submit Button */
         .btn-submit {
             position: relative;
             width: 100%;
@@ -214,12 +216,17 @@
             background: linear-gradient(135deg, #3b82f6, #8b5cf6);
         }
 
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
         .btn-submit:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
 
+        /* Footer Links */
         .link-footer {
             margin-top: 24px;
             font-size: 13px;
@@ -238,6 +245,7 @@
             text-decoration: underline;
         }
 
+        /* Notification Toast */
         #loginToast {
             display: none;
             position: fixed;
@@ -262,17 +270,18 @@
 </head>
 <body>
 
+    <!-- Ambient Floating Orbs -->
     <div class="ambient-blob-1"></div>
     <div class="ambient-blob-2"></div>
     <div class="ambient-blob-3"></div>
 
     <div class="login-card">
         <div class="logo-box">
-            <img src="myguru_logo.jpeg" alt="MyGuru Logo" onerror="this.src='https://via.placeholder.com/68/1e293b/38bdf8?text=MyGuru'">
+            <img src="assets/logo.png" alt="MyGuru Logo" onerror="this.src='https://via.placeholder.com/68/1e293b/38bdf8?text=MyGuru'">
         </div>
         
         <h2 class="title">MyGuru <span>Terminal Room</span></h2>
-        <p class="subtitle">Secure Gateway Framework Node Login</p>
+        <p class="subtitle">Secure Multi-Portal Gateway Authentication</p>
 
         <form id="frmGateway" onsubmit="event.preventDefault(); executeSecureLoginGate();">
             <div class="form-group">
@@ -286,7 +295,7 @@
 
             <div class="form-group">
                 <label for="txtMobile">Registered Mobile / Email ID</label>
-                <input type="text" id="txtMobile" class="input-ctrl" placeholder="e.g., 7981131685 or email" autocomplete="username" required>
+                <input type="text" id="txtMobile" class="input-ctrl" placeholder="e.g., 7981131685 or name@domain.com" autocomplete="username" required>
             </div>
 
             <div class="form-group">
@@ -302,6 +311,7 @@
         </div>
     </div>
 
+    <!-- Notification Toast -->
     <div id="loginToast"></div>
 
     <script>
@@ -325,7 +335,7 @@
             const btn = document.getElementById('btnAuth');
 
             if (!identifier || !password) {
-                showToast("⚠️ Please fill all authentication matrix nodes!", true);
+                showToast("⚠️ Please fill all authentication fields!", true);
                 return;
             }
 
@@ -343,7 +353,7 @@
             }
 
             try {
-                // 2. Authenticate from unified `common_users`
+                // 2. Authenticate from `common_users`
                 let query = _supabase.from('common_users').select('*');
                 if (identifier.includes('@')) {
                     query = query.eq('email', identifier);
@@ -354,14 +364,14 @@
                 const { data: user, error: userErr } = await query.maybeSingle();
 
                 if (userErr || !user) {
-                    showToast("❌ Account not indexed in our central directory!", true);
+                    showToast("❌ Account not found in directory!", true);
                     btn.disabled = false;
                     btn.innerText = "Authenticate & Open";
                     return;
                 }
 
-                // Password Verification
-                const storedPass = user.password || user.passkey;
+                // Password Verification (Checks password, passkey, or user_passkey columns)
+                const storedPass = user.password || user.passkey || user.user_passkey;
                 if (storedPass && storedPass !== password) {
                     showToast("❌ Passkey metric signature mismatch!", true);
                     btn.disabled = false;
@@ -369,31 +379,37 @@
                     return;
                 }
 
-                // Match Role
+                // Resolve Target Role
                 const actualRole = (user.role || user.user_type || selectedRole).toLowerCase();
                 const userPacket = { ...user, roleType: actualRole };
                 localStorage.setItem('myguru_user', JSON.stringify(userPacket));
 
-                showToast("✓ Credentials Verified! Checking Profile Status...");
+                showToast("✓ Verified! Checking Profile Readiness...");
 
-                // 3. Profile Completion Check
+                // 3. Profile Completion & Status Handshake Verification
                 if (actualRole.includes('teacher')) {
                     const { data: tProf } = await _supabase.from('teacher_profiles').select('*').eq('id', user.id).maybeSingle();
-                    if (!tProf || !tProf.qualifications || tProf.profile_status === 'incomplete') {
+                    
+                    const isComplete = tProf && (tProf.qualifications || tProf.qualification) && (tProf.subjects || tProf.subject);
+                    if (!tProf || !isComplete || tProf.profile_status === 'incomplete') {
                         setTimeout(() => { window.location.href = 'teacher/profile.html?setup=true'; }, 700);
                     } else {
                         setTimeout(() => { window.location.href = 'teacher/dashboard.html'; }, 700);
                     }
-                } else if (actualRole.includes('school')) {
+                } else if (actualRole.includes('school') || actualRole.includes('employer')) {
                     const { data: sProf } = await _supabase.from('school_profiles').select('*').eq('id', user.id).maybeSingle();
-                    if (!sProf || !sProf.school_name || sProf.profile_status === 'incomplete') {
+                    
+                    const isComplete = sProf && (sProf.school_name || sProf.institution_name);
+                    if (!sProf || !isComplete || sProf.profile_status === 'incomplete') {
                         setTimeout(() => { window.location.href = 'school/profile.html?setup=true'; }, 700);
                     } else {
                         setTimeout(() => { window.location.href = 'school/dashboard.html'; }, 700);
                     }
                 } else if (actualRole.includes('parent')) {
                     const { data: pProf } = await _supabase.from('parent_profiles').select('*').eq('id', user.id).maybeSingle();
-                    if (!pProf || !pProf.parent_name || pProf.profile_status === 'incomplete') {
+                    
+                    const isComplete = pProf && (pProf.parent_name || pProf.name);
+                    if (!pProf || !isComplete || pProf.profile_status === 'incomplete') {
                         setTimeout(() => { window.location.href = 'parent/profile.html?setup=true'; }, 700);
                     } else {
                         setTimeout(() => { window.location.href = 'parent/dashboard.html'; }, 700);
@@ -403,7 +419,7 @@
                 }
 
             } catch (err) {
-                showToast("Outage: " + err.message, true);
+                showToast("Authentication Error: " + err.message, true);
                 btn.disabled = false;
                 btn.innerText = "Authenticate & Open";
             }
