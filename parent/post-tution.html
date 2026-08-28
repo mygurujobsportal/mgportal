@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Parent - Post Tuition Requirement</title>
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; }
+        .wrapper { display: flex; min-height: 100vh; }
+        
+        .sidebar { width: 260px; background-color: #1e293b; padding: 20px; border-right: 1px solid #334155; }
+        .brand { font-size: 20px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        .nav-list { list-style: none; padding: 0; margin: 0; }
+        .nav-item { margin-bottom: 6px; }
+        .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .nav-link:hover, .nav-link.active { background-color: #334155; color: #f59e0b; }
+        
+        .main-content { flex: 1; padding: 30px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #334155; }
+
+        .form-box { background: #1e293b; border: 1px solid #334155; padding: 25px; border-radius: 12px; max-width: 800px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .form-group { margin-bottom: 14px; }
+        .form-label { display: block; font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase; margin-bottom: 6px; }
+        .input-ctrl { width: 100%; padding: 10px 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: white; border-radius: 6px; font-size: 13px; outline: none; }
+        .input-ctrl:focus { border-color: #38bdf8; }
+
+        .btn-submit { background: #22c55e; color: #000; font-weight: bold; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; transition: 0.2s; font-size: 14px; width: 100%; }
+        .btn-submit:hover { opacity: 0.9; transform: translateY(-1px); }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <aside class="sidebar">
+        <div class="brand">🏡 MyGuru Parent</div>
+        <ul class="nav-list">
+            <li class="nav-item"><a href="parent_dashboard.html" class="nav-link">📊 Dashboard</a></li>
+            <li class="nav-item"><a href="post-tuition.html" class="nav-link active">✍️ Post Tuition</a></li>
+            <li class="nav-item"><a href="my-tuitions.html" class="nav-link">📋 My Tuitions</a></li>
+            <li class="nav-item"><a href="applicants.html" class="nav-link">👨‍🏫 Teacher Applicants</a></li>
+            <li class="nav-item"><a href="profile.html" class="nav-link">👤 My Profile</a></li>
+            <li class="nav-item"><a href="#" onclick="logoutParent()" class="nav-link" style="color: #ef4444; margin-top: 30px;">🚪 Logout</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <div class="header">
+            <div>
+                <h2 style="margin: 0; font-size: 24px;">Post Home Tuition Requirement</h2>
+                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">Find qualified and verified home tutors for your children.</p>
+            </div>
+        </div>
+
+        <div class="form-box">
+            <form id="frmPostTuition" onsubmit="handlePostTuition(event)">
+                <div class="form-group">
+                    <label class="form-label">Tuition Requirement Title *</label>
+                    <input type="text" id="fldTitle" class="input-ctrl" placeholder="e.g. Mathematics & Science Tutor for Class 10 CBSE" required>
+                </div>
+
+                <div class="form-grid">
+                    <div>
+                        <label class="form-label">Student Class / Grade *</label>
+                        <select id="fldClass" class="input-ctrl" required>
+                            <option value="">Select Class</option>
+                            <option value="Primary (Class 1-5)">Primary (Class 1-5)</option>
+                            <option value="Middle (Class 6-8)">Middle (Class 6-8)</option>
+                            <option value="High School (Class 9-10)">High School (Class 9-10)</option>
+                            <option value="Intermediate / +2">Intermediate / +2</option>
+                            <option value="IIT-JEE / NEET Prep">IIT-JEE / NEET Foundation</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Education Board *</label>
+                        <select id="fldBoard" class="input-ctrl" required>
+                            <option value="CBSE">CBSE</option>
+                            <option value="State Board (SSC)">State Board (SSC)</option>
+                            <option value="ICSE">ICSE</option>
+                            <option value="IGCSE / International">IGCSE / IB</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div>
+                        <label class="form-label">Subject(s) Required *</label>
+                        <input type="text" id="fldSubject" class="input-ctrl" placeholder="e.g. Mathematics, Physics, Chemistry" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Tuition Mode *</label>
+                        <select id="fldType" class="input-ctrl" required>
+                            <option value="Home Tuition">🏡 Home Tuition (Teacher visits home)</option>
+                            <option value="Online">💻 Online Live Classes</option>
+                            <option value="Hybrid">🔄 Hybrid (Both)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div>
+                        <label class="form-label">Teacher Gender Preference</label>
+                        <select id="fldGender" class="input-ctrl">
+                            <option value="Any">No Preference (Any)</option>
+                            <option value="Female">Female Tutor Preferred</option>
+                            <option value="Male">Male Tutor Preferred</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Offered Budget / Fee *</label>
+                        <input type="text" id="fldSalary" class="input-ctrl" placeholder="e.g. ₹ 8,000 / Month" required>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div>
+                        <label class="form-label">District *</label>
+                        <input type="text" id="fldDistrict" class="input-ctrl" placeholder="e.g. Hanamkonda / Warangal / Hyderabad" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Area / Locality *</label>
+                        <input type="text" id="fldArea" class="input-ctrl" placeholder="e.g. Nakkalagutta, Subedari" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Preferred Timing / Additional Notes</label>
+                    <textarea id="fldDesc" class="input-ctrl" rows="3" style="resize:none;" placeholder="e.g. Evening 5:30 PM to 7:00 PM, Monday to Friday. Focus required on basics."></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit">🚀 Publish Tuition Requirement</button>
+            </form>
+        </div>
+    </main>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let activeParentId = null;
+
+    async function initPostPage() {
+        const sessionUser = JSON.parse(localStorage.getItem('myguru_user') || '{}');
+        if (sessionUser && sessionUser.id) {
+            activeParentId = sessionUser.id;
+        } else {
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (user) activeParentId = user.id;
+        }
+    }
+
+    async function handlePostTuition(e) {
+        e.preventDefault();
+
+        if (!activeParentId) {
+            alert("దయచేసి ముందుగా లాగిన్ అవ్వండి.");
+            window.location.href = '../index.html';
+            return;
+        }
+
+        const payload = {
+            parent_id: activeParentId,
+            tuition_title: document.getElementById('fldTitle').value.trim(),
+            student_class: document.getElementById('fldClass').value,
+            board: document.getElementById('fldBoard').value,
+            subject: document.getElementById('fldSubject').value.trim(),
+            tuition_type: document.getElementById('fldType').value,
+            preferred_gender: document.getElementById('fldGender').value,
+            salary: document.getElementById('fldSalary').value.trim(),
+            district: document.getElementById('fldDistrict').value.trim(),
+            area: document.getElementById('fldArea').value.trim(),
+            description: document.getElementById('fldDesc').value.trim(),
+            status: 'active',
+            created_at: new Date().toISOString()
+        };
+
+        try {
+            const { error } = await _supabase.from('parent_tuitions').insert([payload]);
+            if (error) throw error;
+
+            alert("✓ మీ ట్యూషన్ రిక్వైర్మెంట్ విజయవంతంగా పోస్ట్ చేయబడింది!");
+            window.location.href = 'my-tuitions.html';
+        } catch (err) {
+            alert("Failed to post tuition: " + err.message);
+        }
+    }
+
+    async function logoutParent() {
+        localStorage.removeItem('myguru_user');
+        await _supabase.auth.signOut();
+        window.location.href = '../index.html';
+    }
+
+    initPostPage();
+</script>
+</body>
+</html>
