@@ -3,84 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyGuru - పేరెంట్ డాష్‌బోర్డ్</title>
-    <!-- CSS లింక్ (రూట్ ఫోల్డర్ లోని css కి వెళ్ళడానికి ../ వాడాము) -->
-    <link rel="stylesheet" href="../css/style.css">
+    <title>MyGuru Parent - Dashboard</title>
     <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; }
+        .wrapper { display: flex; min-height: 100vh; }
+        
+        /* Sidebar */
+        .sidebar { width: 260px; background-color: #1e293b; padding: 20px; border-right: 1px solid #334155; }
+        .brand { font-size: 20px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        .nav-list { list-style: none; padding: 0; margin: 0; }
+        .nav-item { margin-bottom: 6px; }
+        .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .nav-link:hover, .nav-link.active { background-color: #334155; color: #f59e0b; }
+        
+        /* Main Content */
+        .main-content { flex: 1; padding: 30px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #334155; }
+
+        /* KPI Metrics */
+        .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .kpi-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 18px; text-align: center; }
+        .kpi-num { font-size: 24px; font-weight: bold; margin-top: 4px; }
+        .kpi-lbl { font-size: 12px; color: #94a3b8; text-transform: uppercase; }
+
+        .vault-box { background: #1e293b; border: 1px solid #334155; padding: 22px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .section-title { font-size: 16px; font-weight: bold; color: #38bdf8; margin-top: 0; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+
+        /* Action Buttons */
+        .btn-act { padding: 8px 16px; border: none; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-act-post { background: #f59e0b; color: #000; }
+        .btn-act-view { background: #3b82f6; color: #fff; }
+        .btn-act:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        /* Activity List */
+        .activity-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; border-radius: 8px; margin-bottom: 10px; font-size: 13px; }
+        .activity-badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+    </style>
 </head>
 <body>
 
-    <!-- సైడ్‌బార్ సెక్షన్ -->
-    <div class="sidebar">
-        <div style="text-align: center; padding: 10px;">
-            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 80px; height: auto; border-radius: 50%;">
-            <h2>MyGuru</h2>
-        </div>
-        <a href="parent_dashboard.html" class="active">డాష్‌బోర్డ్</a>
-        <a href="parent-profile.html">నా ప్రొఫైల్</a>
-        <a href="find-tutors.html">ట్యూటర్ల సెర్చ్</a>
-        <a href="my-requirements.html">నా రిక్వైర్మెంట్స్</a>
-        <a href="#" id="logout-btn" style="margin-top: auto; color: #e74c3c;">లాగ్ అవుట్</a>
-    </div>
+<div class="wrapper">
+    <!-- 🏡 Parent Sidebar Matching Your Exact Repository Files -->
+    <aside class="sidebar">
+        <div class="brand">🏡 MyGuru Parent</div>
+        <ul class="nav-list">
+            <li class="nav-item"><a href="parent_dashboard.html" class="nav-link active">📊 Dashboard</a></li>
+            <li class="nav-item"><a href="post-tuition.html" class="nav-link">✍️ Post Tuition</a></li>
+            <li class="nav-item"><a href="my-tutions.html" class="nav-link">📋 My Tuitions</a></li>
+            <li class="nav-item"><a href="applications.html" class="nav-link">👨‍🏫 Applications</a></li>
+            <li class="nav-item"><a href="notifications.html" class="nav-link">🔔 Notifications</a></li>
+            <li class="nav-item"><a href="messages.html" class="nav-link">💬 Messages</a></li>
+            <li class="nav-item"><a href="profile.html" class="nav-link">👤 My Profile</a></li>
+            <li class="nav-item"><a href="subscriptions.html" class="nav-link">💳 Subscriptions</a></li>
+            <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ Settings</a></li>
+            <li class="nav-item"><a href="#" onclick="logoutParent()" class="nav-link" style="color: #ef4444; margin-top: 20px;">🚪 Logout</a></li>
+        </ul>
+    </aside>
 
-    <!-- మెయిన్ కంటెంట్ సెక్షన్ -->
-    <div class="content">
-        <!-- హెడర్ -->
+    <!-- 💻 Main Workspace -->
+    <main class="main-content">
         <div class="header">
-            <h3 id="welcome-msg">స్వాగతం, లోడ్ అవుతోంది...</h3>
-            <div class="user-info">
-                <span id="user-role-badge" style="background: #e67e22; color: white; padding: 5px 10px; border-radius: 20px; font-size: 12px;">Parent / Client</span>
+            <div>
+                <h2 style="margin: 0; font-size: 24px;" id="welcomeParent">Welcome Back, Parent!</h2>
+                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">Manage home tuition requests and review verified teacher applications.</p>
+            </div>
+            <a href="post-tuition.html" class="btn-act btn-act-post">➕ Post New Tuition</a>
+        </div>
+
+        <!-- 📊 Live KPI Metrics -->
+        <div class="kpi-row">
+            <div class="kpi-card"><div class="kpi-lbl">Total Requirements</div><div id="kpiTotalReq" class="kpi-num" style="color:#38bdf8;">0</div></div>
+            <div class="kpi-card"><div class="kpi-lbl">Active Tuitions</div><div id="kpiActiveReq" class="kpi-num" style="color:#22c55e;">0</div></div>
+            <div class="kpi-card"><div class="kpi-lbl">Teacher Applicants</div><div id="kpiApplicants" class="kpi-num" style="color:#f59e0b;">0</div></div>
+            <div class="kpi-card"><div class="kpi-lbl">Demos / Interviews</div><div id="kpiInterviews" class="kpi-num" style="color:#a78bfa;">0</div></div>
+        </div>
+
+        <!-- 📋 Active Tuition Posts -->
+        <div class="vault-box">
+            <div class="section-title">
+                <span>📋 Your Active Tuition Requirements</span>
+                <a href="my-tutions.html" style="color:#38bdf8; font-size:13px; text-decoration:none;">View All ➔</a>
+            </div>
+            <div id="activeTuitionsList">
+                <p style="color:#94a3b8; font-size:13px; text-align:center; padding:20px;">Loading your tuition requests...</p>
             </div>
         </div>
 
-        <!-- సమాచార కార్డ్స్ -->
-        <div class="card-container">
-            <div class="card" style="border-left-color: #e67e22;">
-                <h3>పిల్లల సంఖ్య</h3>
-                <p id="children-count">0</p>
-            </div>
-            <div class="card" style="border-left-color: #9b59b6;">
-                <h3>కనెక్ట్ అయిన ట్యూటర్లు</h3>
-                <p id="connected-tutors">0</p>
-            </div>
-            <div class="card" style="border-left-color: #34495e;">
-                <h3>బడ్జెట్ శ్రేణి (PM)</h3>
-                <p id="budget-range" style="font-size: 18px; color: #2ecc71;">Checking...</p>
-            </div>
+        <!-- 🔒 Privacy & Safety Notice -->
+        <div class="vault-box" style="background: rgba(15, 23, 42, 0.4); border-color: #334155;">
+            <h4 style="color:#f59e0b; margin:0 0 8px 0;">🛡️ MyGuru Privacy Shield Active</h4>
+            <p style="color:#94a3b8; font-size:13px; margin:0; line-height:1.6;">
+                Your private mobile number, email, and exact house location are concealed from teachers. Demo schedules and official verification letters are coordinated directly through MyGuru Admin.
+            </p>
         </div>
-    </div>
+    </main>
+</div>
 
-    <!-- సెషన్ వాలిడేషన్ స్క్రిప్ట్ -->
-    <script src="../js/supabase.js"></script>
-    <script src="../js/auth.js"></script>
-    <script>
-        // రోల్-బేస్డ్ ప్రొటెక్షన్ చెక్ (Role Verification & Security Logic)
-        async function verifyParentGate() {
-            // auth.js లోని ఫంక్షన్ ద్వారా లైవ్ సెషన్ ని క్రాస్ వెరిఫై చేస్తున్నాం
-            const activeUser = await checkLiveUserSession('Parent'); 
+<script>
+    const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-            if (!activeUser) return; // సెషన్ లేకపోతే auth.js ఆటోమేటిక్‌గా ఇండెక్స్ కి పంపేస్తుంది.
+    let currentParentId = null;
 
-            // స్క్రీన్ పై సమాచారాన్ని చూపించడం
-            const profileData = activeUser.profileData || {};
+    async function initParentDashboard() {
+        try {
+            const sessionUser = JSON.parse(localStorage.getItem('myguru_user') || '{}');
             
-            // ఒకవేళ ప్రొఫైల్ టేబుల్ లో పేరు ఉంటే అది, లేదంటే సాధారణ స్వాగతం
-            document.getElementById('welcome-msg').innerText = `స్వాగతం, పేరెంట్ క్లయింట్ గారు`;
-            
-            // డేటాబేస్ లోని వివరాలను కార్డ్స్ లో డిస్ప్లే చేయడం
-            document.getElementById('children-count').innerText = profileData.children_count || '1';
-            document.getElementById('budget-range').innerText = profileData.budget_range_text || 'Not Set';
+            if (sessionUser && sessionUser.id) {
+                currentParentId = sessionUser.id;
+                if (sessionUser.name || sessionUser.parent_name) {
+                    document.getElementById('welcomeParent').innerText = `Welcome Back, ${sessionUser.name || sessionUser.parent_name}!`;
+                }
+            } else {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (user) {
+                    currentParentId = user.id;
+                } else {
+                    const { data: pUser } = await _supabase.from('parent_profiles').select('id, parent_name').limit(1).maybeSingle();
+                    if (pUser) {
+                        currentParentId = pUser.id;
+                        document.getElementById('welcomeParent').innerText = `Welcome Back, ${pUser.parent_name || 'Parent'}!`;
+                    }
+                }
+            }
+
+            await loadParentDashboardData();
+        } catch (err) {
+            console.warn("Parent init warning:", err);
+            await loadParentDashboardData();
         }
+    }
 
-        // లాగ్ అవుట్ యాక్షన్ కనెక్ట్ చేయడం
-        document.getElementById('logout-btn').addEventListener('click', async (e) => {
-            e.preventDefault();
-            await logoutSessionRouter();
-        });
+    async function loadParentDashboardData() {
+        const listContainer = document.getElementById('activeTuitionsList');
+        try {
+            // 1. Fetch Tuitions posted by this parent
+            let query = _supabase.from('parent_tuitions').select('*').order('created_at', { ascending: false });
+            if (currentParentId) query = query.eq('parent_id', currentParentId);
 
-        // పేజీ లోడ్ అవ్వగానే రన్ చేయాలి
-        window.onload = verifyParentGate;
-    </script>
+            const { data: tuitions, error } = await query;
+            if (error) throw error;
+
+            if (!tuitions || tuitions.length === 0) {
+                listContainer.innerHTML = `
+                    <div style="text-align:center; padding:30px; color:#94a3b8;">
+                        <p>You haven't posted any home tuition requirements yet.</p>
+                        <a href="post-tuition.html" class="btn-act btn-act-post">Post Your First Tuition</a>
+                    </div>
+                `;
+                return;
+            }
+
+            // 2. Fetch Applications for these tuitions
+            const tuitionIds = tuitions.map(t => t.id);
+            const { data: apps } = await _supabase.from('job_applications').select('*').in('tuition_id', tuitionIds);
+
+            const totalApps = apps ? apps.length : 0;
+            const interviews = apps ? apps.filter(a => a.employer_status === 'demo_requested' || a.employer_status === 'selected').length : 0;
+            const activeCount = tuitions.filter(t => t.status === 'active').length;
+
+            // Update KPI counters
+            document.getElementById('kpiTotalReq').innerText = tuitions.length;
+            document.getElementById('kpiActiveReq').innerText = activeCount;
+            document.getElementById('kpiApplicants').innerText = totalApps;
+            document.getElementById('kpiInterviews').innerText = interviews;
+
+            // Render Recent Tuitions List
+            listContainer.innerHTML = tuitions.slice(0, 5).map(t => {
+                const appCount = apps ? apps.filter(a => a.tuition_id === t.id).length : 0;
+                return `
+                    <div class="activity-item">
+                        <div>
+                            <strong style="color:#38bdf8; font-size:14px;">${t.tuition_title || t.subject}</strong><br>
+                            <small style="color:#94a3b8;">📚 Class: ${t.student_class} (${t.board || 'CBSE/SSC'}) | 📍 ${t.area}, ${t.district} | 💰 ${t.salary}</small>
+                        </div>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <span class="activity-badge" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid #38bdf8;">👥 ${appCount} Applicants</span>
+                            <a href="applications.html?tuition_id=${t.id}" class="btn-act btn-act-view" style="font-size:11px; padding:5px 10px;">Review Candidates</a>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+        } catch (err) {
+            console.error("Dashboard load error:", err);
+            listContainer.innerHTML = `<p style="color:#ef4444; text-align:center;">Error loading data: ${err.message}</p>`;
+        }
+    }
+
+    async function logoutParent() {
+        localStorage.removeItem('myguru_user');
+        await _supabase.auth.signOut();
+        window.location.href = '../index.html';
+    }
+
+    initParentDashboard();
+</script>
 </body>
 </html>
