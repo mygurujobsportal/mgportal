@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Parent - Profile</title>
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; }
+        .wrapper { display: flex; min-height: 100vh; }
+        
+        .sidebar { width: 260px; background-color: #1e293b; padding: 20px; border-right: 1px solid #334155; }
+        .brand { font-size: 20px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        .nav-list { list-style: none; padding: 0; margin: 0; }
+        .nav-item { margin-bottom: 6px; }
+        .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .nav-link:hover, .nav-link.active { background-color: #334155; color: #f59e0b; }
+        
+        .main-content { flex: 1; padding: 30px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #334155; }
+
+        .form-box { background: #1e293b; border: 1px solid #334155; padding: 25px; border-radius: 12px; max-width: 700px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .form-group { margin-bottom: 14px; }
+        .form-label { display: block; font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase; margin-bottom: 6px; }
+        .input-ctrl { width: 100%; padding: 10px 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: white; border-radius: 6px; font-size: 13px; outline: none; }
+        .input-ctrl:focus { border-color: #38bdf8; }
+
+        .btn-submit { background: #22c55e; color: #000; font-weight: bold; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; transition: 0.2s; font-size: 14px; width: 100%; }
+        .btn-submit:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <aside class="sidebar">
+        <div class="brand">🏡 MyGuru Parent</div>
+        <ul class="nav-list">
+            <li class="nav-item"><a href="parent_dashboard.html" class="nav-link">📊 Dashboard</a></li>
+            <li class="nav-item"><a href="post-tuition.html" class="nav-link">✍️ Post Tuition</a></li>
+            <li class="nav-item"><a href="my-tuitions.html" class="nav-link">📋 My Tuitions</a></li>
+            <li class="nav-item"><a href="applicants.html" class="nav-link">👨‍🏫 Teacher Applicants</a></li>
+            <li class="nav-item"><a href="profile.html" class="nav-link active">👤 My Profile</a></li>
+            <li class="nav-item"><a href="#" onclick="logoutParent()" class="nav-link" style="color: #ef4444; margin-top: 30px;">🚪 Logout</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <div class="header">
+            <div>
+                <h2 style="margin: 0; font-size: 24px;">Parent Profile Setup</h2>
+                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">Keep your contact and location information up to date.</p>
+            </div>
+        </div>
+
+        <div class="form-box">
+            <form id="frmParentProfile" onsubmit="saveParentProfile(event)">
+                <div class="form-group">
+                    <label class="form-label">Parent / Guardian Full Name *</label>
+                    <input type="text" id="profName" class="input-ctrl" required>
+                </div>
+
+                <div class="form-grid">
+                    <div>
+                        <label class="form-label">Contact Mobile Number *</label>
+                        <input type="tel" id="profMobile" class="input-ctrl" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Email Address</label>
+                        <input type="email" id="profEmail" class="input-ctrl">
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div>
+                        <label class="form-label">State *</label>
+                        <input type="text" id="profState" class="input-ctrl" value="Telangana" required>
+                    </div>
+                    <div>
+                        <label class="form-label">District *</label>
+                        <input type="text" id="profDistrict" class="input-ctrl" placeholder="e.g. Warangal / Hanamkonda" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Residential Address</label>
+                    <textarea id="profAddress" class="input-ctrl" rows="2" style="resize:none;" placeholder="House No, Street, Landmark"></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit">💾 Save Profile Details</button>
+            </form>
+        </div>
+    </main>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let activeParentId = null;
+
+    async function loadProfile() {
+        const sessionUser = JSON.parse(localStorage.getItem('myguru_user') || '{}');
+        activeParentId = sessionUser.id;
+
+        if (!activeParentId) return;
+
+        try {
+            const { data: p, error } = await _supabase.from('parent_profiles').select('*').eq('id', activeParentId).maybeSingle();
+            if (p) {
+                document.getElementById('profName').value = p.parent_name || '';
+                document.getElementById('profMobile').value = p.mobile || '';
+                document.getElementById('profEmail').value = p.email || '';
+                document.getElementById('profState').value = p.state || 'Telangana';
+                document.getElementById('profDistrict').value = p.district || '';
+                document.getElementById('profAddress').value = p.address || '';
+            }
+        } catch (err) {
+            console.error("Profile load note:", err);
+        }
+    }
+
+    async function saveParentProfile(e) {
+        e.preventDefault();
+
+        if (!activeParentId) {
+            alert("Please login first.");
+            return;
+        }
+
+        const payload = {
+            id: activeParentId,
+            parent_name: document.getElementById('profName').value.trim(),
+            mobile: document.getElementById('profMobile').value.trim(),
+            email: document.getElementById('profEmail').value.trim(),
+            state: document.getElementById('profState').value.trim(),
+            district: document.getElementById('profDistrict').value.trim(),
+            address: document.getElementById('profAddress').value.trim(),
+            profile_status: 'complete',
+            updated_at: new Date().toISOString()
+        };
+
+        try {
+            const { error } = await _supabase.from('parent_profiles').upsert([payload]);
+            if (error) throw error;
+
+            alert("✓ Profile updated successfully!");
+            window.location.href = 'parent_dashboard.html';
+        } catch (err) {
+            alert("Failed to save profile: " + err.message);
+        }
+    }
+
+    async function logoutParent() {
+        localStorage.removeItem('myguru_user');
+        await _supabase.auth.signOut();
+        window.location.href = '../index.html';
+    }
+
+    loadProfile();
+</script>
+</body>
+</html>
