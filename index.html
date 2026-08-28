@@ -471,7 +471,7 @@
                     if (!isProfileComplete || (matchedUser && matchedUser.profile_status === 'incomplete')) {
                         setTimeout(() => { window.location.href = 'school/profile.html?setup=true'; }, 700);
                     } else {
-                        setTimeout(() => { window.location.href = 'employer/dashboard.html'; }, 700);
+                        setTimeout(() => { window.location.href = 'employer/employer_dashboard.html'; }, 700);
                     }
                 } else if (userRole === 'parent') {
                     const isProfileComplete = matchedUser && matchedUser.parent_name && matchedUser.district;
