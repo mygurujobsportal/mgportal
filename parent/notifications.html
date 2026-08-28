@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Parent - Notifications</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; }
+        .wrapper { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background-color: #1e293b; padding: 20px; border-right: 1px solid #334155; }
+        .brand { font-size: 20px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        .nav-list { list-style: none; padding: 0; margin: 0; }
+        .nav-item { margin-bottom: 6px; }
+        .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .nav-link:hover, .nav-link.active { background-color: #334155; color: #f59e0b; }
+        .main-content { flex: 1; padding: 30px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #334155; }
+        .notif-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 16px; margin-bottom: 12px; display: flex; gap: 15px; align-items: flex-start; }
+        .notif-icon { font-size: 20px; background: rgba(56, 189, 248, 0.15); padding: 8px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <aside class="sidebar">
+        <div class="brand">🏡 MyGuru Parent</div>
+        <ul class="nav-list">
+            <li class="nav-item"><a href="dashboard.html" class="nav-link">📊 Dashboard</a></li>
+            <li class="nav-item"><a href="post-tuition.html" class="nav-link">✍️ Post Tuition</a></li>
+            <li class="nav-item"><a href="my-tuitions.html" class="nav-link">📋 My Tuitions</a></li>
+            <li class="nav-item"><a href="applicants.html" class="nav-link">👨‍🏫 Teacher Applicants</a></li>
+            <li class="nav-item"><a href="notifications.html" class="nav-link active">🔔 Notifications</a></li>
+            <li class="nav-item"><a href="messages.html" class="nav-link">💬 Messages</a></li>
+            <li class="nav-item"><a href="subscription.html" class="nav-link">💳 Subscription</a></li>
+            <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ Settings</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <div class="header">
+            <div>
+                <h2 style="margin: 0; font-size: 24px;">Notifications & Activity Log</h2>
+                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">Updates on teacher applications, demo schedules, and tuition inquiries.</p>
+            </div>
+        </div>
+
+        <div id="notifList">
+            <div class="notif-card">
+                <div class="notif-icon">🔔</div>
+                <div>
+                    <strong style="color:#f8fafc; font-size:14px;">Tuition Requirement Live</strong>
+                    <p style="margin:4px 0 0 0; color:#94a3b8; font-size:13px;">Your home tuition post has been verified by Admin and is now open for verified teacher applications.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>
