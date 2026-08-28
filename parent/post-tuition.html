@@ -8,50 +8,71 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
-        body { margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; }
+        body { margin: 0; padding: 0; background-color: #0b1329; color: #f8fafc; }
+        
         .wrapper { display: flex; min-height: 100vh; }
         
-        .sidebar { width: 260px; background-color: #1e293b; padding: 20px; border-right: 1px solid #334155; }
-        .brand { font-size: 20px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        /* 🏡 Consistent Parent Sidebar */
+        .sidebar { width: 260px; background-color: #0f172a; padding: 20px; border-right: 1px solid #1e293b; display: flex; flex-direction: column; justify-content: space-between; }
+        .brand { font-size: 19px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 8px; }
         .nav-list { list-style: none; padding: 0; margin: 0; }
-        .nav-item { margin-bottom: 6px; }
-        .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
-        .nav-link:hover, .nav-link.active { background-color: #334155; color: #f59e0b; }
-        
-        .main-content { flex: 1; padding: 30px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #334155; }
+        .nav-item { margin-bottom: 5px; }
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .nav-link:hover { background-color: #1e293b; color: #f8fafc; }
+        .nav-link.active { background-color: #1e293b; color: #f59e0b; font-weight: 600; }
+        .btn-logout-sidebar { color: #ef4444 !important; }
+        .btn-logout-sidebar:hover { background-color: rgba(239, 68, 68, 0.1) !important; }
 
-        .form-box { background: #1e293b; border: 1px solid #334155; padding: 25px; border-radius: 12px; max-width: 800px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        /* 💻 Main Workspace */
+        .main-content { flex: 1; padding: 30px; background-color: #0b1329; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #1e293b; }
+        
+        .form-box { background: #131d38; border: 1px solid #1e293b; padding: 25px; border-radius: 12px; max-width: 800px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         .form-group { margin-bottom: 14px; }
-        .form-label { display: block; font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase; margin-bottom: 6px; }
-        .input-ctrl { width: 100%; padding: 10px 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: white; border-radius: 6px; font-size: 13px; outline: none; }
-        .input-ctrl:focus { border-color: #38bdf8; }
+        .form-label { display: block; font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+        
+        .input-ctrl { width: 100%; padding: 11px 14px; background: rgba(11, 19, 41, 0.7); border: 1px solid #1e293b; color: white; border-radius: 8px; font-size: 13px; outline: none; transition: 0.2s; }
+        .input-ctrl:focus { border-color: #38bdf8; box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2); }
+        select.input-ctrl option { background: #0f172a; color: white; }
 
-        .btn-submit { background: #22c55e; color: #000; font-weight: bold; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; transition: 0.2s; font-size: 14px; width: 100%; }
+        .btn-submit { background: #f59e0b; color: #000; font-weight: bold; border: none; padding: 13px 24px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 14px; width: 100%; margin-top: 10px; }
         .btn-submit:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
     </style>
 </head>
 <body>
 
 <div class="wrapper">
+    <!-- 🏡 Parent Sidebar Matching All Repository Files -->
     <aside class="sidebar">
-        <div class="brand">🏡 MyGuru Parent</div>
-        <ul class="nav-list">
-            <li class="nav-item"><a href="parent_dashboard.html" class="nav-link">📊 Dashboard</a></li>
-            <li class="nav-item"><a href="post-tuition.html" class="nav-link active">✍️ Post Tuition</a></li>
-            <li class="nav-item"><a href="my-tuitions.html" class="nav-link">📋 My Tuitions</a></li>
-            <li class="nav-item"><a href="applicants.html" class="nav-link">👨‍🏫 Teacher Applicants</a></li>
-            <li class="nav-item"><a href="profile.html" class="nav-link">👤 My Profile</a></li>
-            <li class="nav-item"><a href="#" onclick="logoutParent()" class="nav-link" style="color: #ef4444; margin-top: 30px;">🚪 Logout</a></li>
-        </ul>
+        <div>
+            <div class="brand">🏡 MyGuru Parent</div>
+            <ul class="nav-list">
+                <li class="nav-item"><a href="parent_dashboard.html" class="nav-link">📊 Dashboard</a></li>
+                <li class="nav-item"><a href="post-tuition.html" class="nav-link active">✍️ Post Tuition</a></li>
+                <li class="nav-item"><a href="my-tutions.html" class="nav-link">📋 My Tuitions</a></li>
+                <li class="nav-item"><a href="applications.html" class="nav-link">👨‍🏫 Applications</a></li>
+                <li class="nav-item"><a href="notifications.html" class="nav-link">🔔 Notifications</a></li>
+                <li class="nav-item"><a href="messages.html" class="nav-link">💬 Messages</a></li>
+                <li class="nav-item"><a href="profile.html" class="nav-link">👤 My Profile</a></li>
+                <li class="nav-item"><a href="subscriptions.html" class="nav-link">💳 Subscriptions</a></li>
+                <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ Settings</a></li>
+            </ul>
+        </div>
+        <div>
+            <ul class="nav-list">
+                <li class="nav-item"><a href="#" onclick="logoutParent()" class="nav-link btn-logout-sidebar">🚪 Logout</a></li>
+            </ul>
+        </div>
     </aside>
 
+    <!-- 💻 Main Content -->
     <main class="main-content">
         <div class="header">
             <div>
-                <h2 style="margin: 0; font-size: 24px;">Post Home Tuition Requirement</h2>
-                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">Find qualified and verified home tutors for your children.</p>
+                <h2 style="margin: 0; font-size: 22px; font-weight: 700;">Post Home Tuition Requirement</h2>
+                <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 13px;">Find verified and experienced home tutors for your children.</p>
             </div>
         </div>
 
@@ -59,23 +80,23 @@
             <form id="frmPostTuition" onsubmit="handlePostTuition(event)">
                 <div class="form-group">
                     <label class="form-label">Tuition Requirement Title *</label>
-                    <input type="text" id="fldTitle" class="input-ctrl" placeholder="e.g. Mathematics & Science Tutor for Class 10 CBSE" required>
+                    <input type="text" id="fldTitle" class="input-ctrl" placeholder="e.g., Mathematics & Science Tutor for Class 10 CBSE" required>
                 </div>
 
                 <div class="form-grid">
                     <div>
-                        <label class="form-label">Student Class / Grade *</label>
+                        <label class="form-label">Student Class / Standard *</label>
                         <select id="fldClass" class="input-ctrl" required>
                             <option value="">Select Class</option>
                             <option value="Primary (Class 1-5)">Primary (Class 1-5)</option>
-                            <option value="Middle (Class 6-8)">Middle (Class 6-8)</option>
+                            <option value="Middle School (Class 6-8)">Middle School (Class 6-8)</option>
                             <option value="High School (Class 9-10)">High School (Class 9-10)</option>
-                            <option value="Intermediate / +2">Intermediate / +2</option>
+                            <option value="Intermediate / +2 (MPC/BiPC)">Intermediate / +2 (MPC/BiPC)</option>
                             <option value="IIT-JEE / NEET Prep">IIT-JEE / NEET Foundation</option>
                         </select>
                     </div>
                     <div>
-                        <label class="form-label">Education Board *</label>
+                        <label class="form-label">Educational Board *</label>
                         <select id="fldBoard" class="input-ctrl" required>
                             <option value="CBSE">CBSE</option>
                             <option value="State Board (SSC)">State Board (SSC)</option>
@@ -88,14 +109,14 @@
                 <div class="form-grid">
                     <div>
                         <label class="form-label">Subject(s) Required *</label>
-                        <input type="text" id="fldSubject" class="input-ctrl" placeholder="e.g. Mathematics, Physics, Chemistry" required>
+                        <input type="text" id="fldSubject" class="input-ctrl" placeholder="e.g., Mathematics, Physics, Chemistry" required>
                     </div>
                     <div>
-                        <label class="form-label">Tuition Mode *</label>
+                        <label class="form-label">Tuition Delivery Mode *</label>
                         <select id="fldType" class="input-ctrl" required>
                             <option value="Home Tuition">🏡 Home Tuition (Teacher visits home)</option>
-                            <option value="Online">💻 Online Live Classes</option>
-                            <option value="Hybrid">🔄 Hybrid (Both)</option>
+                            <option value="Online">💻 Online Live Interactive</option>
+                            <option value="Hybrid">🔄 Hybrid (Home + Online)</option>
                         </select>
                     </div>
                 </div>
@@ -111,27 +132,27 @@
                     </div>
                     <div>
                         <label class="form-label">Offered Budget / Fee *</label>
-                        <input type="text" id="fldSalary" class="input-ctrl" placeholder="e.g. ₹ 8,000 / Month" required>
+                        <input type="text" id="fldSalary" class="input-ctrl" placeholder="e.g., ₹ 8,000 / Month" required>
                     </div>
                 </div>
 
                 <div class="form-grid">
                     <div>
                         <label class="form-label">District *</label>
-                        <input type="text" id="fldDistrict" class="input-ctrl" placeholder="e.g. Hanamkonda / Warangal / Hyderabad" required>
+                        <input type="text" id="fldDistrict" class="input-ctrl" placeholder="e.g., Hanamkonda / Warangal / Hyderabad" required>
                     </div>
                     <div>
                         <label class="form-label">Area / Locality *</label>
-                        <input type="text" id="fldArea" class="input-ctrl" placeholder="e.g. Nakkalagutta, Subedari" required>
+                        <input type="text" id="fldArea" class="input-ctrl" placeholder="e.g., Nakkalagutta, Subedari" required>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Preferred Timing / Additional Notes</label>
-                    <textarea id="fldDesc" class="input-ctrl" rows="3" style="resize:none;" placeholder="e.g. Evening 5:30 PM to 7:00 PM, Monday to Friday. Focus required on basics."></textarea>
+                    <label class="form-label">Preferred Timing & Specific Requirements</label>
+                    <textarea id="fldDesc" class="input-ctrl" rows="3" style="resize:none;" placeholder="e.g., Evening 5:30 PM to 7:00 PM, Monday to Friday. Focus required on fundamentals and weekly tests."></textarea>
                 </div>
 
-                <button type="submit" class="btn-submit">🚀 Publish Tuition Requirement</button>
+                <button type="submit" id="btnSubmitTuition" class="btn-submit">🚀 Publish Tuition Requirement</button>
             </form>
         </div>
     </main>
@@ -150,18 +171,27 @@
             activeParentId = sessionUser.id;
         } else {
             const { data: { user } } = await _supabase.auth.getUser();
-            if (user) activeParentId = user.id;
+            if (user) {
+                activeParentId = user.id;
+            } else {
+                const { data: pUser } = await _supabase.from('parent_profiles').select('id').limit(1).maybeSingle();
+                if (pUser) activeParentId = pUser.id;
+            }
         }
     }
 
     async function handlePostTuition(e) {
         e.preventDefault();
+        const btn = document.getElementById('btnSubmitTuition');
 
         if (!activeParentId) {
             alert("దయచేసి ముందుగా లాగిన్ అవ్వండి.");
             window.location.href = '../index.html';
             return;
         }
+
+        btn.disabled = true;
+        btn.innerText = "Publishing...";
 
         const payload = {
             parent_id: activeParentId,
@@ -184,9 +214,11 @@
             if (error) throw error;
 
             alert("✓ మీ ట్యూషన్ రిక్వైర్మెంట్ విజయవంతంగా పోస్ట్ చేయబడింది!");
-            window.location.href = 'my-tuitions.html';
+            window.location.href = 'my-tutions.html';
         } catch (err) {
             alert("Failed to post tuition: " + err.message);
+            btn.disabled = false;
+            btn.innerText = "🚀 Publish Tuition Requirement";
         }
     }
 
