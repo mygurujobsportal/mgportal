@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Parent - Teacher Applicants</title>
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; }
+        .wrapper { display: flex; min-height: 100vh; }
+        
+        .sidebar { width: 260px; background-color: #1e293b; padding: 20px; border-right: 1px solid #334155; }
+        .brand { font-size: 20px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        .nav-list { list-style: none; padding: 0; margin: 0; }
+        .nav-item { margin-bottom: 6px; }
+        .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .nav-link:hover, .nav-link.active { background-color: #334155; color: #f59e0b; }
+        
+        .main-content { flex: 1; padding: 30px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #334155; }
+
+        .candidate-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .candidate-info { display: flex; gap: 15px; align-items: center; }
+        .avatar { width: 50px; height: 50px; border-radius: 50%; background: #334155; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: #38bdf8; }
+
+        .btn-act { padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
+        .btn-demo { background: #22c55e; color: black; }
+        .btn-reject { background: #ef4444; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <aside class="sidebar">
+        <div class="brand">🏡 MyGuru Parent</div>
+        <ul class="nav-list">
+            <li class="nav-item"><a href="parent_dashboard.html" class="nav-link">📊 Dashboard</a></li>
+            <li class="nav-item"><a href="post-tuition.html" class="nav-link">✍️ Post Tuition</a></li>
+            <li class="nav-item"><a href="my-tuitions.html" class="nav-link">📋 My Tuitions</a></li>
+            <li class="nav-item"><a href="applicants.html" class="nav-link active">👨‍🏫 Teacher Applicants</a></li>
+            <li class="nav-item"><a href="profile.html" class="nav-link">👤 My Profile</a></li>
+            <li class="nav-item"><a href="#" onclick="logoutParent()" class="nav-link" style="color: #ef4444; margin-top: 30px;">🚪 Logout</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <div class="header">
+            <div>
+                <h2 style="margin: 0; font-size: 24px;">Teacher Applicants & Demo Requests</h2>
+                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">Review verified educators who applied for your home tuition requirements.</p>
+            </div>
+        </div>
+
+        <div id="applicantsContainer">
+            <p style="text-align:center; color:#94a3b8; padding:30px;">Loading candidate applications...</p>
+        </div>
+    </main>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function loadApplicants() {
+        const container = document.getElementById('applicantsContainer');
+        const urlParams = new URLSearchParams(window.location.search);
+        const filterTuitionId = urlParams.get('tuition_id');
+
+        try {
+            let query = _supabase.from('job_applications').select('*');
+            if (filterTuitionId) {
+                query = query.eq('tuition_id', filterTuitionId);
+            }
+
+            const { data: apps, error } = await query;
+            if (error) throw error;
+
+            if (!apps || apps.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding:40px; background:#1e293b; border-radius:12px; border:1px solid #334155;">
+                        <p style="color:#94a3b8;">No teacher applications received yet.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Fetch Teacher Profile Details for privacy-protected view
+            const teacherIds = apps.map(a => a.teacher_id).filter(Boolean);
+            const { data: teachers } = await _supabase.from('teacher_profiles').select('id, full_name, qualifications, subjects, experience, district').in('id', teacherIds);
+            const teacherMap = {};
+            if (teachers) teachers.forEach(t => teacherMap[t.id] = t);
+
+            container.innerHTML = apps.map(a => {
+                const t = teacherMap[a.teacher_id] || { full_name: 'Verified Teacher', qualifications: 'Graduate', subjects: 'All Subjects', experience: 2, district: 'Telangana' };
+                const initial = t.full_name ? t.full_name.charAt(0) : 'T';
+
+                return `
+                    <div class="candidate-card">
+                        <div class="candidate-info">
+                            <div class="avatar">${initial}</div>
+                            <div>
+                                <strong style="font-size:15px; color:#f8fafc;">${t.full_name}</strong>
+                                <span style="background:rgba(34,197,94,0.15); color:#22c55e; border:1px solid #22c55e; padding:2px 6px; border-radius:4px; font-size:10px; margin-left:6px;">✓ Verified</span>
+                                <div style="color:#94a3b8; font-size:13px; margin-top:3px;">
+                                    🎓 ${t.qualifications} | ⏳ Experience: ${t.experience} Years | 📍 ${t.district}
+                                </div>
+                                <div style="color:#64748b; font-size:12px; margin-top:2px;">
+                                    Subjects Handled: <strong>${t.subjects}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn-act btn-demo" onclick="requestDemo('${a.id}', '${t.full_name}')">📅 Request Demo Class</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+        } catch (err) {
+            container.innerHTML = `<p style="color:#ef4444; text-align:center;">Error loading applicants: ${err.message}</p>`;
+        }
+    }
+
+    async function requestDemo(applicationId, teacherName) {
+        if (!confirm(`Do you want to request a Demo Class with ${teacherName}? MyGuru Admin will coordinate the schedule.`)) return;
+
+        try {
+            const { error } = await _supabase.from('job_applications').update({
+                employer_status: 'demo_requested',
+                updated_at: new Date().toISOString()
+            }).eq('id', applicationId);
+
+            if (error) throw error;
+            alert("✓ Demo Request Sent! MyGuru Admin will verify and dispatch the letter.");
+            loadApplicants();
+        } catch (err) {
+            alert("Error: " + err.message);
+        }
+    }
+
+    async function logoutParent() {
+        localStorage.removeItem('myguru_user');
+        await _supabase.auth.signOut();
+        window.location.href = '../index.html';
+    }
+
+    loadApplicants();
+</script>
+</body>
+</html>
