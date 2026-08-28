@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Parent - Messages & Support</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; }
+        .wrapper { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background-color: #1e293b; padding: 20px; border-right: 1px solid #334155; }
+        .brand { font-size: 20px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        .nav-list { list-style: none; padding: 0; margin: 0; }
+        .nav-item { margin-bottom: 6px; }
+        .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .nav-link:hover, .nav-link.active { background-color: #334155; color: #f59e0b; }
+        .main-content { flex: 1; padding: 30px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #334155; }
+        .msg-box { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 25px; max-width: 750px; }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <aside class="sidebar">
+        <div class="brand">🏡 MyGuru Parent</div>
+        <ul class="nav-list">
+            <li class="nav-item"><a href="dashboard.html" class="nav-link">📊 Dashboard</a></li>
+            <li class="nav-item"><a href="post-tuition.html" class="nav-link">✍️ Post Tuition</a></li>
+            <li class="nav-item"><a href="my-tuitions.html" class="nav-link">📋 My Tuitions</a></li>
+            <li class="nav-item"><a href="applicants.html" class="nav-link">👨‍🏫 Teacher Applicants</a></li>
+            <li class="nav-item"><a href="notifications.html" class="nav-link">🔔 Notifications</a></li>
+            <li class="nav-item"><a href="messages.html" class="nav-link active">💬 Messages</a></li>
+            <li class="nav-item"><a href="subscription.html" class="nav-link">💳 Subscription</a></li>
+            <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ Settings</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <div class="header">
+            <div>
+                <h2 style="margin: 0; font-size: 24px;">Official Communication Desk</h2>
+                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">Coordinated support and interview dispatch updates from MyGuru Admin.</p>
+            </div>
+        </div>
+
+        <div class="msg-box">
+            <h4 style="color:#38bdf8; margin:0 0 10px 0;">🛡️ Coordinated Support Desk</h4>
+            <p style="color:#94a3b8; font-size:13px; line-height:1.6;">
+                To protect student safety and parental privacy, direct private chats between parents and candidates are handled via official MyGuru dispatch. For urgent requirement matching, contact our helpline at <strong>support@mygurujobs.com</strong>.
+            </p>
+        </div>
+    </main>
+</div>
+</body>
+</html>
