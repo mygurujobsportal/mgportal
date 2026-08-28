@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGuru Parent - Membership & Plans</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; }
+        .wrapper { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background-color: #1e293b; padding: 20px; border-right: 1px solid #334155; }
+        .brand { font-size: 20px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        .nav-list { list-style: none; padding: 0; margin: 0; }
+        .nav-item { margin-bottom: 6px; }
+        .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .nav-link:hover, .nav-link.active { background-color: #334155; color: #f59e0b; }
+        .main-content { flex: 1; padding: 30px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #334155; }
+        .plan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; max-width: 800px; }
+        .plan-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 25px; text-align: center; }
+        .plan-price { font-size: 26px; font-weight: bold; color: #38bdf8; margin: 15px 0; }
+        .btn-plan { width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <aside class="sidebar">
+        <div class="brand">🏡 MyGuru Parent</div>
+        <ul class="nav-list">
+            <li class="nav-item"><a href="dashboard.html" class="nav-link">📊 Dashboard</a></li>
+            <li class="nav-item"><a href="post-tuition.html" class="nav-link">✍️ Post Tuition</a></li>
+            <li class="nav-item"><a href="my-tuitions.html" class="nav-link">📋 My Tuitions</a></li>
+            <li class="nav-item"><a href="applicants.html" class="nav-link">👨‍🏫 Teacher Applicants</a></li>
+            <li class="nav-item"><a href="notifications.html" class="nav-link">🔔 Notifications</a></li>
+            <li class="nav-item"><a href="messages.html" class="nav-link">💬 Messages</a></li>
+            <li class="nav-item"><a href="subscription.html" class="nav-link active">💳 Subscription</a></li>
+            <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ Settings</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <div class="header">
+            <div>
+                <h2 style="margin: 0; font-size: 24px;">Parent Membership Plans</h2>
+                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">Access verified tutor profiles and priority demo matching.</p>
+            </div>
+        </div>
+
+        <div class="plan-grid">
+            <div class="plan-card">
+                <h3 style="color:#f8fafc; margin:0;">Free Explorer</h3>
+                <div class="plan-price">₹ 0</div>
+                <p style="color:#94a3b8; font-size:13px;">Post up to 2 home tuition requirements with standard teacher matching.</p>
+                <button class="btn-plan" style="background:#334155; color:#fff;" disabled>Current Active Plan</button>
+            </div>
+            <div class="plan-card" style="border-color:#f59e0b;">
+                <h3 style="color:#f59e0b; margin:0;">Premium Parent</h3>
+                <div class="plan-price" style="color:#f59e0b;">₹ 499 / yr</div>
+                <p style="color:#94a3b8; font-size:13px;">Unlimited tuition posts, instant SMS teacher alerts, and priority demo coordination.</p>
+                <button class="btn-plan" style="background:#f59e0b; color:#000;" onclick="alert('Payment gateway linking in progress. Admin verification available.')">Upgrade to Premium</button>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>
