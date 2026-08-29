@@ -4,61 +4,92 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyGuru Parent - Teacher Profile Review</title>
+    <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
-        body { margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; }
+        body { margin: 0; padding: 0; background-color: #0b1329; color: #f8fafc; }
+        
         .wrapper { display: flex; min-height: 100vh; }
-        .sidebar { width: 260px; background-color: #1e293b; padding: 20px; border-right: 1px solid #334155; }
-        .brand { font-size: 20px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        
+        /* 🏡 Consistent Parent Sidebar */
+        .sidebar { width: 260px; background-color: #0f172a; padding: 20px; border-right: 1px solid #1e293b; display: flex; flex-direction: column; justify-content: space-between; }
+        .brand { font-size: 19px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 8px; }
         .nav-list { list-style: none; padding: 0; margin: 0; }
-        .nav-item { margin-bottom: 6px; }
-        .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
-        .nav-link:hover, .nav-link.active { background-color: #334155; color: #f59e0b; }
-        .main-content { flex: 1; padding: 30px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #334155; }
-        .profile-container { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 30px; max-width: 800px; }
-        .profile-head { display: flex; gap: 20px; align-items: center; margin-bottom: 25px; border-bottom: 1px solid #334155; padding-bottom: 20px; }
-        .avatar { width: 80px; height: 80px; border-radius: 50%; background: #334155; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; color: #38bdf8; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-        .detail-box { background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; border-radius: 8px; padding: 15px; }
-        .lbl { font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
-        .val { font-size: 14px; color: #f8fafc; font-weight: 500; }
-        .privacy-box { background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 15px; font-size: 12px; color: #f59e0b; margin-top: 20px; }
-        .btn-act { padding: 10px 20px; border: none; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; text-decoration: none; }
-        .btn-demo { background: #22c55e; color: #000; }
-        .btn-back { background: #64748b; color: #fff; margin-right: 10px; }
+        .nav-item { margin-bottom: 5px; }
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .nav-link:hover { background-color: #1e293b; color: #f8fafc; }
+        .nav-link.active { background-color: #1e293b; color: #f59e0b; font-weight: 600; }
+        .btn-logout-sidebar { color: #ef4444 !important; }
+        .btn-logout-sidebar:hover { background-color: rgba(239, 68, 68, 0.1) !important; }
+
+        /* 💻 Main Workspace */
+        .main-content { flex: 1; padding: 30px; background-color: #0b1329; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #1e293b; }
+        
+        .btn-logout-top { background-color: #ef4444; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; }
+        .btn-logout-top:hover { background-color: #dc2626; }
+        .btn-back { background: #334155; color: white; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; font-size: 13px; margin-right: 10px; display: inline-flex; align-items: center; gap: 5px; transition: 0.2s; }
+        .btn-back:hover { background: #475569; }
+
+        /* Profile Layout */
+        .profile-container { background: #131d38; border: 1px solid #1e293b; border-radius: 12px; padding: 30px; max-width: 850px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .profile-head { display: flex; gap: 20px; align-items: center; margin-bottom: 25px; border-bottom: 1px solid #1e293b; padding-bottom: 20px; }
+        .avatar-lg { width: 80px; height: 80px; border-radius: 50%; background: #1e293b; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; color: #38bdf8; border: 2px solid #334155; overflow: hidden; }
+        .avatar-lg img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px; }
+        .detail-box { background: rgba(11, 19, 41, 0.7); border: 1px solid #1e293b; border-radius: 8px; padding: 15px; }
+        .lbl { font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 700; margin-bottom: 5px; letter-spacing: 0.5px; }
+        .val { font-size: 14px; color: #f8fafc; font-weight: 600; }
+        
+        .privacy-box { background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 15px; font-size: 12px; color: #f59e0b; margin-top: 20px; line-height: 1.6; }
+        .btn-demo-action { background: #22c55e; color: #000; font-weight: bold; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 14px; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-demo-action:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-demo-action:disabled { background: #334155; color: #94a3b8; cursor: not-allowed; transform: none; }
     </style>
 </head>
 <body>
+
 <div class="wrapper">
+    <!-- 🏡 Parent Sidebar -->
     <aside class="sidebar">
-        <div class="brand">🏡 MyGuru Parent</div>
-        <ul class="nav-list">
-            <li class="nav-item"><a href="dashboard.html" class="nav-link">📊 Dashboard</a></li>
-            <li class="nav-item"><a href="post-tuition.html" class="nav-link">✍️ Post Tuition</a></li>
-            <li class="nav-item"><a href="my-tuitions.html" class="nav-link">📋 My Tuitions</a></li>
-            <li class="nav-item"><a href="applicants.html" class="nav-link active">👨‍🏫 Teacher Applicants</a></li>
-            <li class="nav-item"><a href="notifications.html" class="nav-link">🔔 Notifications</a></li>
-            <li class="nav-item"><a href="messages.html" class="nav-link">💬 Messages</a></li>
-            <li class="nav-item"><a href="subscription.html" class="nav-link">💳 Subscription</a></li>
-            <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ Settings</a></li>
-        </ul>
+        <div>
+            <div class="brand">🏡 MyGuru Parent</div>
+            <ul class="nav-list">
+                <li class="nav-item"><a href="parent_dashboard.html" class="nav-link">📊 Dashboard</a></li>
+                <li class="nav-item"><a href="post-tuition.html" class="nav-link">✍️ Post Tuition</a></li>
+                <li class="nav-item"><a href="my-tutions.html" class="nav-link">📋 My Tuitions</a></li>
+                <li class="nav-item"><a href="applications.html" class="nav-link active">👨‍🏫 Applications</a></li>
+                <li class="nav-item"><a href="notifications.html" class="nav-link">🔔 Notifications</a></li>
+                <li class="nav-item"><a href="messages.html" class="nav-link">💬 Messages</a></li>
+                <li class="nav-item"><a href="profile.html" class="nav-link">👤 My Profile</a></li>
+                <li class="nav-item"><a href="subscriptions.html" class="nav-link">💳 Subscriptions</a></li>
+                <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ Settings</a></li>
+            </ul>
+        </div>
+        <div>
+            <ul class="nav-list">
+                <li class="nav-item"><a href="#" onclick="logoutParent()" class="nav-link btn-logout-sidebar">🚪 Logout</a></li>
+            </ul>
+        </div>
     </aside>
 
+    <!-- 💻 Main Workspace -->
     <main class="main-content">
         <div class="header">
             <div>
-                <h2 style="margin: 0; font-size: 24px;">Teacher Professional Verification Card</h2>
-                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">Review teacher credentials, qualifications, and experience.</p>
+                <h2 style="margin: 0; font-size: 22px; font-weight: 700;">Teacher Professional Verification Card</h2>
+                <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 13px;">Review verified qualifications, subjects, and experience.</p>
             </div>
-            <div>
-                <a href="applicants.html" class="btn-act btn-back">⬅ Back to List</a>
+            <div style="display:flex; align-items:center;">
+                <a href="applications.html" class="btn-back">⬅ Back to List</a>
+                <button class="btn-logout-top" onclick="logoutParent()">Logout</button>
             </div>
         </div>
 
         <div id="teacherCardContainer" class="profile-container">
-            <p style="color:#94a3b8; text-align:center;">Loading verified teacher profile...</p>
+            <p style="color:#94a3b8; text-align:center;">Loading verified educator profile...</p>
         </div>
     </main>
 </div>
@@ -83,12 +114,27 @@
             const { data: t, error } = await _supabase.from('teacher_profiles').select('*').eq('id', teacherId).single();
             if (error) throw error;
 
+            let isDemoRequested = false;
+            if (appId) {
+                const { data: appData } = await _supabase.from('job_applications').select('employer_status').eq('id', appId).maybeSingle();
+                if (appData && (appData.employer_status === 'demo_requested' || appData.employer_status === 'selected')) {
+                    isDemoRequested = true;
+                }
+            }
+
+            const avatarContent = t.avatar_url 
+                ? `<img src="${t.avatar_url}" alt="Avatar">` 
+                : (t.full_name ? t.full_name.charAt(0) : 'T');
+
             container.innerHTML = `
                 <div class="profile-head">
-                    <div class="avatar">${(t.full_name || 'T').charAt(0)}</div>
+                    <div class="avatar-lg">${avatarContent}</div>
                     <div>
-                        <h3 style="margin:0 0 5px 0; font-size:20px; color:#38bdf8;">${t.full_name} <span style="font-size:11px; background:rgba(34,197,94,0.15); color:#22c55e; border:1px solid #22c55e; padding:2px 6px; border-radius:4px; margin-left:6px;">✓ Verified Educator</span></h3>
-                        <p style="margin:0; color:#94a3b8; font-size:13px;">Specialization: <strong>${t.subjects || 'All Core Subjects'}</strong></p>
+                        <h3 style="margin:0 0 5px 0; font-size:22px; color:#38bdf8;">
+                            ${t.full_name} 
+                            ${t.verification_badge ? `<span style="font-size:11px; background:rgba(34,197,94,0.15); color:#22c55e; border:1px solid #22c55e; padding:3px 8px; border-radius:4px; margin-left:6px;">✓ Verified Educator</span>` : ''}
+                        </h3>
+                        <p style="margin:0; color:#94a3b8; font-size:13px;">Specialization: <strong style="color:#cbd5e1;">${t.subjects || 'General Curriculum'}</strong></p>
                     </div>
                 </div>
 
@@ -103,17 +149,19 @@
                     </div>
                     <div class="detail-box">
                         <div class="lbl">District / Operating Region</div>
-                        <div class="val">📍 ${t.district || 'Telangana'}</div>
+                        <div class="val">📍 ${t.district || 'Telangana'}, ${t.state || 'Telangana'}</div>
                     </div>
                     <div class="detail-box">
-                        <div class="lbl">Gender & Profile Status</div>
+                        <div class="lbl">Gender & Status</div>
                         <div class="val">👤 ${t.gender || 'Not Specified'} (${t.profile_status || 'Active'})</div>
                     </div>
                 </div>
 
                 <div class="detail-box" style="margin-bottom:20px;">
                     <div class="lbl">About Educator / Teaching Methodology</div>
-                    <div class="val" style="line-height:1.6; font-size:13px; color:#cbd5e1;">${t.about || 'Dedicated educator focused on conceptual understanding, regular assessment, and student mentoring.'}</div>
+                    <div class="val" style="line-height:1.6; font-size:13px; color:#cbd5e1; font-weight:normal;">
+                        ${t.about || 'Dedicated educator focused on foundational clarity, systematic practice, and personal student guidance.'}
+                    </div>
                 </div>
 
                 <div class="privacy-box">
@@ -121,7 +169,9 @@
                 </div>
 
                 <div style="margin-top:25px; display:flex; justify-content:flex-end;">
-                    <button class="btn-act btn-demo" onclick="requestDemo('${appId}', '${t.full_name}')">📅 Request Demo Class / Interview</button>
+                    <button id="btnActionDemo" class="btn-demo-action" ${isDemoRequested ? 'disabled' : ''} onclick="requestDemo('${appId}', '${t.full_name}')">
+                        ${isDemoRequested ? '✓ Demo Class Requested' : '📅 Request Demo Class / Interview'}
+                    </button>
                 </div>
             `;
         } catch (err) {
@@ -129,17 +179,39 @@
         }
     }
 
-    async function requestDemo(appId, name) {
-        if (!confirm(`Request official Demo Class with ${name}?`)) return;
+    async function requestDemo(appId, teacherName) {
+        if (!confirm(`Request official Demo Class with ${teacherName}? MyGuru Admin will coordinate the schedule.`)) return;
+
+        const btn = document.getElementById('btnActionDemo');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerText = "Requesting...";
+        }
+
         try {
             if (appId) {
-                await _supabase.from('job_applications').update({ employer_status: 'demo_requested', updated_at: new Date().toISOString() }).eq('id', appId);
+                const { error } = await _supabase.from('job_applications').update({ 
+                    employer_status: 'demo_requested' 
+                }).eq('id', appId);
+
+                if (error) throw error;
             }
-            alert("✓ Demo Class request registered! Admin will coordinate.");
-            window.location.href = 'applicants.html';
+
+            alert("✓ Demo Class request registered! MyGuru Admin will coordinate.");
+            window.location.href = 'applications.html';
         } catch (err) {
             alert("Error: " + err.message);
+            if (btn) {
+                btn.disabled = false;
+                btn.innerText = "📅 Request Demo Class / Interview";
+            }
         }
+    }
+
+    async function logoutParent() {
+        localStorage.removeItem('myguru_user');
+        await _supabase.auth.signOut();
+        window.location.href = '../index.html';
     }
 
     loadTeacherDetails();
