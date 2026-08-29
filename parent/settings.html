@@ -3,52 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyGuru Parent - Settings</title>
+    <title>MyGuru Parent - Account Settings</title>
+    <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
-        body { margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; }
+        body { margin: 0; padding: 0; background-color: #0b1329; color: #f8fafc; }
+        
         .wrapper { display: flex; min-height: 100vh; }
-        .sidebar { width: 260px; background-color: #1e293b; padding: 20px; border-right: 1px solid #334155; }
-        .brand { font-size: 20px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        
+        /* 🏡 Consistent Parent Sidebar */
+        .sidebar { width: 260px; background-color: #0f172a; padding: 20px; border-right: 1px solid #1e293b; display: flex; flex-direction: column; justify-content: space-between; }
+        .brand { font-size: 19px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 8px; }
         .nav-list { list-style: none; padding: 0; margin: 0; }
-        .nav-item { margin-bottom: 6px; }
-        .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
-        .nav-link:hover, .nav-link.active { background-color: #334155; color: #f59e0b; }
-        .main-content { flex: 1; padding: 30px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #334155; }
-        .box { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 25px; max-width: 600px; margin-bottom: 20px; }
-        .btn-danger { background: #ef4444; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .nav-item { margin-bottom: 5px; }
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .nav-link:hover { background-color: #1e293b; color: #f8fafc; }
+        .nav-link.active { background-color: #1e293b; color: #f59e0b; font-weight: 600; }
+        .btn-logout-sidebar { color: #ef4444 !important; }
+        .btn-logout-sidebar:hover { background-color: rgba(239, 68, 68, 0.1) !important; }
+
+        /* 💻 Main Workspace */
+        .main-content { flex: 1; padding: 30px; background-color: #0b1329; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #1e293b; }
+        
+        .btn-logout-top { background-color: #ef4444; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; }
+        .btn-logout-top:hover { background-color: #dc2626; }
+
+        /* Settings Boxes */
+        .settings-container { max-width: 800px; }
+        .settings-card { background: #131d38; border: 1px solid #1e293b; border-radius: 12px; padding: 25px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.25); }
+        .card-title { font-size: 16px; font-weight: bold; color: #38bdf8; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .toggle-row:last-child { border-bottom: none; }
+        .toggle-label { font-size: 14px; color: #f8fafc; font-weight: 500; }
+        .toggle-sub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+
+        .btn-danger { background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; }
+        .btn-danger:hover { background: #dc2626; }
     </style>
 </head>
 <body>
+
 <div class="wrapper">
+    <!-- 🏡 Parent Sidebar Matching All Repository Files -->
     <aside class="sidebar">
-        <div class="brand">🏡 MyGuru Parent</div>
-        <ul class="nav-list">
-            <li class="nav-item"><a href="dashboard.html" class="nav-link">📊 Dashboard</a></li>
-            <li class="nav-item"><a href="post-tuition.html" class="nav-link">✍️ Post Tuition</a></li>
-            <li class="nav-item"><a href="my-tuitions.html" class="nav-link">📋 My Tuitions</a></li>
-            <li class="nav-item"><a href="applicants.html" class="nav-link">👨‍🏫 Teacher Applicants</a></li>
-            <li class="nav-item"><a href="notifications.html" class="nav-link">🔔 Notifications</a></li>
-            <li class="nav-item"><a href="messages.html" class="nav-link">💬 Messages</a></li>
-            <li class="nav-item"><a href="subscription.html" class="nav-link">💳 Subscription</a></li>
-            <li class="nav-item"><a href="settings.html" class="nav-link active">⚙️ Settings</a></li>
-        </ul>
+        <div>
+            <div class="brand">🏡 MyGuru Parent</div>
+            <ul class="nav-list">
+                <li class="nav-item"><a href="parent_dashboard.html" class="nav-link">📊 Dashboard</a></li>
+                <li class="nav-item"><a href="post-tuition.html" class="nav-link">✍️ Post Tuition</a></li>
+                <li class="nav-item"><a href="my-tutions.html" class="nav-link">📋 My Tuitions</a></li>
+                <li class="nav-item"><a href="applications.html" class="nav-link">👨‍🏫 Applications</a></li>
+                <li class="nav-item"><a href="notifications.html" class="nav-link">🔔 Notifications</a></li>
+                <li class="nav-item"><a href="messages.html" class="nav-link">💬 Messages</a></li>
+                <li class="nav-item"><a href="profile.html" class="nav-link">👤 My Profile</a></li>
+                <li class="nav-item"><a href="subscriptions.html" class="nav-link">💳 Subscriptions</a></li>
+                <li class="nav-item"><a href="settings.html" class="nav-link active">⚙️ Settings</a></li>
+            </ul>
+        </div>
+        <div>
+            <ul class="nav-list">
+                <li class="nav-item"><a href="#" onclick="logoutParent()" class="nav-link btn-logout-sidebar">🚪 Logout</a></li>
+            </ul>
+        </div>
     </aside>
 
+    <!-- 💻 Main Workspace -->
     <main class="main-content">
         <div class="header">
             <div>
-                <h2 style="margin: 0; font-size: 24px;">Account Settings</h2>
-                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">Manage session and security preferences.</p>
+                <h2 style="margin: 0; font-size: 22px; font-weight: 700;">Account & Privacy Settings</h2>
+                <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 13px;">Manage notification preferences, privacy levels, and active sessions.</p>
             </div>
+            <button class="btn-logout-top" onclick="logoutParent()">Logout</button>
         </div>
 
-        <div class="box">
-            <h4 style="margin:0 0 10px 0; color:#38bdf8;">Session Management</h4>
-            <p style="color:#94a3b8; font-size:13px; margin-bottom:15px;">Log out of your current device session.</p>
-            <button class="btn-danger" onclick="logoutParent()">🚪 Log Out of MyGuru</button>
+        <div class="settings-container">
+            <!-- 🛡️ Privacy Controls -->
+            <div class="settings-card">
+                <div class="card-title">🛡️ Privacy & Shield Settings</div>
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-label">Mask Mobile & Address from Candidates</div>
+                        <div class="toggle-sub">Strictly keeps your personal phone and home details hidden from teachers.</div>
+                    </div>
+                    <span style="color:#22c55e; font-size:12px; font-weight:bold; background:rgba(34,197,94,0.15); padding:4px 8px; border-radius:4px; border:1px solid #22c55e;">ALWAYS ACTIVE</span>
+                </div>
+            </div>
+
+            <!-- 🔔 Notification Preferences -->
+            <div class="settings-card">
+                <div class="card-title">🔔 Alert Preferences</div>
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-label">Teacher Application Alerts</div>
+                        <div class="toggle-sub">Receive in-app and SMS notifications when verified teachers apply.</div>
+                    </div>
+                    <input type="checkbox" checked style="accent-color:#f59e0b; width:18px; height:18px; cursor:pointer;">
+                </div>
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-label">Demo Class Dispatch Updates</div>
+                        <div class="toggle-sub">Get direct status updates from Admin regarding teacher interview confirmations.</div>
+                    </div>
+                    <input type="checkbox" checked style="accent-color:#f59e0b; width:18px; height:18px; cursor:pointer;">
+                </div>
+            </div>
+
+            <!-- 🚪 Session Management -->
+            <div class="settings-card" style="border-color: rgba(239, 68, 68, 0.3);">
+                <div class="card-title" style="color: #ef4444;">🚪 Session & Account Controls</div>
+                <p style="color:#94a3b8; font-size:13px; margin:0 0 15px 0;">
+                    Log out of your current device session. Your posted requirements and candidate applications will remain secure.
+                </p>
+                <button class="btn-danger" onclick="logoutParent()">Log Out of MyGuru Parent</button>
+            </div>
         </div>
     </main>
 </div>
