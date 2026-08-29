@@ -33,7 +33,8 @@
         /* Candidate Card */
         .candidate-card { background: #131d38; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.25); }
         .candidate-info { display: flex; gap: 15px; align-items: center; }
-        .avatar { width: 52px; height: 52px; border-radius: 50%; background: #1e293b; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: #38bdf8; border: 1px solid #334155; }
+        .avatar { width: 54px; height: 54px; border-radius: 50%; background: #1e293b; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: #38bdf8; border: 1px solid #334155; overflow: hidden; }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
         
         .btn-act { padding: 8px 14px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; border: none; transition: 0.2s; }
         .btn-demo { background: #22c55e; color: #000; }
@@ -47,7 +48,7 @@
 <body>
 
 <div class="wrapper">
-    <!-- 🏡 Parent Sidebar Matching All Repository Files -->
+    <!-- 🏡 Parent Sidebar -->
     <aside class="sidebar">
         <div>
             <div class="brand">🏡 MyGuru Parent</div>
@@ -114,35 +115,54 @@
                 return;
             }
 
-            // Fetch Teacher Profile Details for privacy-protected view
+            // Fetch Teacher Profile Details using schema columns (Privacy Protected)
             const teacherIds = apps.map(a => a.teacher_id).filter(Boolean);
-            const { data: teachers } = await _supabase.from('teacher_profiles').select('id, full_name, qualifications, subjects, experience, district').in('id', teacherIds);
+            const { data: teachers } = await _supabase.from('teacher_profiles')
+                .select('id, full_name, avatar_url, qualifications, subjects, experience, district, verification_badge')
+                .in('id', teacherIds);
+
             const teacherMap = {};
             if (teachers) teachers.forEach(t => teacherMap[t.id] = t);
 
             container.innerHTML = apps.map(a => {
-                const t = teacherMap[a.teacher_id] || { full_name: 'Verified Teacher', qualifications: 'Graduate', subjects: 'All Subjects', experience: 1, district: 'Telangana' };
-                const initial = t.full_name ? t.full_name.charAt(0) : 'T';
+                const t = teacherMap[a.teacher_id] || { 
+                    full_name: 'Verified Educator', 
+                    qualifications: 'Degree / B.Ed', 
+                    subjects: 'Core Subjects', 
+                    experience: 1, 
+                    district: 'Telangana',
+                    verification_badge: true 
+                };
+
+                const avatarContent = t.avatar_url 
+                    ? `<img src="${t.avatar_url}" alt="Avatar">` 
+                    : (t.full_name ? t.full_name.charAt(0) : 'T');
 
                 const isDemoReq = a.employer_status === 'demo_requested';
-                const statusBadge = isDemoReq 
-                    ? `<span class="badge-status" style="background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid #f59e0b;">⏳ Demo Requested</span>` 
-                    : `<span class="badge-status" style="background:rgba(34,197,94,0.15); color:#22c55e; border:1px solid #22c55e;">✓ Verified</span>`;
+                const isSelected = a.employer_status === 'selected';
+
+                let badgeHtml = `<span class="badge-status" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid #38bdf8;">Applied</span>`;
+                if (t.verification_badge) {
+                    badgeHtml = `<span class="badge-status" style="background:rgba(34,197,94,0.15); color:#22c55e; border:1px solid #22c55e;">✓ Verified</span>`;
+                }
+                if (isDemoReq) {
+                    badgeHtml = `<span class="badge-status" style="background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid #f59e0b;">⏳ Demo Requested</span>`;
+                }
 
                 return `
                     <div class="candidate-card">
                         <div class="candidate-info">
-                            <div class="avatar">${initial}</div>
+                            <div class="avatar">${avatarContent}</div>
                             <div>
                                 <div style="display:flex; align-items:center; gap:8px;">
                                     <strong style="font-size:15px; color:#f8fafc;">${t.full_name}</strong>
-                                    ${statusBadge}
+                                    ${badgeHtml}
                                 </div>
                                 <div style="color:#94a3b8; font-size:13px; margin-top:3px;">
-                                    🎓 ${t.qualifications} | ⏳ Experience: ${t.experience} Years | 📍 ${t.district}
+                                    🎓 ${t.qualifications || 'Graduate'} | ⏳ Experience: ${t.experience || 0} Years | 📍 ${t.district || 'Telangana'}
                                 </div>
                                 <div style="color:#64748b; font-size:12px; margin-top:2px;">
-                                    Subjects Handled: <strong style="color:#cbd5e1;">${t.subjects}</strong>
+                                    Subjects Handled: <strong style="color:#cbd5e1;">${t.subjects || 'General'}</strong>
                                 </div>
                             </div>
                         </div>
@@ -150,13 +170,13 @@
                             <a href="applicant-details.html?teacher_id=${t.id}&app_id=${a.id}" class="btn-act btn-details">
                                 🔍 Full Profile
                             </a>
-                            ${!isDemoReq ? `
+                            ${!isDemoReq && !isSelected ? `
                                 <button class="btn-act btn-demo" onclick="requestDemo('${a.id}', '${t.full_name}')">
                                     📅 Request Demo Class
                                 </button>
                             ` : `
                                 <button class="btn-act" style="background:#334155; color:#94a3b8; cursor:default;" disabled>
-                                    ✓ Request Sent
+                                    ✓ Request Scheduled
                                 </button>
                             `}
                         </div>
