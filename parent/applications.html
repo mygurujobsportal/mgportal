@@ -98,7 +98,7 @@
         const filterTuitionId = urlParams.get('tuition_id');
 
         try {
-            let query = _supabase.from('job_applications').select('*').order('created_at', { ascending: false });
+            let query = _supabase.from('job_applications').select('*').order('applied_at', { ascending: false });
             if (filterTuitionId) {
                 query = query.eq('tuition_id', filterTuitionId);
             }
