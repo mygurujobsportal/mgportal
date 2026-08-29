@@ -8,56 +8,83 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
-        body { margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; }
+        body { margin: 0; padding: 0; background-color: #0b1329; color: #f8fafc; }
+        
         .wrapper { display: flex; min-height: 100vh; }
         
-        .sidebar { width: 260px; background-color: #1e293b; padding: 20px; border-right: 1px solid #334155; }
-        .brand { font-size: 20px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        /* 🏡 Consistent Parent Sidebar */
+        .sidebar { width: 260px; background-color: #0f172a; padding: 20px; border-right: 1px solid #1e293b; display: flex; flex-direction: column; justify-content: space-between; }
+        .brand { font-size: 19px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 8px; }
         .nav-list { list-style: none; padding: 0; margin: 0; }
-        .nav-item { margin-bottom: 6px; }
-        .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
-        .nav-link:hover, .nav-link.active { background-color: #334155; color: #f59e0b; }
-        
-        .main-content { flex: 1; padding: 30px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #334155; }
+        .nav-item { margin-bottom: 5px; }
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .nav-link:hover { background-color: #1e293b; color: #f8fafc; }
+        .nav-link.active { background-color: #1e293b; color: #f59e0b; font-weight: 600; }
+        .btn-logout-sidebar { color: #ef4444 !important; }
+        .btn-logout-sidebar:hover { background-color: rgba(239, 68, 68, 0.1) !important; }
 
-        .tuition-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        .badge { padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        /* 💻 Main Workspace */
+        .main-content { flex: 1; padding: 30px; background-color: #0b1329; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #1e293b; }
+        
+        .btn-logout-top { background-color: #ef4444; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; }
+        .btn-logout-top:hover { background-color: #dc2626; }
+        .btn-post-top { background: #f59e0b; color: #000; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; margin-right: 10px; }
+
+        /* Tuition Card Styles */
+        .tuition-card { background: #131d38; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.25); }
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
         .badge-active { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid #22c55e; }
         .badge-closed { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; }
 
-        .btn-act { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border: none; }
+        .btn-act { padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; border: none; transition: 0.2s; }
         .btn-blue { background: #3b82f6; color: white; }
-        .btn-red { background: #ef4444; color: white; }
-        .btn-amber { background: #f59e0b; color: black; }
+        .btn-blue:hover { background: #2563eb; }
+        .btn-state { background: #334155; color: #cbd5e1; }
+        .btn-state:hover { background: #475569; color: white; }
     </style>
 </head>
 <body>
 
 <div class="wrapper">
+    <!-- 🏡 Parent Sidebar Matching All Repository Files -->
     <aside class="sidebar">
-        <div class="brand">🏡 MyGuru Parent</div>
-        <ul class="nav-list">
-            <li class="nav-item"><a href="parent_dashboard.html" class="nav-link">📊 Dashboard</a></li>
-            <li class="nav-item"><a href="post-tuition.html" class="nav-link">✍️ Post Tuition</a></li>
-            <li class="nav-item"><a href="my-tuitions.html" class="nav-link active">📋 My Tuitions</a></li>
-            <li class="nav-item"><a href="applicants.html" class="nav-link">👨‍🏫 Teacher Applicants</a></li>
-            <li class="nav-item"><a href="profile.html" class="nav-link">👤 My Profile</a></li>
-            <li class="nav-item"><a href="#" onclick="logoutParent()" class="nav-link" style="color: #ef4444; margin-top: 30px;">🚪 Logout</a></li>
-        </ul>
+        <div>
+            <div class="brand">🏡 MyGuru Parent</div>
+            <ul class="nav-list">
+                <li class="nav-item"><a href="parent_dashboard.html" class="nav-link">📊 Dashboard</a></li>
+                <li class="nav-item"><a href="post-tuition.html" class="nav-link">✍️ Post Tuition</a></li>
+                <li class="nav-item"><a href="my-tutions.html" class="nav-link active">📋 My Tuitions</a></li>
+                <li class="nav-item"><a href="applications.html" class="nav-link">👨‍🏫 Applications</a></li>
+                <li class="nav-item"><a href="notifications.html" class="nav-link">🔔 Notifications</a></li>
+                <li class="nav-item"><a href="messages.html" class="nav-link">💬 Messages</a></li>
+                <li class="nav-item"><a href="profile.html" class="nav-link">👤 My Profile</a></li>
+                <li class="nav-item"><a href="subscriptions.html" class="nav-link">💳 Subscriptions</a></li>
+                <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ Settings</a></li>
+            </ul>
+        </div>
+        <div>
+            <ul class="nav-list">
+                <li class="nav-item"><a href="#" onclick="logoutParent()" class="nav-link btn-logout-sidebar">🚪 Logout</a></li>
+            </ul>
+        </div>
     </aside>
 
+    <!-- 💻 Main Workspace -->
     <main class="main-content">
         <div class="header">
             <div>
-                <h2 style="margin: 0; font-size: 24px;">Manage My Tuitions</h2>
-                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">View, pause, or close your published tuition vacancies.</p>
+                <h2 style="margin: 0; font-size: 22px; font-weight: 700;">Manage My Tuition Requirements</h2>
+                <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 13px;">View status, candidate applications, or close active tuition requests.</p>
             </div>
-            <a href="post-tuition.html" class="btn-act btn-amber">➕ Post New Tuition</a>
+            <div style="display:flex; align-items:center;">
+                <a href="post-tuition.html" class="btn-post-top">➕ Post New Tuition</a>
+                <button class="btn-logout-top" onclick="logoutParent()">Logout</button>
+            </div>
         </div>
 
-        <div id="tuitionContainer">
-            <p style="text-align:center; color:#94a3b8; padding:30px;">Loading your posted tuitions...</p>
+        <div id="tuitionsContainer">
+            <p style="text-align:center; color:#94a3b8; padding:30px;">Loading your posted tuition vacancies...</p>
         </div>
     </main>
 </div>
@@ -70,7 +97,7 @@
     let activeParentId = null;
 
     async function loadMyTuitions() {
-        const container = document.getElementById('tuitionContainer');
+        const container = document.getElementById('tuitionsContainer');
         const sessionUser = JSON.parse(localStorage.getItem('myguru_user') || '{}');
         activeParentId = sessionUser.id;
 
@@ -83,15 +110,20 @@
 
             if (!tuitions || tuitions.length === 0) {
                 container.innerHTML = `
-                    <div style="text-align:center; padding:40px; background:#1e293b; border-radius:12px; border:1px solid #334155;">
-                        <p style="color:#94a3b8; margin-bottom:15px;">You have not posted any tuition requirements yet.</p>
-                        <a href="post-tuition.html" class="btn-act btn-amber">Post Tuition Requirement</a>
+                    <div style="text-align:center; padding:40px; background:#131d38; border-radius:12px; border:1px solid #1e293b;">
+                        <p style="color:#94a3b8; margin-bottom:15px;">You have not published any tuition requirements yet.</p>
+                        <a href="post-tuition.html" class="btn-post-top" style="margin:0;">Post Tuition Requirement</a>
                     </div>
                 `;
                 return;
             }
 
+            // Fetch applications count for each tuition
+            const tuitionIds = tuitions.map(t => t.id);
+            const { data: apps } = await _supabase.from('job_applications').select('id, tuition_id').in('tuition_id', tuitionIds);
+
             container.innerHTML = tuitions.map(t => {
+                const appCount = apps ? apps.filter(a => a.tuition_id === t.id).length : 0;
                 const statusBadge = t.status === 'active' 
                     ? `<span class="badge badge-active">Active</span>` 
                     : `<span class="badge badge-closed">${t.status}</span>`;
@@ -103,17 +135,19 @@
                                 <strong style="font-size:16px; color:#38bdf8;">${t.tuition_title || t.subject}</strong>
                                 ${statusBadge}
                             </div>
-                            <div style="color:#94a3b8; font-size:13px; margin-bottom:4px;">
+                            <div style="color:#94a3b8; font-size:13px; margin-bottom:5px;">
                                 📚 Class: <strong>${t.student_class}</strong> (${t.board || 'CBSE/SSC'}) | 🎯 Subject: <strong>${t.subject}</strong>
                             </div>
                             <div style="color:#64748b; font-size:12px;">
-                                📍 ${t.area}, ${t.district} | 💰 Budget: ${t.salary} | 🕒 Mode: ${t.tuition_type}
+                                📍 ${t.area}, ${t.district} | 💰 Budget: <strong>${t.salary}</strong> | 🕒 Mode: ${t.tuition_type}
                             </div>
                         </div>
-                        <div style="display:flex; gap:8px;">
-                            <a href="applicants.html?tuition_id=${t.id}" class="btn-act btn-blue">👥 View Applicants</a>
-                            <button onclick="toggleTuitionStatus('${t.id}', '${t.status}')">
-                                ${t.status === 'active' ? '⏸️ Close' : '▶️ Activate'}
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <a href="applications.html?tuition_id=${t.id}" class="btn-act btn-blue">
+                                👥 Applicants (${appCount})
+                            </a>
+                            <button class="btn-act btn-state" onclick="toggleTuitionStatus('${t.id}', '${t.status}')">
+                                ${t.status === 'active' ? '⏸️ Close Post' : '▶️ Reopen'}
                             </button>
                         </div>
                     </div>
@@ -121,14 +155,14 @@
             }).join('');
 
         } catch (err) {
-            container.innerHTML = `<p style="color:#ef4444; text-align:center;">Error loading: ${err.message}</p>`;
+            container.innerHTML = `<p style="color:#ef4444; text-align:center;">Error loading data: ${err.message}</p>`;
         }
     }
 
     async function toggleTuitionStatus(id, currentStatus) {
         const nextStatus = currentStatus === 'active' ? 'closed' : 'active';
         try {
-            const { error } = await _supabase.from('parent_tuitions').update({ status: nextStatus }).eq('id', id);
+            const { error } = await _supabase.from('parent_tuitions').update({ status: nextStatus, updated_at: new Date().toISOString() }).eq('id', id);
             if (error) throw error;
             loadMyTuitions();
         } catch (err) {
