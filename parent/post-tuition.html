@@ -27,6 +27,9 @@
         .main-content { flex: 1; padding: 30px; background-color: #0b1329; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #1e293b; }
         
+        .btn-logout-top { background-color: #ef4444; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; }
+        .btn-logout-top:hover { background-color: #dc2626; }
+
         .form-box { background: #131d38; border: 1px solid #1e293b; padding: 25px; border-radius: 12px; max-width: 800px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         .form-group { margin-bottom: 14px; }
@@ -44,7 +47,7 @@
 <body>
 
 <div class="wrapper">
-    <!-- 🏡 Parent Sidebar Matching All Repository Files -->
+    <!-- 🏡 Parent Sidebar -->
     <aside class="sidebar">
         <div>
             <div class="brand">🏡 MyGuru Parent</div>
@@ -74,6 +77,7 @@
                 <h2 style="margin: 0; font-size: 22px; font-weight: 700;">Post Home Tuition Requirement</h2>
                 <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 13px;">Find verified and experienced home tutors for your children.</p>
             </div>
+            <button class="btn-logout-top" onclick="logoutParent()">Logout</button>
         </div>
 
         <div class="form-box">
