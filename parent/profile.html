@@ -3,73 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyGuru Parent - Profile</title>
+    <title>MyGuru Parent - Profile Settings</title>
     <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
-        body { margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; }
+        body { margin: 0; padding: 0; background-color: #0b1329; color: #f8fafc; }
+        
         .wrapper { display: flex; min-height: 100vh; }
         
-        .sidebar { width: 260px; background-color: #1e293b; padding: 20px; border-right: 1px solid #334155; }
-        .brand { font-size: 20px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        /* 🏡 Consistent Parent Sidebar */
+        .sidebar { width: 260px; background-color: #0f172a; padding: 20px; border-right: 1px solid #1e293b; display: flex; flex-direction: column; justify-content: space-between; }
+        .brand { font-size: 19px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 8px; }
         .nav-list { list-style: none; padding: 0; margin: 0; }
-        .nav-item { margin-bottom: 6px; }
-        .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
-        .nav-link:hover, .nav-link.active { background-color: #334155; color: #f59e0b; }
+        .nav-item { margin-bottom: 5px; }
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .nav-link:hover { background-color: #1e293b; color: #f8fafc; }
+        .nav-link.active { background-color: #1e293b; color: #f59e0b; font-weight: 600; }
+        .btn-logout-sidebar { color: #ef4444 !important; }
+        .btn-logout-sidebar:hover { background-color: rgba(239, 68, 68, 0.1) !important; }
+
+        /* 💻 Main Workspace */
+        .main-content { flex: 1; padding: 30px; background-color: #0b1329; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #1e293b; }
         
-        .main-content { flex: 1; padding: 30px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #334155; }
+        .btn-logout-top { background-color: #ef4444; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; }
+        .btn-logout-top:hover { background-color: #dc2626; }
 
-        .form-box { background: #1e293b; border: 1px solid #334155; padding: 25px; border-radius: 12px; max-width: 700px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        .form-group { margin-bottom: 14px; }
-        .form-label { display: block; font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase; margin-bottom: 6px; }
-        .input-ctrl { width: 100%; padding: 10px 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; color: white; border-radius: 6px; font-size: 13px; outline: none; }
-        .input-ctrl:focus { border-color: #38bdf8; }
+        /* Form Controls */
+        .form-box { background: #131d38; border: 1px solid #1e293b; padding: 28px; border-radius: 12px; max-width: 800px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 15px; }
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+        
+        .input-ctrl { width: 100%; padding: 11px 14px; background: rgba(11, 19, 41, 0.7); border: 1px solid #1e293b; color: white; border-radius: 8px; font-size: 13px; outline: none; transition: 0.2s; }
+        .input-ctrl:focus { border-color: #38bdf8; box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2); }
+        .input-ctrl:disabled { background: rgba(15, 23, 42, 0.4); color: #64748b; cursor: not-allowed; }
 
-        .btn-submit { background: #22c55e; color: #000; font-weight: bold; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; transition: 0.2s; font-size: 14px; width: 100%; }
-        .btn-submit:hover { opacity: 0.9; }
+        .btn-submit { background: #22c55e; color: #000; font-weight: bold; border: none; padding: 13px 24px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 14px; width: 100%; margin-top: 10px; }
+        .btn-submit:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .privacy-box { background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 14px; font-size: 12px; color: #f59e0b; margin-top: 20px; line-height: 1.5; }
     </style>
 </head>
 <body>
 
 <div class="wrapper">
+    <!-- 🏡 Parent Sidebar -->
     <aside class="sidebar">
-        <div class="brand">🏡 MyGuru Parent</div>
-        <ul class="nav-list">
-            <li class="nav-item"><a href="parent_dashboard.html" class="nav-link">📊 Dashboard</a></li>
-            <li class="nav-item"><a href="post-tuition.html" class="nav-link">✍️ Post Tuition</a></li>
-            <li class="nav-item"><a href="my-tuitions.html" class="nav-link">📋 My Tuitions</a></li>
-            <li class="nav-item"><a href="applicants.html" class="nav-link">👨‍🏫 Teacher Applicants</a></li>
-            <li class="nav-item"><a href="profile.html" class="nav-link active">👤 My Profile</a></li>
-            <li class="nav-item"><a href="#" onclick="logoutParent()" class="nav-link" style="color: #ef4444; margin-top: 30px;">🚪 Logout</a></li>
-        </ul>
+        <div>
+            <div class="brand">🏡 MyGuru Parent</div>
+            <ul class="nav-list">
+                <li class="nav-item"><a href="parent_dashboard.html" class="nav-link">📊 Dashboard</a></li>
+                <li class="nav-item"><a href="post-tuition.html" class="nav-link">✍️ Post Tuition</a></li>
+                <li class="nav-item"><a href="my-tutions.html" class="nav-link">📋 My Tuitions</a></li>
+                <li class="nav-item"><a href="applications.html" class="nav-link">👨‍🏫 Applications</a></li>
+                <li class="nav-item"><a href="notifications.html" class="nav-link">🔔 Notifications</a></li>
+                <li class="nav-item"><a href="messages.html" class="nav-link">💬 Messages</a></li>
+                <li class="nav-item"><a href="profile.html" class="nav-link active">👤 My Profile</a></li>
+                <li class="nav-item"><a href="subscriptions.html" class="nav-link">💳 Subscriptions</a></li>
+                <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ Settings</a></li>
+            </ul>
+        </div>
+        <div>
+            <ul class="nav-list">
+                <li class="nav-item"><a href="#" onclick="logoutParent()" class="nav-link btn-logout-sidebar">🚪 Logout</a></li>
+            </ul>
+        </div>
     </aside>
 
+    <!-- 💻 Main Workspace -->
     <main class="main-content">
         <div class="header">
             <div>
-                <h2 style="margin: 0; font-size: 24px;">Parent Profile Setup</h2>
-                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">Keep your contact and location information up to date.</p>
+                <h2 style="margin: 0; font-size: 22px; font-weight: 700;">Parent Profile Settings</h2>
+                <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 13px;">Manage your personal details and home location preferences.</p>
             </div>
+            <button class="btn-logout-top" onclick="logoutParent()">Logout</button>
         </div>
 
         <div class="form-box">
             <form id="frmParentProfile" onsubmit="saveParentProfile(event)">
-                <div class="form-group">
-                    <label class="form-label">Parent / Guardian Full Name *</label>
-                    <input type="text" id="profName" class="input-ctrl" required>
+                <div class="form-grid">
+                    <div>
+                        <label class="form-label">Parent / Guardian Full Name *</label>
+                        <input type="text" id="profName" class="input-ctrl" placeholder="e.g. Shailaja Rani" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Occupation / Profession</label>
+                        <input type="text" id="profOccupation" class="input-ctrl" placeholder="e.g. Govt Employee / Business / Software">
+                    </div>
                 </div>
 
                 <div class="form-grid">
                     <div>
-                        <label class="form-label">Contact Mobile Number *</label>
-                        <input type="tel" id="profMobile" class="input-ctrl" required>
+                        <label class="form-label">Registered Mobile Number *</label>
+                        <input type="tel" id="profMobile" class="input-ctrl" placeholder="e.g. 9876543210" required>
                     </div>
                     <div>
                         <label class="form-label">Email Address</label>
-                        <input type="email" id="profEmail" class="input-ctrl">
+                        <input type="email" id="profEmail" class="input-ctrl" placeholder="name@domain.com">
                     </div>
                 </div>
 
@@ -80,16 +114,30 @@
                     </div>
                     <div>
                         <label class="form-label">District *</label>
-                        <input type="text" id="profDistrict" class="input-ctrl" placeholder="e.g. Warangal / Hanamkonda" required>
+                        <input type="text" id="profDistrict" class="input-ctrl" placeholder="e.g. Hanamkonda / Warangal" required>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Residential Address</label>
-                    <textarea id="profAddress" class="input-ctrl" rows="2" style="resize:none;" placeholder="House No, Street, Landmark"></textarea>
+                    <label class="form-label">Primary Subjects Typically Required</label>
+                    <input type="text" id="profSubjects" class="input-ctrl" placeholder="e.g. Mathematics, Science, IIT-JEE Foundation">
                 </div>
 
-                <button type="submit" class="btn-submit">💾 Save Profile Details</button>
+                <div class="form-group">
+                    <label class="form-label">Complete Residential Address</label>
+                    <textarea id="profAddress" class="input-ctrl" rows="2" style="resize:none;" placeholder="House No, Landmark, Locality, Pincode"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">About / Additional Notes for MyGuru Desk</label>
+                    <textarea id="profAbout" class="input-ctrl" rows="2" style="resize:none;" placeholder="Any specific requirements regarding tutor timing or student background..."></textarea>
+                </div>
+
+                <button type="submit" id="btnSaveProfile" class="btn-submit">💾 Save Profile Details</button>
+
+                <div class="privacy-box">
+                    🔒 <strong>Privacy Shield Active:</strong> Contact details (phone, email, house address) entered here are strictly confidential and will never be exposed to candidate teachers.
+                </div>
             </form>
         </div>
     </main>
@@ -106,6 +154,11 @@
         const sessionUser = JSON.parse(localStorage.getItem('myguru_user') || '{}');
         activeParentId = sessionUser.id;
 
+        if (!activeParentId) {
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (user) activeParentId = user.id;
+        }
+
         if (!activeParentId) return;
 
         try {
@@ -114,31 +167,42 @@
                 document.getElementById('profName').value = p.parent_name || '';
                 document.getElementById('profMobile').value = p.mobile || '';
                 document.getElementById('profEmail').value = p.email || '';
+                document.getElementById('profOccupation').value = p.occupation || '';
                 document.getElementById('profState').value = p.state || 'Telangana';
                 document.getElementById('profDistrict').value = p.district || '';
+                document.getElementById('profSubjects').value = p.subjects_required || '';
                 document.getElementById('profAddress').value = p.address || '';
+                document.getElementById('profAbout').value = p.about || '';
             }
         } catch (err) {
-            console.error("Profile load note:", err);
+            console.error("Profile load error:", err);
         }
     }
 
     async function saveParentProfile(e) {
         e.preventDefault();
+        const btn = document.getElementById('btnSaveProfile');
 
         if (!activeParentId) {
-            alert("Please login first.");
+            alert("దయచేసి ముందుగా లాగిన్ అవ్వండి.");
+            window.location.href = '../index.html';
             return;
         }
+
+        btn.disabled = true;
+        btn.innerText = "Saving Profile...";
 
         const payload = {
             id: activeParentId,
             parent_name: document.getElementById('profName').value.trim(),
             mobile: document.getElementById('profMobile').value.trim(),
             email: document.getElementById('profEmail').value.trim(),
+            occupation: document.getElementById('profOccupation').value.trim(),
             state: document.getElementById('profState').value.trim(),
             district: document.getElementById('profDistrict').value.trim(),
+            subjects_required: document.getElementById('profSubjects').value.trim(),
             address: document.getElementById('profAddress').value.trim(),
+            about: document.getElementById('profAbout').value.trim(),
             profile_status: 'complete',
             updated_at: new Date().toISOString()
         };
@@ -147,10 +211,17 @@
             const { error } = await _supabase.from('parent_profiles').upsert([payload]);
             if (error) throw error;
 
-            alert("✓ Profile updated successfully!");
+            // Update local storage session cache
+            const sessionUser = JSON.parse(localStorage.getItem('myguru_user') || '{}');
+            sessionUser.name = payload.parent_name;
+            localStorage.setItem('myguru_user', JSON.stringify(sessionUser));
+
+            alert("✓ మీ ప్రొఫైల్ వివరాలు విజయవంతంగా భద్రపరచబడ్డాయి!");
             window.location.href = 'parent_dashboard.html';
         } catch (err) {
             alert("Failed to save profile: " + err.message);
+            btn.disabled = false;
+            btn.innerText = "💾 Save Profile Details";
         }
     }
 
