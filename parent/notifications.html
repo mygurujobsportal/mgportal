@@ -3,58 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyGuru Parent - Notifications</title>
+    <title>MyGuru Parent - Notifications & Alerts</title>
+    <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
-        body { margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; }
+        body { margin: 0; padding: 0; background-color: #0b1329; color: #f8fafc; }
+        
         .wrapper { display: flex; min-height: 100vh; }
-        .sidebar { width: 260px; background-color: #1e293b; padding: 20px; border-right: 1px solid #334155; }
-        .brand { font-size: 20px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        
+        /* 🏡 Consistent Parent Sidebar */
+        .sidebar { width: 260px; background-color: #0f172a; padding: 20px; border-right: 1px solid #1e293b; display: flex; flex-direction: column; justify-content: space-between; }
+        .brand { font-size: 19px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 8px; }
         .nav-list { list-style: none; padding: 0; margin: 0; }
-        .nav-item { margin-bottom: 6px; }
-        .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
-        .nav-link:hover, .nav-link.active { background-color: #334155; color: #f59e0b; }
-        .main-content { flex: 1; padding: 30px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #334155; }
-        .notif-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 16px; margin-bottom: 12px; display: flex; gap: 15px; align-items: flex-start; }
-        .notif-icon { font-size: 20px; background: rgba(56, 189, 248, 0.15); padding: 8px; border-radius: 8px; }
+        .nav-item { margin-bottom: 5px; }
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .nav-link:hover { background-color: #1e293b; color: #f8fafc; }
+        .nav-link.active { background-color: #1e293b; color: #f59e0b; font-weight: 600; }
+        .btn-logout-sidebar { color: #ef4444 !important; }
+        .btn-logout-sidebar:hover { background-color: rgba(239, 68, 68, 0.1) !important; }
+
+        /* 💻 Main Workspace */
+        .main-content { flex: 1; padding: 30px; background-color: #0b1329; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #1e293b; }
+        
+        .btn-logout-top { background-color: #ef4444; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; }
+        .btn-logout-top:hover { background-color: #dc2626; }
+
+        /* Notification Elements */
+        .notif-container { max-width: 850px; }
+        .notif-card { background: #131d38; border: 1px solid #1e293b; border-radius: 12px; padding: 18px 20px; margin-bottom: 14px; display: flex; gap: 16px; align-items: flex-start; box-shadow: 0 4px 15px rgba(0,0,0,0.25); transition: transform 0.2s; }
+        .notif-card:hover { transform: translateY(-1px); border-color: #334155; }
+        
+        .notif-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .icon-blue { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+        .icon-green { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .icon-amber { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+        
+        .notif-time { font-size: 11px; color: #64748b; margin-top: 5px; }
+        .btn-action-link { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #38bdf8; text-decoration: none; font-weight: 600; margin-top: 6px; }
+        .btn-action-link:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
+
 <div class="wrapper">
+    <!-- 🏡 Parent Sidebar Matching All Repository Files -->
     <aside class="sidebar">
-        <div class="brand">🏡 MyGuru Parent</div>
-        <ul class="nav-list">
-            <li class="nav-item"><a href="dashboard.html" class="nav-link">📊 Dashboard</a></li>
-            <li class="nav-item"><a href="post-tuition.html" class="nav-link">✍️ Post Tuition</a></li>
-            <li class="nav-item"><a href="my-tuitions.html" class="nav-link">📋 My Tuitions</a></li>
-            <li class="nav-item"><a href="applicants.html" class="nav-link">👨‍🏫 Teacher Applicants</a></li>
-            <li class="nav-item"><a href="notifications.html" class="nav-link active">🔔 Notifications</a></li>
-            <li class="nav-item"><a href="messages.html" class="nav-link">💬 Messages</a></li>
-            <li class="nav-item"><a href="subscription.html" class="nav-link">💳 Subscription</a></li>
-            <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ Settings</a></li>
-        </ul>
+        <div>
+            <div class="brand">🏡 MyGuru Parent</div>
+            <ul class="nav-list">
+                <li class="nav-item"><a href="parent_dashboard.html" class="nav-link">📊 Dashboard</a></li>
+                <li class="nav-item"><a href="post-tuition.html" class="nav-link">✍️ Post Tuition</a></li>
+                <li class="nav-item"><a href="my-tutions.html" class="nav-link">📋 My Tuitions</a></li>
+                <li class="nav-item"><a href="applications.html" class="nav-link">👨‍🏫 Applications</a></li>
+                <li class="nav-item"><a href="notifications.html" class="nav-link active">🔔 Notifications</a></li>
+                <li class="nav-item"><a href="messages.html" class="nav-link">💬 Messages</a></li>
+                <li class="nav-item"><a href="profile.html" class="nav-link">👤 My Profile</a></li>
+                <li class="nav-item"><a href="subscriptions.html" class="nav-link">💳 Subscriptions</a></li>
+                <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ Settings</a></li>
+            </ul>
+        </div>
+        <div>
+            <ul class="nav-list">
+                <li class="nav-item"><a href="#" onclick="logoutParent()" class="nav-link btn-logout-sidebar">🚪 Logout</a></li>
+            </ul>
+        </div>
     </aside>
 
+    <!-- 💻 Main Workspace -->
     <main class="main-content">
         <div class="header">
             <div>
-                <h2 style="margin: 0; font-size: 24px;">Notifications & Activity Log</h2>
-                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">Updates on teacher applications, demo schedules, and tuition inquiries.</p>
+                <h2 style="margin: 0; font-size: 22px; font-weight: 700;">Notifications & Live Alerts</h2>
+                <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 13px;">Updates on teacher applications, demo schedules, and verification notes.</p>
             </div>
+            <button class="btn-logout-top" onclick="logoutParent()">Logout</button>
         </div>
 
-        <div id="notifList">
-            <div class="notif-card">
-                <div class="notif-icon">🔔</div>
-                <div>
-                    <strong style="color:#f8fafc; font-size:14px;">Tuition Requirement Live</strong>
-                    <p style="margin:4px 0 0 0; color:#94a3b8; font-size:13px;">Your home tuition post has been verified by Admin and is now open for verified teacher applications.</p>
-                </div>
-            </div>
+        <div id="notifList" class="notif-container">
+            <p style="text-align:center; color:#94a3b8; padding:30px;">Loading your notifications...</p>
         </div>
     </main>
 </div>
+
+<script>
+    const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function loadNotifications() {
+        const container = document.getElementById('notifList');
+        const sessionUser = JSON.parse(localStorage.getItem('myguru_user') || '{}');
+        const parentId = sessionUser.id;
+
+        try {
+            // 1. Fetch parent's posted tuitions
+            let tQuery = _supabase.from('parent_tuitions').select('id, tuition_title, subject, created_at');
+            if (parentId) tQuery = tQuery.eq('parent_id', parentId);
+            const { data: tuitions } = await tQuery;
+
+            let alerts = [];
+
+            if (tuitions && tuitions.length > 0) {
+                const tuitionIds = tuitions.map(t => t.id);
+                const tuitionMap = {};
+                tuitions.forEach(t => tuitionMap[t.id] = t);
+
+                // 2. Fetch applications for these tuitions
+                const { data: apps } = await _supabase
+                    .from('job_applications')
+                    .select('id, tuition_id, teacher_id, employer_status, applied_at')
+                    .in('tuition_id', tuitionIds)
+                    .order('applied_at', { ascending: false });
+
+                if (apps && apps.length > 0) {
+                    const teacherIds = apps.map(a => a.teacher_id).filter(Boolean);
+                    const { data: teachers } = await _supabase
+                        .from('teacher_profiles')
+                        .select('id, full_name, subjects')
+                        .in('id', teacherIds);
+                    
+                    const teacherMap = {};
+                    if (teachers) teachers.forEach(t => teacherMap[t.id] = t);
+
+                    apps.forEach(a => {
+                        const tInfo = teacherMap[a.teacher_id] || { full_name: 'Verified Educator' };
+                        const tPost = tuitionMap[a.tuition_id] || { tuition_title: 'Home Tuition' };
+
+                        if (a.employer_status === 'demo_requested') {
+                            alerts.push({
+                                type: 'demo',
+                                title: 'Demo Class Request Under Dispatch',
+                                desc: `You requested a Demo Class with <strong>${tInfo.full_name}</strong> for <em>"${tPost.tuition_title || tPost.subject}"</em>. MyGuru Admin is coordinating the schedule.`,
+                                time: a.applied_at,
+                                link: `applicant-details.html?teacher_id=${a.teacher_id}&app_id=${a.id}`
+                            });
+                        } else {
+                            alerts.push({
+                                type: 'application',
+                                title: 'New Teacher Application Received',
+                                desc: `<strong>${tInfo.full_name}</strong> applied for your tuition requirement: <em>"${tPost.tuition_title || tPost.subject}"</em>.`,
+                                time: a.applied_at,
+                                link: `applicant-details.html?teacher_id=${a.teacher_id}&app_id=${a.id}`
+                            });
+                        }
+                    });
+                }
+
+                // Add tuition published alert
+                tuitions.forEach(t => {
+                    alerts.push({
+                        type: 'live',
+                        title: 'Tuition Requirement Published',
+                        desc: `Your tuition requirement <strong>"${t.tuition_title || t.subject}"</strong> is active and visible to verified teachers.`,
+                        time: t.created_at,
+                        link: 'my-tutions.html'
+                    });
+                });
+            }
+
+            // Always add system privacy badge alert
+            alerts.push({
+                type: 'privacy',
+                title: 'Privacy Shield Security Active',
+                desc: 'Your phone number and exact address remain concealed. All teacher contact handshakes are routed through MyGuru.',
+                time: null,
+                link: 'settings.html'
+            });
+
+            container.innerHTML = alerts.map(item => {
+                let iconHtml = '<div class="notif-icon icon-blue">🔔</div>';
+                if (item.type === 'demo') iconHtml = '<div class="notif-icon icon-amber">📅</div>';
+                if (item.type === 'application') iconHtml = '<div class="notif-icon icon-green">👨‍🏫</div>';
+                if (item.type === 'privacy') iconHtml = '<div class="notif-icon icon-amber">🛡️</div>';
+
+                const timeStr = item.time ? new Date(item.time).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'System Default';
+
+                return `
+                    <div class="notif-card">
+                        ${iconHtml}
+                        <div style="flex: 1;">
+                            <strong style="color: #f8fafc; font-size: 14px;">${item.title}</strong>
+                            <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 13px; line-height: 1.5;">${item.desc}</p>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+                                <span class="notif-time">${timeStr}</span>
+                                ${item.link ? `<a href="${item.link}" class="btn-action-link">View Details ➔</a>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+        } catch (err) {
+            container.innerHTML = `<p style="color:#ef4444; text-align:center;">Error loading notifications: ${err.message}</p>`;
+        }
+    }
+
+    async function logoutParent() {
+        localStorage.removeItem('myguru_user');
+        await _supabase.auth.signOut();
+        window.location.href = '../index.html';
+    }
+
+    loadNotifications();
+</script>
 </body>
 </html>
