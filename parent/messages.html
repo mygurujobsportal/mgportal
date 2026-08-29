@@ -3,54 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyGuru Parent - Messages & Support</title>
+    <title>MyGuru Parent - Messages & Communication</title>
+    <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
-        body { margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; }
+        body { margin: 0; padding: 0; background-color: #0b1329; color: #f8fafc; }
+        
         .wrapper { display: flex; min-height: 100vh; }
-        .sidebar { width: 260px; background-color: #1e293b; padding: 20px; border-right: 1px solid #334155; }
-        .brand { font-size: 20px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        
+        /* 🏡 Consistent Parent Sidebar */
+        .sidebar { width: 260px; background-color: #0f172a; padding: 20px; border-right: 1px solid #1e293b; display: flex; flex-direction: column; justify-content: space-between; }
+        .brand { font-size: 19px; font-weight: bold; color: #f59e0b; margin-bottom: 25px; display: flex; align-items: center; gap: 8px; }
         .nav-list { list-style: none; padding: 0; margin: 0; }
-        .nav-item { margin-bottom: 6px; }
-        .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
-        .nav-link:hover, .nav-link.active { background-color: #334155; color: #f59e0b; }
-        .main-content { flex: 1; padding: 30px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #334155; }
-        .msg-box { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 25px; max-width: 750px; }
+        .nav-item { margin-bottom: 5px; }
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .nav-link:hover { background-color: #1e293b; color: #f8fafc; }
+        .nav-link.active { background-color: #1e293b; color: #f59e0b; font-weight: 600; }
+        .btn-logout-sidebar { color: #ef4444 !important; }
+        .btn-logout-sidebar:hover { background-color: rgba(239, 68, 68, 0.1) !important; }
+
+        /* 💻 Main Workspace */
+        .main-content { flex: 1; padding: 30px; background-color: #0b1329; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #1e293b; }
+        
+        .btn-logout-top { background-color: #ef4444; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; }
+        .btn-logout-top:hover { background-color: #dc2626; }
+
+        /* Communication Box */
+        .msg-container { max-width: 850px; }
+        .msg-box { background: #131d38; border: 1px solid #1e293b; border-radius: 12px; padding: 25px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.25); }
+        .privacy-banner { background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 10px; padding: 16px; font-size: 13px; color: #f59e0b; line-height: 1.6; margin-bottom: 20px; }
+        
+        .chat-thread { background: rgba(11, 19, 41, 0.7); border: 1px solid #1e293b; border-radius: 10px; padding: 20px; margin-bottom: 15px; }
+        .chat-bubble { padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; max-width: 80%; font-size: 13px; line-height: 1.5; }
+        .bubble-admin { background: #1e293b; color: #f8fafc; border-left: 3px solid #38bdf8; }
+        .bubble-parent { background: rgba(245, 158, 11, 0.2); color: #f8fafc; border-right: 3px solid #f59e0b; margin-left: auto; text-align: right; }
+        
+        .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .contact-card { background: rgba(15, 23, 42, 0.6); border: 1px solid #1e293b; padding: 15px; border-radius: 8px; }
     </style>
 </head>
 <body>
+
 <div class="wrapper">
+    <!-- 🏡 Parent Sidebar Matching All Repository Files -->
     <aside class="sidebar">
-        <div class="brand">🏡 MyGuru Parent</div>
-        <ul class="nav-list">
-            <li class="nav-item"><a href="dashboard.html" class="nav-link">📊 Dashboard</a></li>
-            <li class="nav-item"><a href="post-tuition.html" class="nav-link">✍️ Post Tuition</a></li>
-            <li class="nav-item"><a href="my-tuitions.html" class="nav-link">📋 My Tuitions</a></li>
-            <li class="nav-item"><a href="applicants.html" class="nav-link">👨‍🏫 Teacher Applicants</a></li>
-            <li class="nav-item"><a href="notifications.html" class="nav-link">🔔 Notifications</a></li>
-            <li class="nav-item"><a href="messages.html" class="nav-link active">💬 Messages</a></li>
-            <li class="nav-item"><a href="subscription.html" class="nav-link">💳 Subscription</a></li>
-            <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ Settings</a></li>
-        </ul>
+        <div>
+            <div class="brand">🏡 MyGuru Parent</div>
+            <ul class="nav-list">
+                <li class="nav-item"><a href="parent_dashboard.html" class="nav-link">📊 Dashboard</a></li>
+                <li class="nav-item"><a href="post-tuition.html" class="nav-link">✍️ Post Tuition</a></li>
+                <li class="nav-item"><a href="my-tutions.html" class="nav-link">📋 My Tuitions</a></li>
+                <li class="nav-item"><a href="applications.html" class="nav-link">👨‍🏫 Applications</a></li>
+                <li class="nav-item"><a href="notifications.html" class="nav-link">🔔 Notifications</a></li>
+                <li class="nav-item"><a href="messages.html" class="nav-link active">💬 Messages</a></li>
+                <li class="nav-item"><a href="profile.html" class="nav-link">👤 My Profile</a></li>
+                <li class="nav-item"><a href="subscriptions.html" class="nav-link">💳 Subscriptions</a></li>
+                <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ Settings</a></li>
+            </ul>
+        </div>
+        <div>
+            <ul class="nav-list">
+                <li class="nav-item"><a href="#" onclick="logoutParent()" class="nav-link btn-logout-sidebar">🚪 Logout</a></li>
+            </ul>
+        </div>
     </aside>
 
+    <!-- 💻 Main Workspace -->
     <main class="main-content">
         <div class="header">
             <div>
-                <h2 style="margin: 0; font-size: 24px;">Official Communication Desk</h2>
-                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">Coordinated support and interview dispatch updates from MyGuru Admin.</p>
+                <h2 style="margin: 0; font-size: 22px; font-weight: 700;">Official Communication Desk</h2>
+                <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 13px;">Direct updates and demo coordination from MyGuru Admin.</p>
             </div>
+            <button class="btn-logout-top" onclick="logoutParent()">Logout</button>
         </div>
 
-        <div class="msg-box">
-            <h4 style="color:#38bdf8; margin:0 0 10px 0;">🛡️ Coordinated Support Desk</h4>
-            <p style="color:#94a3b8; font-size:13px; line-height:1.6;">
-                To protect student safety and parental privacy, direct private chats between parents and candidates are handled via official MyGuru dispatch. For urgent requirement matching, contact our helpline at <strong>support@mygurujobs.com</strong>.
-            </p>
+        <div class="msg-container">
+            <!-- 🔒 Privacy Notice -->
+            <div class="privacy-banner">
+                🛡️ <strong>Zero Direct Contact Disclosure:</strong> To protect student safety and parental confidentiality, direct chat with teachers is restricted. All demo requests, reporting letters, and background verification are routed via MyGuru Official Desk.
+            </div>
+
+            <!-- 💬 Admin Coordination Thread -->
+            <div class="msg-box">
+                <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #38bdf8;">📢 System & Coordination Updates</h3>
+                
+                <div class="chat-thread">
+                    <div class="chat-bubble bubble-admin">
+                        <strong style="color: #38bdf8; font-size: 12px; display: block; margin-bottom: 4px;">MyGuru Helpdesk</strong>
+                        Welcome to MyGuru Parent Portal! When you request a Demo Class from the <em>Applications</em> section, our coordinator will contact the candidate and schedule the session directly.
+                    </div>
+                </div>
+
+                <div class="contact-grid">
+                    <div class="contact-card">
+                        <span style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: bold;">Official Email Desk</span>
+                        <p style="margin: 5px 0 0 0; font-size: 14px; color: #f8fafc; font-weight: 600;">support@mygurujobs.com</p>
+                    </div>
+                    <div class="contact-card">
+                        <span style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: bold;">Parent Helpline Support</span>
+                        <p style="margin: 5px 0 0 0; font-size: 14px; color: #22c55e; font-weight: 600;">+91 7981131685</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 </div>
+
+<script>
+    function logoutParent() {
+        localStorage.removeItem('myguru_user');
+        window.location.href = '../index.html';
+    }
+</script>
 </body>
 </html>
