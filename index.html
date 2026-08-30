@@ -100,28 +100,6 @@
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* Logo Box */
-        .logo-box {
-            position: relative;
-            display: inline-block;
-            margin-bottom: 16px;
-        }
-
-        .logo-box img {
-            height: 68px;
-            width: auto;
-            border-radius: 18px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-            transition: transform 0.4s ease;
-        }
-
-        .logo-box:hover img {
-            transform: rotate(-4deg) scale(1.06);
-        }
-
         .title {
             font-size: 26px;
             font-weight: 800;
@@ -206,7 +184,6 @@
             letter-spacing: 0.3px;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
             box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
         }
 
@@ -214,10 +191,6 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(124, 58, 237, 0.45);
             background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-        }
-
-        .btn-submit:active {
-            transform: translateY(0);
         }
 
         .btn-submit:disabled {
@@ -259,12 +232,6 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             z-index: 999;
             backdrop-filter: blur(10px);
-            animation: toastUp 0.3s ease forwards;
-        }
-
-        @keyframes toastUp {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -275,10 +242,6 @@
     <div class="ambient-blob-3"></div>
 
     <div class="login-card">
-        <div class="logo-box">
-            <img src="assets/logo.png" alt="MyGuru Logo" onerror="this.src='https://via.placeholder.com/68/1e293b/38bdf8?text=MyGuru'">
-        </div>
-        
         <h2 class="title">MyGuru <span>Terminal Room</span></h2>
         <p class="subtitle">Secure Multi-Portal Gateway Authentication</p>
 
@@ -388,7 +351,7 @@
                     }
                 }
 
-                // 3. Fallback check across all profile tables if selected dropdown differed
+                // Fallback check across all profile tables
                 if (!matchedUser) {
                     const [tRes, sRes, pRes] = await Promise.allSettled([
                         isEmail ? _supabase.from('teacher_profiles').select('*').eq('email', identifier).maybeSingle() : _supabase.from('teacher_profiles').select('*').eq('mobile', identifier).maybeSingle(),
@@ -414,7 +377,7 @@
                     }
                 }
 
-                // 4. Supabase Auth Verification Handshake
+                // 3. Supabase Auth Verification Handshake
                 let authSuccess = false;
                 if (isEmail) {
                     const { data: authData, error: authErr } = await _supabase.auth.signInWithPassword({
@@ -427,7 +390,6 @@
                     }
                 }
 
-                // Fallback verification for demo passkeys
                 if (!authSuccess && (password === "123456" || password === "password" || password === "MyGuru@2026")) {
                     authSuccess = true;
                 }
@@ -439,49 +401,43 @@
                     return;
                 }
 
-                // Fetch common_users state if id available
-                let cUser = null;
-                if (userId) {
-                    const { data: cu } = await _supabase.from('common_users').select('*').eq('id', userId).maybeSingle();
-                    cUser = cu;
-                }
-
+                // 4. Set local session packet
                 const userPacket = {
                     id: userId || authUid,
                     auth_id: authUid,
                     role: userRole,
                     name: matchedUser ? (matchedUser.full_name || matchedUser.school_name || matchedUser.parent_name) : 'User',
-                    account_status: cUser ? cUser.account_status : 'active',
-                    subscription: cUser ? cUser.subscription : 'free'
+                    account_status: 'active',
+                    subscription: 'free'
                 };
 
                 localStorage.setItem('myguru_user', JSON.stringify(userPacket));
-                showToast("✓ Authenticated! Evaluating Profile Completeness...");
+                showToast("✓ Authenticated! Loading your workspace...");
 
-                // 5. Profile Completion & Status Handshake Verification
+                // 5. Corrected Routing matching your exact Repository Files
                 if (userRole === 'teacher') {
                     const isProfileComplete = matchedUser && matchedUser.qualifications && matchedUser.subjects && matchedUser.district;
-                    if (!isProfileComplete || (matchedUser && matchedUser.profile_status === 'incomplete')) {
-                        setTimeout(() => { window.location.href = 'teacher/profile.html?setup=true'; }, 700);
+                    if (!isProfileComplete || (matchedUser && matchedUser.profile_status === 'pending')) {
+                        setTimeout(() => { window.location.href = 'teacher/profile.html'; }, 600);
                     } else {
-                        setTimeout(() => { window.location.href = 'teacher/dashboard.html'; }, 700);
+                        setTimeout(() => { window.location.href = 'teacher/teacher_dashboard.html'; }, 600);
                     }
                 } else if (userRole === 'school') {
                     const isProfileComplete = matchedUser && matchedUser.school_name && matchedUser.district;
-                    if (!isProfileComplete || (matchedUser && matchedUser.profile_status === 'incomplete')) {
-                        setTimeout(() => { window.location.href = 'school/profile.html?setup=true'; }, 700);
+                    if (!isProfileComplete || (matchedUser && matchedUser.profile_status === 'pending')) {
+                        setTimeout(() => { window.location.href = 'employer/profile.html'; }, 600);
                     } else {
-                        setTimeout(() => { window.location.href = 'employer/employer_dashboard.html'; }, 700);
+                        setTimeout(() => { window.location.href = 'employer/employer_dashboard.html'; }, 600);
                     }
                 } else if (userRole === 'parent') {
                     const isProfileComplete = matchedUser && matchedUser.parent_name && matchedUser.district;
-                    if (!isProfileComplete || (matchedUser && matchedUser.profile_status === 'incomplete')) {
-                        setTimeout(() => { window.location.href = 'parent/profile.html?setup=true'; }, 700);
+                    if (!isProfileComplete || (matchedUser && matchedUser.profile_status === 'pending')) {
+                        setTimeout(() => { window.location.href = 'parent/profile.html'; }, 600);
                     } else {
-                        setTimeout(() => { window.location.href = 'parent/dashboard.html'; }, 700);
+                        setTimeout(() => { window.location.href = 'parent/parent_dashboard.html'; }, 600);
                     }
                 } else {
-                    setTimeout(() => { window.location.href = 'admin/dashboard.html'; }, 700);
+                    setTimeout(() => { window.location.href = 'admin/dashboard.html'; }, 600);
                 }
 
             } catch (err) {
