@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyGuru Terminal - Secure Multi-Portal Access</title>
+    <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -327,14 +328,14 @@
 
                 const isEmail = identifier.includes('@');
 
-                // 2. Exact Table Lookup based on Role
+                // 2. Fetch Profile based on role
                 if (selectedRole === 'teacher') {
                     let q = _supabase.from('teacher_profiles').select('*');
                     q = isEmail ? q.eq('email', identifier) : q.eq('mobile', identifier);
                     const { data } = await q.maybeSingle();
                     if (data) {
                         matchedUser = data;
-                        userId = data.id; // foreign key to common_users.id
+                        userId = data.id;
                         authUid = data.auth_id;
                     }
                 } else if (selectedRole === 'school') {
@@ -357,7 +358,7 @@
                     }
                 }
 
-                // 3. Fallback Cross-Table Lookup (If user chose a different dropdown)
+                // 3. Fallback Cross-Table Lookup
                 if (!matchedUser) {
                     const [tRes, sRes, pRes] = await Promise.allSettled([
                         isEmail ? _supabase.from('teacher_profiles').select('*').eq('email', identifier).maybeSingle() : _supabase.from('teacher_profiles').select('*').eq('mobile', identifier).maybeSingle(),
@@ -383,7 +384,7 @@
                     }
                 }
 
-                // 4. Supabase Auth Verification Handshake
+                // 4. Supabase Auth Verification
                 let authSuccess = false;
                 if (isEmail) {
                     const { data: authData, error: authErr } = await _supabase.auth.signInWithPassword({
@@ -396,7 +397,6 @@
                     }
                 }
 
-                // Fallback password checks
                 if (!authSuccess && (password === "123456" || password === "password" || password === "MyGuru@2026")) {
                     authSuccess = true;
                 }
@@ -408,12 +408,11 @@
                     return;
                 }
 
-                // 5. Fetch common_users State & Update last_login
+                // 5. Fetch common_users state (Allowed to log in regardless of account_status being 'pending')
                 let cUser = null;
                 if (userId) {
                     const { data: cu } = await _supabase.from('common_users').select('*').eq('id', userId).maybeSingle();
                     cUser = cu;
-                    // update last_login timestamp in background
                     _supabase.from('common_users').update({ last_login: new Date().toISOString() }).eq('id', userId);
                 }
 
@@ -423,49 +422,49 @@
                     auth_id: authUid,
                     role: userRole,
                     name: matchedUser ? (matchedUser.full_name || matchedUser.school_name || matchedUser.parent_name) : 'User',
-                    account_status: cUser ? cUser.account_status : 'active',
+                    account_status: cUser ? (cUser.account_status || 'pending') : 'pending',
                     subscription: cUser ? cUser.subscription : 'free',
                     is_premium: cUser ? cUser.is_premium : false,
                     verification_badge: matchedUser ? (matchedUser.verification_badge || false) : false
                 };
 
                 localStorage.setItem('myguru_user', JSON.stringify(userPacket));
-                showToast("✓ Authenticated! Routing to workspace...");
+                showToast("✓ Authenticated! Evaluating profile completeness...");
 
-                // 7. Accurate Routing Based on Profile Completeness
+                // 7. Profile Entry Completion Check (Qualifications, Subjects, District)
                 if (userRole === 'teacher') {
-                    // Check if teacher profile fields are filled
-                    const isComplete = matchedUser && 
+                    // Check if entry fields are filled
+                    const hasDetails = matchedUser && 
                                        matchedUser.qualifications && 
+                                       matchedUser.qualifications.trim() !== '' &&
                                        matchedUser.subjects && 
+                                       matchedUser.subjects.trim() !== '' &&
                                        matchedUser.district && 
-                                       matchedUser.profile_status !== 'pending';
+                                       matchedUser.district.trim() !== '';
 
-                    if (!isComplete) {
-                        // New user or incomplete profile -> redirect to profile setup
+                    if (!hasDetails) {
+                        // Incomplete profile -> Profile Updation Page
                         setTimeout(() => { window.location.href = 'teacher/teacher_profile.html'; }, 600);
                     } else {
-                        // Completed profile -> direct to dashboard
-                        setTimeout(() => { window.location.href = 'teacher/dashboard.html'; }, 600);
+                        // Completed profile fields -> Direct to Dashboard (Jobs locked if pending)
+                        setTimeout(() => { window.location.href = 'teacher/teacher_dashboard.html'; }, 600);
                     }
                 } else if (userRole === 'school') {
-                    const isComplete = matchedUser && 
+                    const hasDetails = matchedUser && 
                                        matchedUser.school_name && 
-                                       matchedUser.district && 
-                                       matchedUser.profile_status !== 'pending';
+                                       matchedUser.district;
 
-                    if (!isComplete) {
+                    if (!hasDetails) {
                         setTimeout(() => { window.location.href = 'employer/profile.html'; }, 600);
                     } else {
                         setTimeout(() => { window.location.href = 'employer/employer_dashboard.html'; }, 600);
                     }
                 } else if (userRole === 'parent') {
-                    const isComplete = matchedUser && 
+                    const hasDetails = matchedUser && 
                                        matchedUser.parent_name && 
-                                       matchedUser.district && 
-                                       matchedUser.profile_status !== 'pending';
+                                       matchedUser.district;
 
-                    if (!isComplete) {
+                    if (!hasDetails) {
                         setTimeout(() => { window.location.href = 'parent/profile.html'; }, 600);
                     } else {
                         setTimeout(() => { window.location.href = 'parent/parent_dashboard.html'; }, 600);
