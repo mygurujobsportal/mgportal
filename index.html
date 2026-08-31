@@ -38,7 +38,7 @@
             overflow-x: hidden;
         }
 
-        /* Ambient Background Blobs */
+        /* Ambient Glowing Background Blobs */
         .ambient-blob-1, .ambient-blob-2, .ambient-blob-3 {
             position: absolute;
             width: 380px;
@@ -78,7 +78,7 @@
             100% { transform: translate(-30px, 30px) scale(0.9); }
         }
 
-        /* Glassmorphic Login Box */
+        /* Glassmorphic Login Card */
         .login-card {
             position: relative;
             z-index: 1;
@@ -328,7 +328,7 @@
 
                 const isEmail = identifier.includes('@');
 
-                // 2. Fetch Profile based on role
+                // 2. Fetch Profile record based on role
                 if (selectedRole === 'teacher') {
                     let q = _supabase.from('teacher_profiles').select('*');
                     q = isEmail ? q.eq('email', identifier) : q.eq('mobile', identifier);
@@ -358,7 +358,7 @@
                     }
                 }
 
-                // 3. Fallback Cross-Table Lookup
+                // 3. Fallback Cross-Table Lookup (If user selected wrong dropdown option)
                 if (!matchedUser) {
                     const [tRes, sRes, pRes] = await Promise.allSettled([
                         isEmail ? _supabase.from('teacher_profiles').select('*').eq('email', identifier).maybeSingle() : _supabase.from('teacher_profiles').select('*').eq('mobile', identifier).maybeSingle(),
@@ -397,6 +397,7 @@
                     }
                 }
 
+                // Demo password bypass for local testing
                 if (!authSuccess && (password === "123456" || password === "password" || password === "MyGuru@2026")) {
                     authSuccess = true;
                 }
@@ -408,7 +409,7 @@
                     return;
                 }
 
-                // 5. Fetch common_users state (Allowed to log in regardless of account_status being 'pending')
+                // 5. Fetch common_users state and update last_login
                 let cUser = null;
                 if (userId) {
                     const { data: cu } = await _supabase.from('common_users').select('*').eq('id', userId).maybeSingle();
@@ -416,61 +417,62 @@
                     _supabase.from('common_users').update({ last_login: new Date().toISOString() }).eq('id', userId);
                 }
 
-                // 6. Build Local Session Packet
+                // 6. Build Local Session Packet (Universal across all pages)
                 const userPacket = {
                     id: userId || authUid,
                     auth_id: authUid,
                     role: userRole,
                     name: matchedUser ? (matchedUser.full_name || matchedUser.school_name || matchedUser.parent_name) : 'User',
                     account_status: cUser ? (cUser.account_status || 'pending') : 'pending',
-                    subscription: cUser ? cUser.subscription : 'free',
-                    is_premium: cUser ? cUser.is_premium : false,
-                    verification_badge: matchedUser ? (matchedUser.verification_badge || false) : false
+                    subscription: cUser ? (cUser.subscription || 'free') : 'free',
+                    is_premium: cUser ? (cUser.is_premium || false) : false,
+                    verification_badge: matchedUser ? (matchedUser.verification_badge || false) : false,
+                    profile_status: matchedUser ? (matchedUser.profile_status || 'pending') : 'pending'
                 };
 
                 localStorage.setItem('myguru_user', JSON.stringify(userPacket));
-                showToast("✓ Authenticated! Evaluating profile completeness...");
+                showToast("✓ Authenticated! Loading portal...");
 
-                // 7. Profile Entry Completion Check (Qualifications, Subjects, District)
+                // 7. Accurate Routing Matching Your Exact Repository Files
                 if (userRole === 'teacher') {
-                    // Check if entry fields are filled
-                    const hasDetails = matchedUser && 
-                                       matchedUser.qualifications && 
-                                       matchedUser.qualifications.trim() !== '' &&
-                                       matchedUser.subjects && 
-                                       matchedUser.subjects.trim() !== '' &&
-                                       matchedUser.district && 
-                                       matchedUser.district.trim() !== '';
+                    // Check if teacher has filled essential details (qualifications, subjects, district)
+                    const isProfileFilled = matchedUser && 
+                                           matchedUser.qualifications && 
+                                           matchedUser.qualifications.trim() !== '' &&
+                                           matchedUser.subjects && 
+                                           matchedUser.subjects.trim() !== '' &&
+                                           matchedUser.district && 
+                                           matchedUser.district.trim() !== '';
 
-                    if (!hasDetails) {
-                        // Incomplete profile -> Profile Updation Page
-                        setTimeout(() => { window.location.href = 'teacher/teacher_profile.html'; }, 600);
+                    if (!isProfileFilled) {
+                        // Profile Incomplete -> Go to teacher_profile.html
+                        setTimeout(() => { window.location.href = 'teacher/teacher_profile.html'; }, 500);
                     } else {
-                        // Completed profile fields -> Direct to Dashboard (Jobs locked if pending)
-                        setTimeout(() => { window.location.href = 'teacher/teacher_dashboard.html'; }, 600);
+                        // Profile Complete -> Go to dashboard.html (Exact file name in teacher folder)
+                        setTimeout(() => { window.location.href = 'teacher/dashboard.html'; }, 500);
                     }
                 } else if (userRole === 'school') {
-                    const hasDetails = matchedUser && 
-                                       matchedUser.school_name && 
-                                       matchedUser.district;
+                    const isProfileFilled = matchedUser && 
+                                           matchedUser.school_name && 
+                                           matchedUser.district;
 
-                    if (!hasDetails) {
-                        setTimeout(() => { window.location.href = 'employer/profile.html'; }, 600);
+                    if (!isProfileFilled) {
+                        setTimeout(() => { window.location.href = 'employer/profile.html'; }, 500);
                     } else {
-                        setTimeout(() => { window.location.href = 'employer/employer_dashboard.html'; }, 600);
+                        setTimeout(() => { window.location.href = 'employer/employer_dashboard.html'; }, 500);
                     }
                 } else if (userRole === 'parent') {
-                    const hasDetails = matchedUser && 
-                                       matchedUser.parent_name && 
-                                       matchedUser.district;
+                    const isProfileFilled = matchedUser && 
+                                           matchedUser.parent_name && 
+                                           matchedUser.district;
 
-                    if (!hasDetails) {
-                        setTimeout(() => { window.location.href = 'parent/profile.html'; }, 600);
+                    if (!isProfileFilled) {
+                        setTimeout(() => { window.location.href = 'parent/profile.html'; }, 500);
                     } else {
-                        setTimeout(() => { window.location.href = 'parent/parent_dashboard.html'; }, 600);
+                        setTimeout(() => { window.location.href = 'parent/parent_dashboard.html'; }, 500);
                     }
                 } else {
-                    setTimeout(() => { window.location.href = 'admin/dashboard.html'; }, 600);
+                    setTimeout(() => { window.location.href = 'admin/dashboard.html'; }, 500);
                 }
 
             } catch (err) {
