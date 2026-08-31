@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyGuru Terminal - Secure Multi-Portal Access</title>
-    <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -38,7 +37,7 @@
             overflow-x: hidden;
         }
 
-        /* Ambient Glowing Background Blobs */
+        /* Ambient Background Blobs */
         .ambient-blob-1, .ambient-blob-2, .ambient-blob-3 {
             position: absolute;
             width: 380px;
@@ -78,7 +77,7 @@
             100% { transform: translate(-30px, 30px) scale(0.9); }
         }
 
-        /* Glassmorphic Login Card */
+        /* Glassmorphic Login Box */
         .login-card {
             position: relative;
             z-index: 1;
@@ -305,16 +304,22 @@
 
             // 1. Master Bypass for Admin Workspace
             if (identifier === "7981131685" && password === "Vishnu@MyGuru") {
-                const adminSession = { mobile: identifier, name: "Master Admin Vishnu", roleType: "admin" };
+                const adminSession = { 
+                    id: "admin-root", 
+                    mobile: identifier, 
+                    name: "Master Admin Vishnu", 
+                    role: "admin", 
+                    account_status: "active",
+                    is_premium: true 
+                };
                 localStorage.setItem('myguru_user', JSON.stringify(adminSession));
                 localStorage.setItem('adminLoggedIn', 'true');
                 showToast("✓ Master Handshake Verified! Loading Workspace...");
-                setTimeout(() => { window.location.href = 'admin/dashboard.html'; }, 600);
+                setTimeout(() => { window.location.href = 'admin/dashboard.html'; }, 500);
                 return;
             }
 
             try {
-                // 2. Identify entity record across teacher_profiles, school_profiles, parent_profiles
                 let matchedUser = null;
                 let userRole = selectedRole;
                 let userId = null;
@@ -322,13 +327,14 @@
 
                 const isEmail = identifier.includes('@');
 
+                // 2. Exact Table Lookup based on Role
                 if (selectedRole === 'teacher') {
                     let q = _supabase.from('teacher_profiles').select('*');
                     q = isEmail ? q.eq('email', identifier) : q.eq('mobile', identifier);
                     const { data } = await q.maybeSingle();
                     if (data) {
                         matchedUser = data;
-                        userId = data.id;
+                        userId = data.id; // foreign key to common_users.id
                         authUid = data.auth_id;
                     }
                 } else if (selectedRole === 'school') {
@@ -351,7 +357,7 @@
                     }
                 }
 
-                // Fallback check across all profile tables if role dropdown differed
+                // 3. Fallback Cross-Table Lookup (If user chose a different dropdown)
                 if (!matchedUser) {
                     const [tRes, sRes, pRes] = await Promise.allSettled([
                         isEmail ? _supabase.from('teacher_profiles').select('*').eq('email', identifier).maybeSingle() : _supabase.from('teacher_profiles').select('*').eq('mobile', identifier).maybeSingle(),
@@ -377,7 +383,7 @@
                     }
                 }
 
-                // 3. Supabase Auth Verification Handshake
+                // 4. Supabase Auth Verification Handshake
                 let authSuccess = false;
                 if (isEmail) {
                     const { data: authData, error: authErr } = await _supabase.auth.signInWithPassword({
@@ -390,6 +396,7 @@
                     }
                 }
 
+                // Fallback password checks
                 if (!authSuccess && (password === "123456" || password === "password" || password === "MyGuru@2026")) {
                     authSuccess = true;
                 }
@@ -401,54 +408,64 @@
                     return;
                 }
 
-                // 4. Set local session packet
+                // 5. Fetch common_users State & Update last_login
+                let cUser = null;
+                if (userId) {
+                    const { data: cu } = await _supabase.from('common_users').select('*').eq('id', userId).maybeSingle();
+                    cUser = cu;
+                    // update last_login timestamp in background
+                    _supabase.from('common_users').update({ last_login: new Date().toISOString() }).eq('id', userId);
+                }
+
+                // 6. Build Local Session Packet
                 const userPacket = {
                     id: userId || authUid,
                     auth_id: authUid,
                     role: userRole,
                     name: matchedUser ? (matchedUser.full_name || matchedUser.school_name || matchedUser.parent_name) : 'User',
-                    account_status: 'active',
-                    subscription: 'free'
+                    account_status: cUser ? cUser.account_status : 'active',
+                    subscription: cUser ? cUser.subscription : 'free',
+                    is_premium: cUser ? cUser.is_premium : false,
+                    verification_badge: matchedUser ? (matchedUser.verification_badge || false) : false
                 };
 
                 localStorage.setItem('myguru_user', JSON.stringify(userPacket));
-                showToast("✓ Authenticated! Checking profile status...");
+                showToast("✓ Authenticated! Routing to workspace...");
 
-                // 5. Explicit Routing Matching Exact Repository File Names
+                // 7. Accurate Routing Based on Profile Completeness
                 if (userRole === 'teacher') {
-                    // Check if teacher has completed qualifications, subjects, and district
-                    const isProfileComplete = matchedUser && 
-                                              matchedUser.qualifications && 
-                                              matchedUser.subjects && 
-                                              matchedUser.district && 
-                                              matchedUser.profile_status !== 'pending' && 
-                                              matchedUser.profile_status !== 'incomplete';
+                    // Check if teacher profile fields are filled
+                    const isComplete = matchedUser && 
+                                       matchedUser.qualifications && 
+                                       matchedUser.subjects && 
+                                       matchedUser.district && 
+                                       matchedUser.profile_status !== 'pending';
 
-                    if (!isProfileComplete) {
+                    if (!isComplete) {
+                        // New user or incomplete profile -> redirect to profile setup
                         setTimeout(() => { window.location.href = 'teacher/teacher_profile.html'; }, 600);
                     } else {
+                        // Completed profile -> direct to dashboard
                         setTimeout(() => { window.location.href = 'teacher/teacher_dashboard.html'; }, 600);
                     }
                 } else if (userRole === 'school') {
-                    const isProfileComplete = matchedUser && 
-                                              matchedUser.school_name && 
-                                              matchedUser.district && 
-                                              matchedUser.profile_status !== 'pending' && 
-                                              matchedUser.profile_status !== 'incomplete';
+                    const isComplete = matchedUser && 
+                                       matchedUser.school_name && 
+                                       matchedUser.district && 
+                                       matchedUser.profile_status !== 'pending';
 
-                    if (!isProfileComplete) {
+                    if (!isComplete) {
                         setTimeout(() => { window.location.href = 'employer/profile.html'; }, 600);
                     } else {
                         setTimeout(() => { window.location.href = 'employer/employer_dashboard.html'; }, 600);
                     }
                 } else if (userRole === 'parent') {
-                    const isProfileComplete = matchedUser && 
-                                              matchedUser.parent_name && 
-                                              matchedUser.district && 
-                                              matchedUser.profile_status !== 'pending' && 
-                                              matchedUser.profile_status !== 'incomplete';
+                    const isComplete = matchedUser && 
+                                       matchedUser.parent_name && 
+                                       matchedUser.district && 
+                                       matchedUser.profile_status !== 'pending';
 
-                    if (!isProfileComplete) {
+                    if (!isComplete) {
                         setTimeout(() => { window.location.href = 'parent/profile.html'; }, 600);
                     } else {
                         setTimeout(() => { window.location.href = 'parent/parent_dashboard.html'; }, 600);
