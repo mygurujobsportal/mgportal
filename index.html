@@ -1,486 +1,257 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="te">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyGuru Terminal - Secure Multi-Portal Access</title>
+    <title>MyGuru Teacher - Profile Setup</title>
     <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --slate-950: #030712;
-            --slate-900: #0f172a;
-            --slate-800: #1e293b;
-            --slate-700: #334155;
-            --emerald: #10b981;
-            --blurple: #3b82f6;
-            --purple: #8b5cf6;
-            --pink: #ec4899;
-            --amber: #f59e0b;
-        }
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { margin: 0; padding: 0; background-color: #0b1329; color: #f8fafc; }
+        
+        .wrapper { display: flex; min-height: 100vh; }
+        
+        /* 👨‍🏫 Teacher Sidebar */
+        .sidebar { width: 260px; background-color: #0f172a; padding: 20px; border-right: 1px solid #1e293b; display: flex; flex-direction: column; justify-content: space-between; }
+        .brand { font-size: 19px; font-weight: bold; color: #38bdf8; margin-bottom: 25px; display: flex; align-items: center; gap: 8px; }
+        .nav-list { list-style: none; padding: 0; margin: 0; }
+        .nav-item { margin-bottom: 5px; }
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .nav-link:hover { background-color: #1e293b; color: #f8fafc; }
+        .nav-link.active { background-color: #1e293b; color: #38bdf8; font-weight: 600; }
+        .btn-logout-sidebar { color: #ef4444 !important; }
+        .btn-logout-sidebar:hover { background-color: rgba(239, 68, 68, 0.1) !important; }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-        }
+        /* 💻 Main Workspace */
+        .main-content { flex: 1; padding: 30px; background-color: #0b1329; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #1e293b; }
+        
+        .btn-logout-top { background-color: #ef4444; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; }
+        .btn-logout-top:hover { background-color: #dc2626; }
 
-        body {
-            background-color: var(--slate-950);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #f1f5f9;
-            padding: 20px;
-            position: relative;
-            overflow-x: hidden;
-        }
+        /* Form Card */
+        .form-box { background: #131d38; border: 1px solid #1e293b; padding: 30px; border-radius: 12px; max-width: 850px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 15px; }
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+        
+        .input-ctrl { width: 100%; padding: 11px 14px; background: rgba(11, 19, 41, 0.7); border: 1px solid #1e293b; color: white; border-radius: 8px; font-size: 13px; outline: none; transition: 0.2s; }
+        .input-ctrl:focus { border-color: #38bdf8; box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2); }
+        
+        select.input-ctrl { cursor: pointer; }
+        select.input-ctrl option { background: #0f172a; color: white; }
 
-        /* Ambient Glowing Background Blobs */
-        .ambient-blob-1, .ambient-blob-2, .ambient-blob-3 {
-            position: absolute;
-            width: 380px;
-            height: 380px;
-            border-radius: 50%;
-            filter: blur(120px);
-            opacity: 0.28;
-            pointer-events: none;
-            z-index: 0;
-            animation: floatGlow 14s infinite alternate ease-in-out;
-        }
+        .btn-submit { background: #22c55e; color: #000; font-weight: bold; border: none; padding: 13px 24px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 14px; width: 100%; margin-top: 10px; }
+        .btn-submit:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-        .ambient-blob-1 {
-            background: linear-gradient(135deg, var(--blurple), var(--purple));
-            top: 10%;
-            left: 15%;
-        }
-
-        .ambient-blob-2 {
-            background: linear-gradient(135deg, var(--pink), var(--purple));
-            bottom: 10%;
-            right: 15%;
-            animation-delay: -5s;
-        }
-
-        .ambient-blob-3 {
-            background: linear-gradient(135deg, var(--emerald), var(--blurple));
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            animation-delay: -9s;
-        }
-
-        @keyframes floatGlow {
-            0% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(30px, -40px) scale(1.15); }
-            100% { transform: translate(-30px, 30px) scale(0.9); }
-        }
-
-        /* Glassmorphic Login Card */
-        .login-card {
-            position: relative;
-            z-index: 1;
-            background: rgba(30, 41, 59, 0.55);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 28px;
-            width: 100%;
-            max-width: 440px;
-            padding: 42px 36px;
-            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.15);
-            text-align: center;
-            animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        @keyframes cardEntrance {
-            from { opacity: 0; transform: translateY(30px) scale(0.96); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        .title {
-            font-size: 26px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            margin-bottom: 6px;
-        }
-
-        .title span {
-            background: linear-gradient(135deg, #60a5fa, #c084fc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .subtitle {
-            font-size: 13px;
-            color: #94a3b8;
-            margin-bottom: 28px;
-            letter-spacing: 0.2px;
-        }
-
-        /* Form Controls */
-        .form-group {
-            text-align: left;
-            margin-bottom: 18px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 11px;
-            font-weight: 700;
-            color: #94a3b8;
-            text-transform: uppercase;
-            margin-bottom: 7px;
-            letter-spacing: 0.6px;
-        }
-
-        .input-ctrl {
-            width: 100%;
-            padding: 13px 16px;
-            background: rgba(15, 23, 42, 0.7);
-            border: 1px solid var(--slate-700);
-            color: #f8fafc;
-            border-radius: 12px;
-            font-size: 14px;
-            outline: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .input-ctrl:focus {
-            border-color: #60a5fa;
-            background: rgba(15, 23, 42, 0.95);
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15), 0 0 20px rgba(59, 130, 246, 0.2);
-            transform: translateY(-1px);
-        }
-
-        select.input-ctrl {
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 14px center;
-            background-size: 16px;
-        }
-
-        select.input-ctrl option {
-            background: #0f172a;
-            color: white;
-        }
-
-        /* Action Button */
-        .btn-submit {
-            position: relative;
-            width: 100%;
-            padding: 14px;
-            margin-top: 12px;
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
-            color: #ffffff;
-            border: none;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 15px;
-            letter-spacing: 0.3px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-        }
-
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.45);
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-        }
-
-        .btn-submit:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* Footer Links */
-        .link-footer {
-            margin-top: 24px;
-            font-size: 13px;
-            color: #94a3b8;
-        }
-
-        .link-footer a {
-            color: #60a5fa;
-            text-decoration: none;
-            font-weight: 600;
-            transition: color 0.2s ease;
-        }
-
-        .link-footer a:hover {
-            color: #93c5fd;
-            text-decoration: underline;
-        }
-
-        /* Toast Feedback */
-        #loginToast {
-            display: none;
-            position: fixed;
-            bottom: 24px;
-            background: rgba(30, 41, 59, 0.95);
-            border: 1px solid var(--slate-700);
-            padding: 12px 20px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 600;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            z-index: 999;
-            backdrop-filter: blur(10px);
-        }
+        .alert-banner { background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 14px; font-size: 13px; color: #38bdf8; margin-bottom: 20px; line-height: 1.5; }
     </style>
 </head>
 <body>
 
-    <div class="ambient-blob-1"></div>
-    <div class="ambient-blob-2"></div>
-    <div class="ambient-blob-3"></div>
-
-    <div class="login-card">
-        <h2 class="title">MyGuru <span>Terminal Room</span></h2>
-        <p class="subtitle">Secure Multi-Portal Gateway Authentication</p>
-
-        <form id="frmGateway" onsubmit="event.preventDefault(); executeSecureLoginGate();">
-            <div class="form-group">
-                <label for="ddlRoleSelector">Account Classification</label>
-                <select id="ddlRoleSelector" class="input-ctrl">
-                    <option value="teacher">👨‍🏫 Professional Core Teacher</option>
-                    <option value="school">🏢 Institutional School / Employer</option>
-                    <option value="parent">🏡 Home Tuition Parent</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="txtIdentifier">Registered Mobile / Email ID</label>
-                <input type="text" id="txtIdentifier" class="input-ctrl" placeholder="e.g., 7981131685 or name@domain.com" autocomplete="username" required>
-            </div>
-
-            <div class="form-group">
-                <label for="txtPassword">Secure Passkey / Password</label>
-                <input type="password" id="txtPassword" class="input-ctrl" placeholder="••••••••••••" autocomplete="current-password" required>
-            </div>
-
-            <button type="submit" id="btnAuth" class="btn-submit">Authenticate & Open</button>
-        </form>
-        
-        <div class="link-footer">
-            Don't have an account? <a href="register.html">Register Here</a>
+<div class="wrapper">
+    <!-- 👨‍🏫 Teacher Sidebar Matching Repo -->
+    <aside class="sidebar">
+        <div>
+            <div class="brand">👨‍🏫 MyGuru Teacher</div>
+            <ul class="nav-list">
+                <li class="nav-item"><a href="dashboard.html" class="nav-link">📊 Dashboard</a></li>
+                <li class="nav-item"><a href="jobs.html" class="nav-link">🔍 Find Jobs</a></li>
+                <li class="nav-item"><a href="applied-jobs.html" class="nav-link">📋 Applied Jobs</a></li>
+                <li class="nav-item"><a href="applications.html" class="nav-link">📨 Applications</a></li>
+                <li class="nav-item"><a href="teacher_profile.html" class="nav-link active">👤 My Profile</a></li>
+                <li class="nav-item"><a href="print-profile.html" class="nav-link">🖨️ Print Profile</a></li>
+                <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ Settings</a></li>
+            </ul>
         </div>
-    </div>
+        <div>
+            <ul class="nav-list">
+                <li class="nav-item"><a href="#" onclick="logoutTeacher()" class="nav-link btn-logout-sidebar">🚪 Logout</a></li>
+            </ul>
+        </div>
+    </aside>
 
-    <div id="loginToast"></div>
+    <!-- 💻 Main Workspace -->
+    <main class="main-content">
+        <div class="header">
+            <div>
+                <h2 style="margin: 0; font-size: 22px; font-weight: 700;">Professional Teacher Profile Setup</h2>
+                <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 13px;">Complete your academic qualifications and subject specializations to unlock job posts.</p>
+            </div>
+            <button class="btn-logout-top" onclick="logoutTeacher()">Logout</button>
+        </div>
 
-    <script>
-        const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0';
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        <div class="form-box">
+            <div id="setupAlert" class="alert-banner">
+                📝 <strong>Profile Details Required:</strong> Please enter your core subjects, qualifications, and district. Once updated, your Teacher Dashboard and Job Applications will be unlocked.
+            </div>
 
-        function showToast(msg, isError = false) {
-            const toast = document.getElementById('loginToast');
-            toast.innerText = msg;
-            toast.style.display = 'block';
-            toast.style.borderColor = isError ? '#ef4444' : '#22c55e';
-            toast.style.color = isError ? '#ef4444' : '#22c55e';
-            setTimeout(() => { toast.style.display = 'none'; }, 4000);
-        }
+            <form id="frmTeacherProfile" onsubmit="saveTeacherProfile(event)">
+                <div class="form-grid">
+                    <div>
+                        <label class="form-label">Full Name (as per certificates) *</label>
+                        <input type="text" id="profFullName" class="input-ctrl" placeholder="e.g. Ramesh Varma" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Gender *</label>
+                        <select id="profGender" class="input-ctrl" required>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
 
-        async function executeSecureLoginGate() {
-            const selectedRole = document.getElementById('ddlRoleSelector').value;
-            const identifier = document.getElementById('txtIdentifier').value.trim();
-            const password = document.getElementById('txtPassword').value;
-            const btn = document.getElementById('btnAuth');
+                <div class="form-grid">
+                    <div>
+                        <label class="form-label">Registered Mobile Number *</label>
+                        <input type="tel" id="profMobile" class="input-ctrl" placeholder="e.g. 9876543210" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Email ID</label>
+                        <input type="email" id="profEmail" class="input-ctrl" placeholder="name@domain.com">
+                    </div>
+                </div>
 
-            if (!identifier || !password) {
-                showToast("⚠️ Please fill all authentication fields!", true);
+                <div class="form-grid">
+                    <div>
+                        <label class="form-label">Academic Qualifications (e.g. MSc, B.Ed, PhD) *</label>
+                        <input type="text" id="profQualifications" class="input-ctrl" placeholder="e.g. M.Sc (Maths), B.Ed" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Teaching Experience (in Years) *</label>
+                        <input type="number" id="profExperience" class="input-ctrl" min="0" max="40" value="0" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Primary Subjects You Can Teach *</label>
+                    <input type="text" id="profSubjects" class="input-ctrl" placeholder="e.g. Mathematics, Physics, Chemistry (Classes 8-12)" required>
+                </div>
+
+                <div class="form-grid">
+                    <div>
+                        <label class="form-label">State *</label>
+                        <input type="text" id="profState" class="input-ctrl" value="Telangana" required>
+                    </div>
+                    <div>
+                        <label class="form-label">District *</label>
+                        <input type="text" id="profDistrict" class="input-ctrl" placeholder="e.g. Hanamkonda / Warangal / Hyderabad" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Residential Address / Area</label>
+                    <textarea id="profAddress" class="input-ctrl" rows="2" style="resize:none;" placeholder="Locality, Landmark, City"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">About / Teaching Methodology</label>
+                    <textarea id="profAbout" class="input-ctrl" rows="3" style="resize:none;" placeholder="Brief overview of your teaching style, concepts clarity, past achievements..."></textarea>
+                </div>
+
+                <button type="submit" id="btnSave" class="btn-submit">💾 Save Profile & Proceed to Dashboard</button>
+            </form>
+        </div>
+    </main>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // 🔒 Safe Session Retrieval - NO Bounce-back redirects
+    let sessionUser = JSON.parse(localStorage.getItem('myguru_user') || '{}');
+
+    async function initProfilePage() {
+        // If session is completely missing in localStorage, check Supabase Auth session before redirecting
+        if (!sessionUser || !sessionUser.id) {
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (user) {
+                sessionUser = { id: user.id, email: user.email, role: 'teacher' };
+                localStorage.setItem('myguru_user', JSON.stringify(sessionUser));
+            } else {
+                alert("Session expired. Please login again.");
+                window.location.href = '../index.html';
                 return;
             }
-
-            btn.disabled = true;
-            btn.innerText = "Authenticating Gateway Node...";
-
-            // 1. Master Bypass for Admin Workspace
-            if (identifier === "7981131685" && password === "Vishnu@MyGuru") {
-                const adminSession = { 
-                    id: "admin-root", 
-                    mobile: identifier, 
-                    name: "Master Admin Vishnu", 
-                    role: "admin", 
-                    account_status: "active",
-                    is_premium: true 
-                };
-                localStorage.setItem('myguru_user', JSON.stringify(adminSession));
-                localStorage.setItem('adminLoggedIn', 'true');
-                showToast("✓ Master Handshake Verified! Loading Workspace...");
-                setTimeout(() => { window.location.href = 'admin/dashboard.html'; }, 500);
-                return;
-            }
-
-            try {
-                let matchedUser = null;
-                let userRole = selectedRole;
-                let userId = null;
-                let authUid = null;
-
-                const isEmail = identifier.includes('@');
-
-                // 2. Fetch Profile record based on role
-                if (selectedRole === 'teacher') {
-                    let q = _supabase.from('teacher_profiles').select('*');
-                    q = isEmail ? q.eq('email', identifier) : q.eq('mobile', identifier);
-                    const { data } = await q.maybeSingle();
-                    if (data) {
-                        matchedUser = data;
-                        userId = data.id;
-                        authUid = data.auth_id;
-                    }
-                } else if (selectedRole === 'school') {
-                    let q = _supabase.from('school_profiles').select('*');
-                    q = isEmail ? q.eq('email', identifier) : q.eq('mobile', identifier);
-                    const { data } = await q.maybeSingle();
-                    if (data) {
-                        matchedUser = data;
-                        userId = data.id;
-                        authUid = data.auth_id;
-                    }
-                } else if (selectedRole === 'parent') {
-                    let q = _supabase.from('parent_profiles').select('*');
-                    q = isEmail ? q.eq('email', identifier) : q.eq('mobile', identifier);
-                    const { data } = await q.maybeSingle();
-                    if (data) {
-                        matchedUser = data;
-                        userId = data.id;
-                        authUid = data.auth_id;
-                    }
-                }
-
-                // 3. Fallback Cross-Table Lookup (If user selected wrong dropdown option)
-                if (!matchedUser) {
-                    const [tRes, sRes, pRes] = await Promise.allSettled([
-                        isEmail ? _supabase.from('teacher_profiles').select('*').eq('email', identifier).maybeSingle() : _supabase.from('teacher_profiles').select('*').eq('mobile', identifier).maybeSingle(),
-                        isEmail ? _supabase.from('school_profiles').select('*').eq('email', identifier).maybeSingle() : _supabase.from('school_profiles').select('*').eq('mobile', identifier).maybeSingle(),
-                        isEmail ? _supabase.from('parent_profiles').select('*').eq('email', identifier).maybeSingle() : _supabase.from('parent_profiles').select('*').eq('mobile', identifier).maybeSingle()
-                    ]);
-
-                    if (tRes.status === 'fulfilled' && tRes.value.data) {
-                        matchedUser = tRes.value.data;
-                        userRole = 'teacher';
-                        userId = matchedUser.id;
-                        authUid = matchedUser.auth_id;
-                    } else if (sRes.status === 'fulfilled' && sRes.value.data) {
-                        matchedUser = sRes.value.data;
-                        userRole = 'school';
-                        userId = matchedUser.id;
-                        authUid = matchedUser.auth_id;
-                    } else if (pRes.status === 'fulfilled' && pRes.value.data) {
-                        matchedUser = pRes.value.data;
-                        userRole = 'parent';
-                        userId = matchedUser.id;
-                        authUid = matchedUser.auth_id;
-                    }
-                }
-
-                // 4. Supabase Auth Verification
-                let authSuccess = false;
-                if (isEmail) {
-                    const { data: authData, error: authErr } = await _supabase.auth.signInWithPassword({
-                        email: identifier,
-                        password: password
-                    });
-                    if (!authErr && authData.user) {
-                        authSuccess = true;
-                        authUid = authData.user.id;
-                    }
-                }
-
-                // Demo password bypass for local testing
-                if (!authSuccess && (password === "123456" || password === "password" || password === "MyGuru@2026")) {
-                    authSuccess = true;
-                }
-
-                if (!matchedUser && !authSuccess) {
-                    showToast("❌ Account not found in directory!", true);
-                    btn.disabled = false;
-                    btn.innerText = "Authenticate & Open";
-                    return;
-                }
-
-                // 5. Fetch common_users state and update last_login
-                let cUser = null;
-                if (userId) {
-                    const { data: cu } = await _supabase.from('common_users').select('*').eq('id', userId).maybeSingle();
-                    cUser = cu;
-                    _supabase.from('common_users').update({ last_login: new Date().toISOString() }).eq('id', userId);
-                }
-
-                // 6. Build Local Session Packet (Universal across all pages)
-                const userPacket = {
-                    id: userId || authUid,
-                    auth_id: authUid,
-                    role: userRole,
-                    name: matchedUser ? (matchedUser.full_name || matchedUser.school_name || matchedUser.parent_name) : 'User',
-                    account_status: cUser ? (cUser.account_status || 'pending') : 'pending',
-                    subscription: cUser ? (cUser.subscription || 'free') : 'free',
-                    is_premium: cUser ? (cUser.is_premium || false) : false,
-                    verification_badge: matchedUser ? (matchedUser.verification_badge || false) : false,
-                    profile_status: matchedUser ? (matchedUser.profile_status || 'pending') : 'pending'
-                };
-
-                localStorage.setItem('myguru_user', JSON.stringify(userPacket));
-                showToast("✓ Authenticated! Loading portal...");
-
-                // 7. Accurate Routing Matching Your Exact Repository Files
-                if (userRole === 'teacher') {
-                    // Check if teacher has filled essential details (qualifications, subjects, district)
-                    const isProfileFilled = matchedUser && 
-                                           matchedUser.qualifications && 
-                                           matchedUser.qualifications.trim() !== '' &&
-                                           matchedUser.subjects && 
-                                           matchedUser.subjects.trim() !== '' &&
-                                           matchedUser.district && 
-                                           matchedUser.district.trim() !== '';
-
-                    if (!isProfileFilled) {
-                        // Profile Incomplete -> Go to teacher_profile.html
-                        setTimeout(() => { window.location.href = 'teacher/teacher_profile.html'; }, 500);
-                    } else {
-                        // Profile Complete -> Go to dashboard.html (Exact file name in teacher folder)
-                        setTimeout(() => { window.location.href = 'teacher/dashboard.html'; }, 500);
-                    }
-                } else if (userRole === 'school') {
-                    const isProfileFilled = matchedUser && 
-                                           matchedUser.school_name && 
-                                           matchedUser.district;
-
-                    if (!isProfileFilled) {
-                        setTimeout(() => { window.location.href = 'employer/profile.html'; }, 500);
-                    } else {
-                        setTimeout(() => { window.location.href = 'employer/employer_dashboard.html'; }, 500);
-                    }
-                } else if (userRole === 'parent') {
-                    const isProfileFilled = matchedUser && 
-                                           matchedUser.parent_name && 
-                                           matchedUser.district;
-
-                    if (!isProfileFilled) {
-                        setTimeout(() => { window.location.href = 'parent/profile.html'; }, 500);
-                    } else {
-                        setTimeout(() => { window.location.href = 'parent/parent_dashboard.html'; }, 500);
-                    }
-                } else {
-                    setTimeout(() => { window.location.href = 'admin/dashboard.html'; }, 500);
-                }
-
-            } catch (err) {
-                showToast("Authentication Error: " + err.message, true);
-                btn.disabled = false;
-                btn.innerText = "Authenticate & Open";
-            }
         }
-    </script>
+
+        // Load existing data from teacher_profiles table
+        try {
+            const { data: t, error } = await _supabase.from('teacher_profiles').select('*').eq('id', sessionUser.id).maybeSingle();
+            
+            if (t) {
+                document.getElementById('profFullName').value = t.full_name || sessionUser.name || '';
+                document.getElementById('profMobile').value = t.mobile || sessionUser.mobile || '';
+                document.getElementById('profEmail').value = t.email || sessionUser.email || '';
+                document.getElementById('profGender').value = t.gender || 'Male';
+                document.getElementById('profQualifications').value = t.qualifications || '';
+                document.getElementById('profExperience').value = t.experience !== null ? t.experience : 0;
+                document.getElementById('profSubjects').value = t.subjects || '';
+                document.getElementById('profState').value = t.state || 'Telangana';
+                document.getElementById('profDistrict').value = t.district || '';
+                document.getElementById('profAddress').value = t.address || '';
+                document.getElementById('profAbout').value = t.about || '';
+            } else if (sessionUser.name) {
+                document.getElementById('profFullName').value = sessionUser.name;
+            }
+        } catch (err) {
+            console.error("Profile load warning:", err);
+        }
+    }
+
+    async function saveTeacherProfile(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnSave');
+        btn.disabled = true;
+        btn.innerText = "Saving Profile Details...";
+
+        const payload = {
+            id: sessionUser.id,
+            full_name: document.getElementById('profFullName').value.trim(),
+            mobile: document.getElementById('profMobile').value.trim(),
+            email: document.getElementById('profEmail').value.trim(),
+            gender: document.getElementById('profGender').value,
+            qualifications: document.getElementById('profQualifications').value.trim(),
+            experience: parseInt(document.getElementById('profExperience').value) || 0,
+            subjects: document.getElementById('profSubjects').value.trim(),
+            state: document.getElementById('profState').value.trim(),
+            district: document.getElementById('profDistrict').value.trim(),
+            address: document.getElementById('profAddress').value.trim(),
+            about: document.getElementById('profAbout').value.trim(),
+            profile_status: 'complete',
+            updated_at: new Date().toISOString()
+        };
+
+        try {
+            const { error } = await _supabase.from('teacher_profiles').upsert([payload]);
+            if (error) throw error;
+
+            // Update local session
+            sessionUser.name = payload.full_name;
+            sessionUser.profile_status = 'complete';
+            localStorage.setItem('myguru_user', JSON.stringify(sessionUser));
+
+            alert("✓ మీ ప్రొఫైల్ వివరాలు విజయవంతంగా అప్‌డేట్ అయ్యాయి!");
+            window.location.href = 'dashboard.html';
+        } catch (err) {
+            alert("Error saving profile: " + err.message);
+            btn.disabled = false;
+            btn.innerText = "💾 Save Profile & Proceed to Dashboard";
+        }
+    }
+
+    function logoutTeacher() {
+        localStorage.removeItem('myguru_user');
+        _supabase.auth.signOut();
+        window.location.href = '../index.html';
+    }
+
+    initProfilePage();
+</script>
 </body>
 </html>
