@@ -1,29 +1,30 @@
 /**
- * MyGuru Portal - Parent Support Module
- * Manages Home Tutor inquiries, children matrix, and helpdesk interaction loops
+ * MyGuru Portal - Parent Module Controller
  */
 
-// 1. హోం ట్యూటర్ కావాలని రిక్వెస్ట్ పెట్టే ఫంక్షన్
+// 1. Post Tuition Requirement
 async function submitHomeTutorRequest(parentData) {
     try {
         const { data, error } = await _supabase
-            .from('support_tickets')
+            .from('parent_tuitions')
             .insert([
                 {
-                    user_id: parentData.userId,
-                    category: 'Parent Support',
-                    subject: `Tutor Needed for Class: ${parentData.studentClass}`,
-                    message: `Required Subject: ${parentData.subject}. Budget Range: ${parentData.budget}. Details: ${parentData.requirements}`,
+                    parent_id: parentData.userId,
+                    student_class: parentData.studentClass,
+                    subject: parentData.subject,
+                    budget: parentData.budget,
+                    location: parentData.location || parentData.address,
+                    requirements: parentData.requirements || '',
                     status: 'open',
                     created_at: new Date().toISOString()
                 }
             ]);
 
         if (error) throw error;
-        alert("✓ Tutor requirement registered successfully! MyGuru advisors will contact you shortly.");
+        alert("✓ Home tuition requirement posted successfully! Verified teachers will apply.");
         return true;
     } catch (err) {
-        console.error("Tutor request post crashed:", err.message);
+        console.error("Tutor request post failed:", err.message);
         alert("Submission failed: " + err.message);
         return false;
     }
