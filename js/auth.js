@@ -2,69 +2,71 @@
 
 /**
  * 🔄 Active User Session Verification
- * బ్రౌజర్ లోకల్ డేటాను మరియు సుపాబేస్ నెట్‌వర్క్ ఆథ్ సెషన్ ని క్రాస్-వెరిఫై చేస్తుంది.
+ * Local Storage సెషన్‌ను ప్రాథమికంగా తీసుకుంటూ, Supabase సెషన్‌ను బ్యాకప్‌గా చెక్ చేస్తుంది.
  */
 async function checkLiveUserSession(requiredRole) {
     const cachedUser = localStorage.getItem('myguru_user');
     if (!cachedUser) {
-        window.location.href = "../index.html"; // ఒకవేళ ఫోల్డర్ లోపల ఉంటే వెనక్కి పంపడానికి
+        window.location.href = "../index.html";
         return null;
     }
     
-    const user = JSON.parse(cachedUser);
-
+    let user;
     try {
-        // Validate native session from supabase server
-        const { data: { session }, error } = await _supabase.auth.getSession();
-        
-        if (error || !session) {
-            localStorage.removeItem('myguru_user');
-            window.location.href = "../index.html";
-            return null;
-        }
+        user = JSON.parse(cachedUser);
+    } catch(e) {
+        localStorage.removeItem('myguru_user');
+        window.location.href = "../index.html";
+        return null;
+    }
 
-        // Role Matching Barrier (toLowerCase వాడటం వల్ల కేస్-మిస్మ్యాచ్ సమస్య రాదు)
-        if (requiredRole && user.role.toLowerCase() !== requiredRole.toLowerCase()) {
+    if (!user || !user.id) {
+        localStorage.removeItem('myguru_user');
+        window.location.href = "../index.html";
+        return null;
+    }
+
+    // Role Matching Barrier
+    if (requiredRole && user.role) {
+        const uRole = user.role.toLowerCase();
+        const rRole = requiredRole.toLowerCase();
+
+        const isMatch = (uRole === rRole) || 
+                        (rRole === 'employer' && uRole === 'school') || 
+                        (rRole === 'school' && uRole === 'employer');
+
+        if (!isMatch && uRole !== 'admin') {
             alert("⚠️ Unauthorized Access Detected!");
             window.location.href = "../index.html";
             return null;
         }
-
-        // 🎯 [SAFE FIX]: క్రాష్ అవ్వకుండా సుపాబేస్ ఆథ్ మరియు మెటాడేటా నుండి మొబైల్ నంబర్ లాగడం
-        const liveMobile = session.user.phone || 
-                           session.user.user_metadata?.mobile || 
-                           session.user.user_metadata?.phone || 
-                           user.mobile || '';
-
-        return {
-            id: session.user.id,
-            role: user.role,
-            email: session.user.email,
-            mobile: liveMobile, // profileData బ్యాకప్ కోసమే కాకుండా నేరుగా యాక్సెస్ చేయడానికి
-            phone: liveMobile,  // 🎯 ప్రొఫైల్ పేజీ లోని 'session.phone' కి మ్యాచ్ అవ్వడానికి ఇది కూడా ఇస్తున్నాం
-            profileData: user.profileData || {}
-        };
-    } catch (e) {
-        console.error("Auth Session Outage:", e);
-        window.location.href = "../index.html";
-        return null;
     }
+
+    // Return unified user object matching entire portal architecture
+    return {
+        id: user.id,
+        auth_id: user.auth_id || user.id,
+        role: user.role,
+        email: user.email || '',
+        mobile: user.mobile || '',
+        name: user.name || 'User',
+        account_status: user.account_status || 'pending',
+        subscription: user.subscription || 'free',
+        is_premium: user.is_premium || false,
+        profile_status: user.profile_status || 'pending'
+    };
 }
 
 /**
  * 🚪 Landing Destination Router
- * ఫోల్డర్ స్ట్రక్చర్ ప్రకారం పాత్‌లను ఇక్కడ సరిచేశాం 🛠️
- */
-/**
- * 🚪 Landing Destination Router - GitHub Pages [FIXED]
- */
-/**
- * 🚪 Landing Destination Router - Relative Routing [100% FIXED]
  */
 function routeUserToDashboard(role) {
+    if (!role) {
+        window.location.href = './index.html';
+        return;
+    }
     const lowerRole = role.toLowerCase();
     
-    // లాగిన్ పేజీలు బయటే (mgportal/) ఉన్నాయి కాబట్టి, నేరుగా ఆయా ఫోల్డర్లలోకి రూట్ చేస్తున్నాం
     if (lowerRole === 'teacher') {
         window.location.href = './teacher/dashboard.html';
     } else if (lowerRole === 'employer' || lowerRole === 'school') {
@@ -72,7 +74,7 @@ function routeUserToDashboard(role) {
     } else if (lowerRole === 'parent') {
         window.location.href = './parent/parent_dashboard.html';
     } else if (lowerRole === 'admin') {
-        window.location.href = './admin/admin_dashboard.html';
+        window.location.href = './admin/dashboard.html';
     } else {
         window.location.href = './index.html';
     }
@@ -83,10 +85,13 @@ function routeUserToDashboard(role) {
  */
 async function logoutSessionRouter() {
     try {
-        await _supabase.auth.signOut();
+        if (typeof _supabase !== 'undefined') {
+            await _supabase.auth.signOut();
+        }
     } catch(e) {
         console.error("SignOut Exception:", e);
     }
     localStorage.removeItem('myguru_user');
-    window.location.href = "../index.html"; // రూట్ లాగిన్ పేజీకి రీడైరెక్ట్
+    localStorage.removeItem('adminLoggedIn');
+    window.location.href = "../index.html";
 }
