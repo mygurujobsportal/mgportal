@@ -1,9 +1,8 @@
 /**
  * MyGuru Portal - Employer Command Engine
- * Controls Job Postings, Applicant Audits, and Corporate Profiles
  */
 
-// 1. కొత్త ఉద్యోగాన్ని పోస్ట్ చేసే ఫంక్షన్
+// 1. Post New Job
 async function createNewJobVacancy(jobData) {
     try {
         const { data, error } = await _supabase
@@ -13,8 +12,8 @@ async function createNewJobVacancy(jobData) {
                     school_id: jobData.schoolId,
                     title: jobData.title,
                     subject: jobData.subject,
-                    experience_required: jobData.experience,
-                    salary_range: jobData.salary,
+                    experience_required: jobData.experience || 0,
+                    salary_range: jobData.salary || 'Negotiable',
                     location: jobData.location,
                     description: jobData.description,
                     status: 'open',
@@ -31,7 +30,7 @@ async function createNewJobVacancy(jobData) {
     }
 }
 
-// 2. సదరు స్కూల్ పోస్ట్ చేసిన ఉద్యోగాలను లాగే ఫంక్షన్
+// 2. Fetch Jobs posted by School
 async function fetchEmployerPostedJobs(schoolId) {
     try {
         const { data, error } = await _supabase
@@ -48,15 +47,15 @@ async function fetchEmployerPostedJobs(schoolId) {
     }
 }
 
-// 3. ఉద్యోగాల కోసం వచ్చిన అప్లికేషన్లను రివ్యూ చేసే ఫ明క్షన్
+// 3. Fetch Applicants for School Jobs from 'job_applications'
 async function fetchApplicantsForEmployerJobs(schoolId) {
     try {
         const { data, error } = await _supabase
-            .from('applications')
+            .from('job_applications')
             .select(`
                 id, job_id, teacher_id, status, created_at,
-                jobs ( title, subject ),
-                common_users ( full_name, email )
+                jobs ( title, subject, school_id ),
+                teacher_profiles ( full_name, qualifications, experience, district )
             `)
             .eq('jobs.school_id', schoolId);
 
