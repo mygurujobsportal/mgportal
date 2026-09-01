@@ -3,120 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyGuru - టీచర్ డాష్‌బోర్డ్</title>
-    <!-- రూట్ ఫోల్డర్ లోని CSS లింక్ -->
-    <link rel="stylesheet" href="../css/style.css">
+    <title>MyGuru Teacher - Dashboard</title>
     <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .card-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .card { background: #1e293b; border-left: 5px solid #38bdf8; padding: 20px; border-radius: 12px; border-top: 1px solid #334155; border-right: 1px solid #334155; border-bottom: 1px solid #334155; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .card h3 { font-size: 13px; text-transform: uppercase; color: #94a3b8; margin-bottom: 8px; font-weight: bold; }
-        .card p { font-size: 24px; color: white; font-weight: bold; }
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { margin: 0; padding: 0; background-color: #0b1329; color: #f8fafc; }
         
-        .dashboard-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-        @media(max-width: 900px) { .dashboard-layout { grid-template-columns: 1fr; } }
+        .wrapper { display: flex; min-height: 100vh; }
         
-        .activity-box, .action-box { background: #1e293b; border: 1px solid #334155; padding: 20px; border-radius: 16px; }
-        .activity-item { padding: 12px; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
-        .activity-item:last-child { border-bottom: none; }
+        /* 👨‍🏫 Sidebar */
+        .sidebar { width: 260px; background-color: #0f172a; padding: 20px; border-right: 1px solid #1e293b; display: flex; flex-direction: column; justify-content: space-between; }
+        .brand { font-size: 19px; font-weight: bold; color: #38bdf8; margin-bottom: 25px; display: flex; align-items: center; gap: 8px; }
+        .nav-list { list-style: none; padding: 0; margin: 0; }
+        .nav-item { margin-bottom: 5px; }
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 14px; color: #94a3b8; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .nav-link:hover { background-color: #1e293b; color: #f8fafc; }
+        .nav-link.active { background-color: #1e293b; color: #38bdf8; font-weight: 600; }
+        .btn-logout-sidebar { color: #ef4444 !important; }
+        .btn-logout-sidebar:hover { background-color: rgba(239, 68, 68, 0.1) !important; }
+
+        /* 💻 Workspace */
+        .main-content { flex: 1; padding: 30px; background-color: #0b1329; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #1e293b; }
         
-        .btn-action-zone { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
-        .btn-dash { padding: 12px; border: none; border-radius: 8px; font-weight: bold; text-align: center; cursor: pointer; text-decoration: none; transition: 0.2s; font-size: 14px; }
-        .btn-profile-comp { background: linear-gradient(135deg, #4f46e5, #3b82f6); color: white; }
-        .btn-search-go { background: #10b981; color: white; }
-        .btn-dash:hover { transform: translateY(-2px); opacity: 0.95; }
-        
-        /* Profile progress bar styling */
-        .progress-bar-bg { background: #0f172a; border-radius: 10px; height: 12px; width: 100%; margin-top: 5px; overflow: hidden; border: 1px solid #334155; }
-        .progress-bar-fill { background: linear-gradient(90deg, #10b981, #34d399); height: 100%; width: 0%; transition: width 0.5s ease-in-out; }
+        .btn-logout-top { background-color: #ef4444; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; }
+        .btn-logout-top:hover { background-color: #dc2626; }
+
+        /* Metric Grid */
+        .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 25px; }
+        .metric-card { background: #131d38; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.25); }
+        .metric-label { font-size: 12px; color: #94a3b8; text-transform: uppercase; font-weight: bold; }
+        .metric-value { font-size: 28px; font-weight: 800; color: #38bdf8; margin-top: 6px; }
+
+        .content-card { background: #131d38; border: 1px solid #1e293b; border-radius: 12px; padding: 25px; margin-bottom: 20px; }
+        .banner-pending { background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 8px; padding: 14px; font-size: 13px; color: #f59e0b; margin-bottom: 20px; display: none; }
     </style>
 </head>
 <body>
 
-    <!-- 🧭 Left Menu / మీ ఫ్రెండ్ సజెస్ట్ చేసిన పక్కా సైడ్‌బార్ మెనూ -->
-    <div class="sidebar">
-        <div style="text-align: center; padding: 10px;">
-            <img src="../assets/logo.png" alt="MyGuru Logo" style="max-width: 80px; height: auto; border-radius: 50%;">
-            <h2>MyGuru Jobs</h2>
+<div class="wrapper">
+    <aside class="sidebar">
+        <div>
+            <div class="brand">👨‍🏫 MyGuru Teacher</div>
+            <ul class="nav-list">
+                <li class="nav-item"><a href="dashboard.html" class="nav-link active">📊 Dashboard</a></li>
+                <li class="nav-item"><a href="jobs.html" class="nav-link">🔍 Find Jobs</a></li>
+                <li class="nav-item"><a href="applied-jobs.html" class="nav-link">📋 Applied Jobs</a></li>
+                <li class="nav-item"><a href="applications.html" class="nav-link">📨 Applications</a></li>
+                <li class="nav-item"><a href="teacher_profile.html" class="nav-link">👤 My Profile</a></li>
+                <li class="nav-item"><a href="print-profile.html" class="nav-link">🖨️ Print Profile</a></li>
+                <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ Settings</a></li>
+            </ul>
         </div>
-        <a href="dashboard.html" class="active">Dashboard</a>
-        <a href="teacher_profile.html">My Profile</a>
-        <a href="jobs.html">Search Jobs</a>
-        <a href="applied-jobs.html">Applied Jobs</a>
-        <a href="interview-letters.html">Interview Letters</a>
-        <a href="notifications.html">Notifications</a>
-        <a href="support.html">Support</a>
-        <a href="settings.html">Settings</a>
-        <a href="#" id="logout-btn" style="margin-top: auto; color: #ef4444;">Logout</a>
-    </div>
+        <div>
+            <ul class="nav-list">
+                <li class="nav-item"><a onclick="logoutTeacher()" class="nav-link btn-logout-sidebar" style="cursor:pointer;">🚪 Logout</a></li>
+            </ul>
+        </div>
+    </aside>
 
-    <!-- 💻 మెయిన్ కంటెంట్ సెక్షన్ -->
-    <div class="content">
-        <!-- హెడర్ -->
+    <main class="main-content">
         <div class="header">
-            <h3 id="welcome-msg">స్వాగతం, లోడ్ అవుతోంది...</h3>
-            <span class="tag" style="background: #10b981;">Teacher Mode</span>
+            <div>
+                <h2 id="lblGreeting" style="margin: 0; font-size: 22px; font-weight: 700;">Welcome, Educator</h2>
+                <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 13px;">Your live teacher matching and application pipeline.</p>
+            </div>
+            <button class="btn-logout-top" onclick="logoutTeacher()">Logout</button>
         </div>
 
-        <!-- 📊 Dashboard Cards (మీ ఫ్రెండ్ సజెస్ట్ చేసిన 6 కీలక కార్డ్స్) -->
-        <div class="card-container">
-            <div class="card" style="border-left-color: #6366f1;">
-                <h3>Profile Completion</h3>
-                <p id="lblProfilePercent">0%</p>
-                <div class="progress-bar-bg">
-                    <div id="barProfileFill" class="progress-bar-fill"></div>
-                </div>
+        <div id="bannerVerificationPending" class="banner-pending">
+            ⏳ <strong>Account Verification Pending:</strong> Your profile is submitted. Once verified by Admin, school job applications will be fully unlocked.
+        </div>
+
+        <div class="metric-grid">
+            <div class="metric-card">
+                <div class="metric-label">Jobs Applied</div>
+                <div id="valAppliedCount" class="metric-value">0</div>
             </div>
-            <div class="card" style="border-left-color: #3b82f6;">
-                <h3>Recommended Jobs</h3>
-                <p id="matched-jobs">0</p>
+            <div class="metric-card">
+                <div class="metric-label">Interview Letters</div>
+                <div id="valInterviewsCount" class="metric-value" style="color: #22c55e;">0</div>
             </div>
-            <div class="card" style="border-left-color: #10b981;">
-                <h3>Applied Jobs</h3>
-                <p id="total-apps">0</p>
+            <div class="metric-card">
+                <div class="metric-label">Demo Requests</div>
+                <div id="valDemosCount" class="metric-value" style="color: #f59e0b;">0</div>
             </div>
-            <div class="card" style="border-left-color: #f59e0b;">
-                <h3>Interview Invitations</h3>
-                <p id="lblInterviews">0</p>
-            </div>
-            <div class="card" style="border-left-color: #ec4899;">
-                <h3>Saved Jobs</h3>
-                <p>0</p>
-            </div>
-            <div class="card" style="border-left-color: #a855f7;">
-                <h3>Subscription Status</h3>
-                <p id="lblSubStatus" style="font-size: 16px; margin-top: 5px; color: #cbd5e1;">Free Plan</p>
+            <div class="metric-card">
+                <div class="metric-label">Account Status</div>
+                <div id="valAccountStatus" class="metric-value" style="font-size: 20px; text-transform: uppercase;">Active</div>
             </div>
         </div>
 
-        <!-- డ్యాష్‌బోర్డ్ లేఅవుట్ గ్రిడ్ -->
-        <div class="dashboard-layout">
-            <!-- Latest Activity -->
-            <div class="activity-box">
-                <h3 style="color: #38bdf8; font-size: 16px; margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 8px;">Latest Activity (ఇటీవలి మార్పులు)</h3>
-                <div id="activity-container">
-                    <div class="activity-item">
-                        <span style="color: white; font-size: 14px;">🔄 సిస్టమ్ ఆప్టిమైజేషన్ రన్ అయింది.</span>
-                        <span style="color: #94a3b8; font-size: 12px;">ఇప్పుడే</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="action-box">
-                <h3 style="color: white; font-size: 16px; margin-bottom: 15px;">Quick Actions</h3>
-                <div class="btn-action-zone">
-                    <a href="profile.html" class="btn-dash btn-profile-comp">Complete Profile</a>
-                    <a href="jobs.html" class="btn-dash btn-search-go">Search Jobs</a>
-                </div>
+        <div class="content-card">
+            <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #f8fafc;">🚀 Quick Actions</h3>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <a href="jobs.html" style="background: #38bdf8; color: #000; padding: 10px 18px; border-radius: 6px; font-weight: bold; text-decoration: none; font-size: 13px;">🔍 Browse Available Vacancies</a>
+                <a href="teacher_profile.html" style="background: #1e293b; color: #f8fafc; padding: 10px 18px; border-radius: 6px; font-weight: bold; text-decoration: none; font-size: 13px; border: 1px solid #334155;">✏️ Edit Profile Details</a>
             </div>
         </div>
-    </div>
+    </main>
+</div>
 
-    <!-- స్క్రిప్ట్స్ లింకింగ్ ఆర్డర్ -->
-    <script src="../js/supabase.js"></script>
-    <script src="../js/auth.js"></script>
-    <script src="../js/teacher.js"></script>
+<script>
+    const SUPABASE_URL = 'https://sugomkzvytuncybafngf.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1Z29ta3p2eXR1bmN5YmFmbmdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NjM5ODQsImV4cCI6MjA5OTEzOTk4NH0.JNwUYVXdqj0hyVhf1ZjL-YDvY_AekJg9sZE9fuDH9q0';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let sessionUser = JSON.parse(localStorage.getItem('myguru_user') || '{}');
+
+    async function verifyAndLoadDashboard() {
+        if (!sessionUser || !sessionUser.id) {
+            window.location.href = '../index.html';
+            return;
+        }
+
+        // Check if user has filled all required fields in database
+        try {
+            const { data: t, error } = await _supabase.from('teacher_profiles').select('*').eq('id', sessionUser.id).maybeSingle();
+
+            const isFilled = t && 
+                             t.qualifications && t.qualifications.trim() !== '' &&
+                             t.subjects && t.subjects.trim() !== '' &&
+                             t.district && t.district.trim() !== '';
+
+            if (!isFilled) {
+                // Not filled -> alert and redirect to profile page (Does NOT logout)
+                alert("⚠️ Please update your profile details (Qualifications, Core Subjects, District) before accessing the dashboard.");
+                window.location.href = 'teacher_profile.html';
+                return;
+            }
+
+            // If filled, show dashboard info
+            document.getElementById('lblGreeting').innerText = `Welcome, ${t.full_name || sessionUser.name || 'Educator'}`;
+            document.getElementById('valAccountStatus').innerText = sessionUser.account_status || 'Pending';
+
+            if (sessionUser.account_status === 'pending') {
+                document.getElementById('bannerVerificationPending').style.display = 'block';
+                document.getElementById('valAccountStatus').style.color = '#f59e0b';
+            }
+
+            // Load application metrics
+            const { count: appCount } = await _supabase.from('job_applications').select('*', { count: 'exact', head: true }).eq('teacher_id', sessionUser.id);
+            if (appCount !== null) document.getElementById('valAppliedCount').innerText = appCount;
+
+        } catch (err) {
+            console.error("Dashboard check error:", err);
+        }
+    }
+
+    function logoutTeacher() {
+        localStorage.removeItem('myguru_user');
+        _supabase.auth.signOut();
+        window.location.href = '../index.html';
+    }
+
+    verifyAndLoadDashboard();
+</script>
 </body>
 </html>
