@@ -13,7 +13,7 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
  * Keeps database records securely referenced via UUIDs, while presenting structured IDs to users.
  */
 function formatAlphanumericDisplayID(type, rawUuid) {
-    if (!rawUuid) return 'MG-REF-000';
-    const shortHash = rawUuid.split('-')[0].toUpperCase();
-    return type === 'school' ? `MGJOB-${shortHash}` : `MGTUT-${shortHash}`;
+  if (!rawUuid) return 'MG-REF-000';
+  const shortHash = rawUuid.split('-')[0].toUpperCase();
+  return type === 'school' ? `MGJOB-${shortHash}` : `MGTUT-${shortHash}`;
 }
