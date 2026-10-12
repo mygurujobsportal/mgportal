@@ -308,10 +308,11 @@ async function handlePasswordReset() {
 
         // 🎯 FIX: Simple clean reset call without broken custom redirect path
         const { error } = await _supabase.auth.resetPasswordForEmail(targetEmail, {
-            redirectTo: window.location.href.split('?')[0].split('#')[0]
-        });
+    redirectTo: 'https://mygurujobsportal.github.io/mgportal/reset-password.html'
+});
 
-        if (error) throw error;
+if (error) throw error;
+        
 
         closeForgotModal();
         showToast(`✓ Password reset link dispatched to ${targetEmail}. Please check your inbox!`);
