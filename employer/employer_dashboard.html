@@ -97,24 +97,35 @@
         let currentEmployerId = null;
 
         async function initEmployerDashboard() {
-            // auth.js లోని సెషన్ గేట్ చెక్
+                async function initEmployerDashboard() {
+            // 1. సెషన్ చెక్
             const activeUser = await checkLiveUserSession('School'); 
             if (!activeUser) return;
 
             currentEmployerId = activeUser.id;
             
-            // 🎯 సుపాబేస్ టేబుల్ స్ట్రక్చర్ ప్రకారం 'school_name' చెక్ చేస్తున్నాం
-            const profile = activeUser.profileData || {};
-            if (!profile.school_name) {
+            // 2. నేరుగా డేటాబేస్ నుంచి తాజా ప్రొఫైల్ తనిఖీ చేయడం
+            const { data: profile, error: profErr } = await _supabase
+                .from('school_profiles')
+                .select('*')
+                .or(`id.eq.${activeUser.id},auth_id.eq.${activeUser.id}`)
+                .maybeSingle();
+
+            if (profErr) {
+                console.error("Profile check error:", profErr);
+            }
+
+            // ఒకవేళ ప్రొఫైల్ లేకపోయినా లేదా school_name ఇంకా ఖాళీగా ఉన్నా మాత్రమే profile.html కి పంపుతుంది
+            if (!profile || !profile.school_name || profile.school_name.trim() === '') {
                 alert("📢 Please complete your School Profile details first!");
                 window.location.href = "profile.html";
                 return;
             }
 
-            // స్క్రీన్ పై స్కూల్ పేరు సెట్ చేయడం
+            // 3. లైవ్ స్కూల్ పేరును హెడర్‌లో సెట్ చేయడం
             document.getElementById('welcome-msg').innerText = `Welcome back, ${profile.school_name}`;
             
-            if(activeUser.subscription === 'premium') {
+            if (activeUser.subscription === 'premium' || profile.is_premium) {
                 const badge = document.getElementById('premium-status');
                 badge.innerText = "⭐ Premium Plan";
                 badge.style.background = "linear-gradient(135deg, #fbbf24, #f59e0b)";
