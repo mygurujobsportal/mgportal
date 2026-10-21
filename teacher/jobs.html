@@ -201,8 +201,12 @@
 
                 // 2. మెయిన్ జాబ్స్ క్వెరీ
                 let query = _supabase
-                    .from('school_jobs')
-                    .select('*');
+   					 .from('school_jobs')
+   					 .select(`
+     				 	  *,
+     				   school_profiles:school_id (school_name)
+ 			   `);
+
 
                 query = query.or('status.eq.open,status.eq.Open,status.is.null');
 
@@ -237,7 +241,10 @@
                 const card = document.createElement('div');
                 card.className = 'job-card';
 
-                const displayName = job.school_name || job.institution_name || job.name || 'MyGuru Partner School';
+                const displayName = (job.school_profiles && job.school_profiles.school_name) 
+   					 ? job.school_profiles.school_name 
+  				  : (job.school_name || 'MyGuru Partner School');
+
                 const schoolType = job.management_type || 'Private';
 
                 card.innerHTML = `
