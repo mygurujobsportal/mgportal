@@ -27,48 +27,39 @@
         .btn-job-apply { width: 100%; background: #10b981; color: white; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; font-size: 14px; margin-top: 10px; display: block; transition: 0.2s; }
         .btn-job-apply:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
 
-        <style>
-    /* మీ పాత CSS కోడ్ అంతా అలాగే ఉంటుంది */
-    .search-filter-zone { ... }
-    .filter-group { ... }
-    .jobs-grid { ... }
-    .job-card { ... }
-    .btn-job-apply { ... }
-
-    /* 👇 సరిగ్గా ఇక్కడ, చివరన ఈ కొత్త మోడల్ CSS ను యాడ్ చేయండి 👇 */
-    /* Application Modal Popup Styles */
-    .modal-overlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px);
-        display: none; justify-content: center; align-items: center; z-index: 1000;
-    }
-    .modal-box {
-        background: #1e293b; border: 1px solid #334155; border-radius: 14px;
-        width: 90%; max-width: 480px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-        color: #f8fafc;
-    }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-    .modal-header h3 { margin: 0; color: #38bdf8; font-size: 18px; }
-    .modal-close { background: transparent; border: none; color: #94a3b8; font-size: 20px; cursor: pointer; }
-    .modal-meta { background: #0f172a; padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom: 15px; border: 1px solid #334155; }
-    .modal-meta div { margin-bottom: 4px; }
-    .modal-meta strong { color: #cbd5e1; }
-    .cover-textarea {
-        width: 100%; height: 110px; background: #0f172a; border: 1px solid #334155;
-        border-radius: 8px; padding: 10px; color: #fff; font-family: inherit;
-        font-size: 13px; resize: vertical; box-sizing: border-box; outline: none; margin-top: 6px;
-    }
-    .cover-textarea:focus { border-color: #38bdf8; }
-    .modal-btns { display: flex; gap: 10px; margin-top: 18px; }
-    .btn-submit-app {
-        flex: 1; background: #10b981; color: white; border: none; padding: 12px;
-        border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px;
-    }
-    .btn-submit-app:hover { background: #059669; }
-    .btn-cancel-app {
-        background: #334155; color: #cbd5e1; border: none; padding: 12px 18px;
-        border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px;
-    }
+        /* Application Modal Popup Styles */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px);
+            display: none; justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-box {
+            background: #1e293b; border: 1px solid #334155; border-radius: 14px;
+            width: 90%; max-width: 480px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            color: #f8fafc;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .modal-header h3 { margin: 0; color: #38bdf8; font-size: 18px; }
+        .modal-close { background: transparent; border: none; color: #94a3b8; font-size: 24px; cursor: pointer; line-height: 1; }
+        .modal-meta { background: #0f172a; padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom: 15px; border: 1px solid #334155; }
+        .modal-meta div { margin-bottom: 5px; }
+        .modal-meta strong { color: #cbd5e1; }
+        .cover-textarea {
+            width: 100%; height: 110px; background: #0f172a; border: 1px solid #334155;
+            border-radius: 8px; padding: 10px; color: #fff; font-family: inherit;
+            font-size: 13px; resize: vertical; box-sizing: border-box; outline: none; margin-top: 6px;
+        }
+        .cover-textarea:focus { border-color: #38bdf8; }
+        .modal-btns { display: flex; gap: 10px; margin-top: 18px; }
+        .btn-submit-app {
+            flex: 1; background: #10b981; color: white; border: none; padding: 12px;
+            border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px;
+        }
+        .btn-submit-app:hover { background: #059669; }
+        .btn-cancel-app {
+            background: #334155; color: #cbd5e1; border: none; padding: 12px 18px;
+            border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -97,7 +88,7 @@
             <span class="tag" style="background: #3b82f6;">Live Jobs</span>
         </div>
 
-        <!-- 🔍 Filters Zone (మీ ఫ్రెండ్ అడిగిన ఫిల్టర్స్) -->
+        <!-- 🔍 Filters Zone -->
         <div class="search-filter-zone">
             <div class="filter-group">
                 <label>Subject (సబ్జెక్ట్)</label>
@@ -124,18 +115,44 @@
         </div>
     </div>
 
+    <!-- Job Application Popup Modal -->
+    <div id="applyModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>📝 Confirm Job Application</h3>
+                <button class="modal-close" onclick="closeApplyModal()">&times;</button>
+            </div>
+
+            <div class="modal-meta">
+                <div><strong>Applying For:</strong> <span id="modalJobTitle">-</span></div>
+                <div><strong>School:</strong> <span id="modalSchoolName">-</span></div>
+                <div><strong>Attached Resume:</strong> <span id="modalResumeStatus" style="color: #4ade80;">Checking...</span></div>
+            </div>
+
+            <label style="font-size: 12px; font-weight: bold; color: #94a3b8; text-transform: uppercase;">Cover Letter / Message to Employer</label>
+            <textarea id="modalCoverLetter" class="cover-textarea" placeholder="మీ కవర్ లెటర్ ఇక్కడ రాయండి లేదా ఎడిట్ చేయండి..."></textarea>
+
+            <div class="modal-btns">
+                <button class="btn-cancel-app" onclick="closeApplyModal()">Cancel</button>
+                <button class="btn-submit-app" id="btnConfirmApply" onclick="submitFinalApplication()">Confirm & Apply</button>
+            </div>
+        </div>
+    </div>
+
     <script src="../js/supabase.js"></script>
     <script src="../js/auth.js"></script>
     <script>
         let currentTeacherId = null;
         let isProfileComplete = false;
+        let teacherProfile = null;
+        let pendingJobId = null;
 
         async function initJobSearchEngine() {
             const session = await checkLiveUserSession('Teacher');
             if (!session) return;
             currentTeacherId = session.id;
 
-            // 1. టీచర్ ప్రొఫైల్ పర్సంటేజ్ చెక్ చేసి 100% ఉందో లేదో డిసైడ్ చేయడం
+            // 1. టీచర్ ప్రొఫైల్ వివరాలు మరియు స్టేటస్ చెక్
             await checkTeacherProfileBarrier();
             
             // 2. జాబ్స్ లోడ్ చేయడం
@@ -145,15 +162,18 @@
         // 🔒 ప్రొఫైల్ లాక్ బారియర్ వెరిఫికేషన్ లాజిక్
         async function checkTeacherProfileBarrier() {
             try {
-                const { data: prof } = await _supabase
+                const { data: prof, error } = await _supabase
                     .from('teacher_profiles')
                     .select('*')
                     .eq('id', currentTeacherId)
-                    .single();
+                    .maybeSingle();
+
+                if (error) console.error("Barrier verification issue:", error.message);
 
                 if (prof) {
-                    // మీ ఫ్రెండ్ పర్సంటేజ్ ఫార్ములా ప్రకారం అన్నీ నిండితేనే 'approved' అవుతుంది
-                    if(prof.profile_status === 'approved') {
+                    teacherProfile = prof;
+                    // ప్రొఫైల్ స్టేటస్ approved అయితే బటన్ అన్‌లాక్ అవుతుంది
+                    if (prof.profile_status === 'approved') {
                         isProfileComplete = true;
                     }
                 }
@@ -163,8 +183,6 @@
         }
 
         // 📥 డేటాబేస్ నుండి జాబ్స్ తేవడం + ఫిల్టర్ చేయడం
-                // 📥 డేటాబేస్ నుండి జాబ్స్ తేవడం + ఫిల్టర్ చేయడం
-                // 📥 [SMART FILTER]: ఆల్రెడీ అప్లై చేసిన జాబ్స్ ని దాచి, మిగిలిన ఓపెన్ జాబ్స్ చూపిస్తుంది
         async function fetchFilteredJobs() {
             try {
                 const subInput = document.getElementById('filterSubject').value.trim();
@@ -179,29 +197,24 @@
 
                 if (appliedError) throw appliedError;
 
-                // అప్లై చేసిన ఐడీలను ఒక అరే లాగా మార్చడం
                 const appliedJobIds = appliedList ? appliedList.map(app => app.school_job_id) : [];
 
-                // 2. మెయిన్ జాబ్స్ క్వెరీ స్టార్ట్ చేయడం
+                // 2. మెయిన్ జాబ్స్ క్వెరీ
                 let query = _supabase
                     .from('school_jobs')
                     .select('*');
 
-                // 🎯 [BACKUP FIX]: status కాలమ్ 'open' లేదా 'Open' లేదా null ఉన్నా సేఫ్ గా హ్యాండిల్ చేయడం
-                // మీ టేబుల్ లో స్టేటస్ కాలమ్ లేకపోతే ఈ కింద లైన్ ని కామెంట్ (//) చేయవచ్చు
                 query = query.or('status.eq.open,status.eq.Open,status.is.null');
 
-                // 🎯 [PRIVACY GATE]: ఆల్రెడీ అప్లై చేసిన జాబ్స్ ని లిస్ట్ నుండి మినహాయించడం (NOT IN ఫిల్టర్)
                 if (appliedJobIds.length > 0) {
                     query = query.not('id', 'in', `(${appliedJobIds.join(',')})`);
                 }
 
-                // యూజర్ సెర్చ్ ఫిల్టర్స్ అప్లై చేయడం
                 if (subInput) query = query.ilike('subject', `%${subInput}%`);
                 if (distInput) query = query.ilike('district', `%${distInput}%`);
                 if (typeInput) query = query.eq('management_type', typeInput); 
 
-                const { data: jobs, error } = await query.order('id', { ascending: false });
+                const { data: jobs, error } = await query.order('created_at', { ascending: false });
 
                 if (error) throw error;
 
@@ -210,7 +223,6 @@
                 document.getElementById('jobs-container').innerHTML = `<p style="color: #ef4444;">Error: ${err.message}</p>`;
             }
         }
-
 
         // 🃏 UI లో జాబ్స్ కార్డ్స్ రెండర్ చేయడం
         function renderJobCards(jobs) {
@@ -225,7 +237,6 @@
                 const card = document.createElement('div');
                 card.className = 'job-card';
 
-                // 🎯 undefined ని రూపుమాపడానికి టేబుల్ లో ఉండే ఏ రకమైన పేరునైనా తీసుకునే బ్యాకప్ లాజిక్
                 const displayName = job.school_name || job.institution_name || job.name || 'MyGuru Partner School';
                 const schoolType = job.management_type || 'Private';
 
@@ -240,9 +251,9 @@
                         </div>
                         
                         <div class="job-details-meta">
-                            <div><strong>Qualification:</strong> ${job.required_qualification || 'Any Degree'}</div>
+                            <div><strong>Qualification:</strong> ${job.qualification_required || job.required_qualification || 'Any Degree'}</div>
                             <div><strong>Experience:</strong> ${job.experience_required || 0} Years</div>
-                            <div><strong>Estimated Salary:</strong> ₹${job.salary_package || 'Negotiable'}</div>
+                            <div><strong>Estimated Salary:</strong> ₹${job.salary || job.salary_package || 'Negotiable'}</div>
                         </div>
                     </div>
                     
@@ -258,48 +269,84 @@
             });
         }
 
-        // 🚀 సింగిల్ క్లిక్ జాబ్ అప్లికేషన్ ఇంజన్ [Schema Synced & Fixed]
-        async function applyForThisJob(jobId) {
-            if(!confirm("మీరు ఈ ఉద్యోగానికి దరఖాస్తు చేయాలనుకుంటున్నారా?")) return;
+        // 1. మోడల్ ఓపెన్ చేయడం
+        function openApplyModal(jobId, jobTitle, schoolName) {
+            pendingJobId = jobId;
+            
+            document.getElementById('modalJobTitle').innerText = jobTitle;
+            document.getElementById('modalSchoolName').innerText = schoolName;
+
+            const resumeStatusEl = document.getElementById('modalResumeStatus');
+            if (teacherProfile && teacherProfile.resume_url) {
+                resumeStatusEl.innerHTML = `✅ Attached from Profile (<a href="${teacherProfile.resume_url}" target="_blank" style="color:#38bdf8; text-decoration: underline;">View</a>)`;
+            } else {
+                resumeStatusEl.innerHTML = `<span style="color:#f87171;">⚠️ No resume in profile</span>`;
+            }
+
+            const defaultCover = teacherProfile && teacherProfile.about 
+                ? teacherProfile.about 
+                : `Respected Principal / Hiring Team,\n\nI am applying for the position of ${jobTitle}. With my qualifications and teaching experience, I am confident in delivering quality education to students. Please review my profile and credentials.\n\nThank you,\n${teacherProfile?.full_name || 'Teacher Candidate'}`;
+
+            document.getElementById('modalCoverLetter').value = defaultCover;
+            document.getElementById('applyModal').style.display = 'flex';
+        }
+
+        function closeApplyModal() {
+            document.getElementById('applyModal').style.display = 'none';
+            pendingJobId = null;
+        }
+
+        // 2. దరఖాస్తును ఫైనల్ సబ్మిట్ చేయడం
+        async function submitFinalApplication() {
+            if (!pendingJobId) return;
+
+            const submitBtn = document.getElementById('btnConfirmApply');
+            const coverText = document.getElementById('modalCoverLetter').value.trim();
+            const resumeUrl = teacherProfile?.resume_url || null;
+
+            submitBtn.innerText = 'Submitting...';
+            submitBtn.disabled = true;
 
             try {
-                // 1. ముందే ఆల్రెడీ అప్లై చేసారేమో చెక్ చేయడం (school_job_id కాలమ్ తో)
-                const { data: alreadyApplied, error: checkError } = await _supabase
+                // ఇప్పటికే అప్లై చేశారా అని చివరి తనిఖీ
+                const { data: alreadyApplied } = await _supabase
                     .from('job_applications')
                     .select('id')
-                    .eq('school_job_id', jobId) 
+                    .eq('school_job_id', pendingJobId)
                     .eq('teacher_id', currentTeacherId);
-
-                if (checkError) throw checkError;
 
                 if (alreadyApplied && alreadyApplied.length > 0) {
                     alert("⚠️ మీరు ఆల్రెడీ ఈ ఉద్యోగానికి అప్లై చేశారు!");
+                    closeApplyModal();
                     return;
                 }
 
-                // 2. మీ కొత్త టేబుల్ స్కీమా ప్రకారం పక్కా పేలోడ్ ఇన్సర్షన్
                 const { error } = await _supabase
                     .from('job_applications')
                     .insert({
-                        school_job_id: jobId,         // 🎯 job_id ని school_job_id గా మార్చాం
+                        school_job_id: pendingJobId,
                         teacher_id: currentTeacherId,
-                        application_type: 'school',   // 🎯 NOT NULL కాబట్టి 'school' అని పంపుతున్నాం
+                        application_type: 'school',
+                        cover_letter: coverText || 'Interested in this role.',
+                        resume_url: resumeUrl,
                         employer_status: 'applied',
                         application_status: 'pending',
                         admin_status: 'pending',
-                        applied_at: new Date().toISOString() // 🎯 created_at ని applied_at గా మార్చాం
+                        applied_at: new Date().toISOString()
                     });
 
                 if (error) throw error;
 
                 alert("✓ Success! మీ అప్లికేషన్ విజయవంతంగా స్కూల్‌కు పంపబడింది.");
+                closeApplyModal();
                 window.location.href = "applied-jobs.html";
 
             } catch (err) {
-                alert("Application Error: " + err.message);
+                alert("⚠️ Application Failed: " + err.message);
+                submitBtn.innerText = 'Confirm & Apply';
+                submitBtn.disabled = false;
             }
         }
-
 
         document.getElementById('logout-btn').addEventListener('click', async (e) => {
             e.preventDefault();
@@ -308,28 +355,5 @@
 
         window.onload = initJobSearchEngine;
     </script>
-    <!-- Job Application Popup Modal -->
-<div id="applyModal" class="modal-overlay">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h3>📝 Confirm Job Application</h3>
-            <button class="modal-close" onclick="closeApplyModal()">&times;</button>
-        </div>
-
-        <div class="modal-meta">
-            <div><strong>Applying For:</strong> <span id="modalJobTitle">-</span></div>
-            <div><strong>School:</strong> <span id="modalSchoolName">-</span></div>
-            <div><strong>Attached Resume:</strong> <span id="modalResumeStatus" style="color: #4ade80;">Checking...</span></div>
-        </div>
-
-        <label style="font-size: 12px; font-weight: bold; color: #94a3b8; text-transform: uppercase;">Cover Letter / Message to Employer</label>
-        <textarea id="modalCoverLetter" class="cover-textarea" placeholder="మీ కవర్ లెటర్ ఇక్కడ రాయండి లేదా ఎడిట్ చేయండి..."></textarea>
-
-        <div class="modal-btns">
-            <button class="btn-cancel-app" onclick="closeApplyModal()">Cancel</button>
-            <button class="btn-submit-app" id="btnConfirmApply" onclick="submitFinalApplication()">Confirm & Apply</button>
-        </div>
-    </div>
-</div>
 </body>
 </html>
