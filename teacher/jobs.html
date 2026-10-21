@@ -26,6 +26,49 @@
         .lock-warning { background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #fca5a5; padding: 10px; border-radius: 6px; font-size: 12px; text-align: center; margin-top: 10px; }
         .btn-job-apply { width: 100%; background: #10b981; color: white; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; font-size: 14px; margin-top: 10px; display: block; transition: 0.2s; }
         .btn-job-apply:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
+
+        <style>
+    /* మీ పాత CSS కోడ్ అంతా అలాగే ఉంటుంది */
+    .search-filter-zone { ... }
+    .filter-group { ... }
+    .jobs-grid { ... }
+    .job-card { ... }
+    .btn-job-apply { ... }
+
+    /* 👇 సరిగ్గా ఇక్కడ, చివరన ఈ కొత్త మోడల్ CSS ను యాడ్ చేయండి 👇 */
+    /* Application Modal Popup Styles */
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px);
+        display: none; justify-content: center; align-items: center; z-index: 1000;
+    }
+    .modal-box {
+        background: #1e293b; border: 1px solid #334155; border-radius: 14px;
+        width: 90%; max-width: 480px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        color: #f8fafc;
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .modal-header h3 { margin: 0; color: #38bdf8; font-size: 18px; }
+    .modal-close { background: transparent; border: none; color: #94a3b8; font-size: 20px; cursor: pointer; }
+    .modal-meta { background: #0f172a; padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom: 15px; border: 1px solid #334155; }
+    .modal-meta div { margin-bottom: 4px; }
+    .modal-meta strong { color: #cbd5e1; }
+    .cover-textarea {
+        width: 100%; height: 110px; background: #0f172a; border: 1px solid #334155;
+        border-radius: 8px; padding: 10px; color: #fff; font-family: inherit;
+        font-size: 13px; resize: vertical; box-sizing: border-box; outline: none; margin-top: 6px;
+    }
+    .cover-textarea:focus { border-color: #38bdf8; }
+    .modal-btns { display: flex; gap: 10px; margin-top: 18px; }
+    .btn-submit-app {
+        flex: 1; background: #10b981; color: white; border: none; padding: 12px;
+        border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px;
+    }
+    .btn-submit-app:hover { background: #059669; }
+    .btn-cancel-app {
+        background: #334155; color: #cbd5e1; border: none; padding: 12px 18px;
+        border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px;
+    }
     </style>
 </head>
 <body>
@@ -265,5 +308,28 @@
 
         window.onload = initJobSearchEngine;
     </script>
+    <!-- Job Application Popup Modal -->
+<div id="applyModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3>📝 Confirm Job Application</h3>
+            <button class="modal-close" onclick="closeApplyModal()">&times;</button>
+        </div>
+
+        <div class="modal-meta">
+            <div><strong>Applying For:</strong> <span id="modalJobTitle">-</span></div>
+            <div><strong>School:</strong> <span id="modalSchoolName">-</span></div>
+            <div><strong>Attached Resume:</strong> <span id="modalResumeStatus" style="color: #4ade80;">Checking...</span></div>
+        </div>
+
+        <label style="font-size: 12px; font-weight: bold; color: #94a3b8; text-transform: uppercase;">Cover Letter / Message to Employer</label>
+        <textarea id="modalCoverLetter" class="cover-textarea" placeholder="మీ కవర్ లెటర్ ఇక్కడ రాయండి లేదా ఎడిట్ చేయండి..."></textarea>
+
+        <div class="modal-btns">
+            <button class="btn-cancel-app" onclick="closeApplyModal()">Cancel</button>
+            <button class="btn-submit-app" id="btnConfirmApply" onclick="submitFinalApplication()">Confirm & Apply</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
